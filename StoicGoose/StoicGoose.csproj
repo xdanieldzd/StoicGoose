@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>0.2.0</Version>
+    <Authors>xdaniel</Authors>
+    <Company>xdaniel</Company>
+    <Copyright>Written in 2021 by xdaniel - http://github.com/xdanieldzd/</Copyright>
+    <Description>16-bit game handheld emulator</Description>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="OpenTK" Version="4.6.7" />
+    <PackageReference Include="OpenTK.WinForms.Radegast" Version="0.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Icons\Aux1.png" />
+    <None Remove="Assets\Icons\Aux2.png" />
+    <None Remove="Assets\Icons\Aux3.png" />
+    <None Remove="Assets\Icons\Headphones.png" />
+    <None Remove="Assets\Icons\Horizontal.png" />
+    <None Remove="Assets\Icons\Initialized.png" />
+    <None Remove="Assets\Icons\LowBattery.png" />
+    <None Remove="Assets\Icons\Power.png" />
+    <None Remove="Assets\Icons\Sleep.png" />
+    <None Remove="Assets\Icons\Vertical.png" />
+    <None Remove="Assets\Icons\Volume0.png" />
+    <None Remove="Assets\Icons\Volume1.png" />
+    <None Remove="Assets\Icons\Volume2.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Icons\Aux1.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux2.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux3.png" />
+    <EmbeddedResource Include="Assets\Icons\Headphones.png" />
+    <EmbeddedResource Include="Assets\Icons\Horizontal.png" />
+    <EmbeddedResource Include="Assets\Icons\Initialized.png" />
+    <EmbeddedResource Include="Assets\Icons\LowBattery.png" />
+    <EmbeddedResource Include="Assets\Icons\Power.png" />
+    <EmbeddedResource Include="Assets\Icons\Sleep.png" />
+    <EmbeddedResource Include="Assets\Icons\Vertical.png" />
+    <EmbeddedResource Include="Assets\Icons\Volume0.png" />
+    <EmbeddedResource Include="Assets\Icons\Volume1.png" />
+    <EmbeddedResource Include="Assets\Icons\Volume2.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\Shaders\" />
+  </ItemGroup>
+
+</Project>
