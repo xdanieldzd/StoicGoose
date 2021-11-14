@@ -20,6 +20,7 @@ namespace StoicGoose.Interface
 	public sealed class VideoConfiguration : ConfigurationBase<VideoConfiguration>
 	{
 		public int ScreenSize { get; set; } = 3;
+		public string Shader { get; set; } = string.Empty;
 	}
 
 	public sealed class SoundConfiguration : ConfigurationBase<SoundConfiguration>

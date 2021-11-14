@@ -11,6 +11,8 @@ namespace StoicGoose.OpenGL.Shaders
 
 		readonly Dictionary<string, int> uniformLocations = new Dictionary<string, int>();
 
+		bool disposed = false;
+
 		public Program(params int[] shaders)
 		{
 			foreach (var shader in shaders) GL.AttachShader(Handle, shader);
@@ -35,13 +37,27 @@ namespace StoicGoose.OpenGL.Shaders
 
 		~Program()
 		{
-			Dispose();
+			Dispose(false);
 		}
 
 		public void Dispose()
 		{
-			if (GL.IsProgram(Handle))
-				GL.DeleteProgram(Handle);
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		private void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
+
+			if (disposing)
+			{
+				if (GL.IsProgram(Handle))
+					GL.DeleteProgram(Handle);
+			}
+
+			disposed = true;
 		}
 
 		public void Bind()

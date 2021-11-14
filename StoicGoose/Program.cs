@@ -14,16 +14,26 @@ namespace StoicGoose
 		const string jsonConfigFileName = "Config.json";
 		const string saveDataDirectoryName = "Saves";
 
+		const string assetsDirectoryName = "Assets";
+		const string shaderDirectoryName = "Shaders";
+
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
 		public static Configuration Configuration { get; } = LoadConfiguration(programConfigPath);
-
 		public static string SaveDataPath { get; } = string.Empty;
+
+		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+		readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
+
+		public static string ShaderPath { get; } = string.Empty;
 
 		static Program()
 		{
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+
+			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
+				throw new DirectoryNotFoundException("Shader directory missing");
 		}
 
 		[STAThread]

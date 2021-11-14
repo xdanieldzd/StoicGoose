@@ -36,6 +36,12 @@
     <None Remove="Assets\Icons\Volume0.png" />
     <None Remove="Assets\Icons\Volume1.png" />
     <None Remove="Assets\Icons\Volume2.png" />
+    <None Remove="Assets\Shaders\Basic\Fragment.glsl" />
+    <None Remove="Assets\Shaders\Basic\FragmentBase.glsl" />
+    <None Remove="Assets\Shaders\Basic\Manifest.json" />
+    <None Remove="Assets\Shaders\FragmentBase.glsl" />
+    <None Remove="Assets\Shaders\IconFragment.glsl" />
+    <None Remove="Assets\Shaders\Vertex.glsl" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,10 +58,23 @@
     <EmbeddedResource Include="Assets\Icons\Volume0.png" />
     <EmbeddedResource Include="Assets\Icons\Volume1.png" />
     <EmbeddedResource Include="Assets\Icons\Volume2.png" />
+    <EmbeddedResource Include="Assets\Shaders\Basic\Fragment.glsl" />
+    <EmbeddedResource Include="Assets\Shaders\IconFragment.glsl" />
+    <EmbeddedResource Include="Assets\Shaders\FragmentBase.glsl" />
+    <EmbeddedResource Include="Assets\Shaders\Vertex.glsl" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Assets\Shaders\" />
+    <EmbeddedResource Include="Assets\Shaders\Basic\Manifest.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\Shaders\Dot-Matrix\Fragment.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix\Manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

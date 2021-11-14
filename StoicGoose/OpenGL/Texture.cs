@@ -19,12 +19,14 @@ namespace StoicGoose.OpenGL
 		byte[] pixelData = default;
 		bool isDirty = false;
 
-		public Texture(Bitmap bitmap, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest)
+		bool disposed = false;
+
+		public Texture(Bitmap bitmap, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
 		{
-			FromBitmap(bitmap, textureMinFilter, textureMagFilter);
+			FromBitmap(bitmap, textureMinFilter, textureMagFilter, textureWrapMode);
 		}
 
-		public Texture(int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest)
+		public Texture(int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
 		{
 			Size = new Vector2i(width, height);
 
@@ -33,22 +35,36 @@ namespace StoicGoose.OpenGL
 
 			var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
 			var pointer = handle.AddrOfPinnedObject();
-			Generate(pointer, textureMinFilter, textureMagFilter);
+			Generate(pointer, textureMinFilter, textureMagFilter, textureWrapMode);
 			handle.Free();
 		}
 
 		~Texture()
 		{
-			Dispose();
+			Dispose(false);
 		}
 
 		public void Dispose()
 		{
-			if (GL.IsTexture(Handle))
-				GL.DeleteTexture(Handle);
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
-		private void FromBitmap(Bitmap bitmap, TextureMinFilter textureMinFilter, TextureMagFilter textureMagFilter)
+		private void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
+
+			if (disposing)
+			{
+				if (GL.IsTexture(Handle))
+					GL.DeleteTexture(Handle);
+			}
+
+			disposed = true;
+		}
+
+		private void FromBitmap(Bitmap bitmap, TextureMinFilter textureMinFilter, TextureMagFilter textureMagFilter, TextureWrapMode textureWrapMode)
 		{
 			if (bitmap.PixelFormat != ImagingPixelFormat.Format32bppArgb)
 			{
@@ -61,18 +77,18 @@ namespace StoicGoose.OpenGL
 			Size = new Vector2i(bitmap.Width, bitmap.Height);
 
 			var bmpData = bitmap.LockBits(new Rectangle(0, 0, Size.X, Size.Y), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
-			Generate(bmpData.Scan0, textureMinFilter, textureMagFilter);
+			Generate(bmpData.Scan0, textureMinFilter, textureMagFilter, textureWrapMode);
 			bitmap.UnlockBits(bmpData);
 		}
 
-		private void Generate(IntPtr pixels, TextureMinFilter textureMinFilter, TextureMagFilter textureMagFilter)
+		private void Generate(IntPtr pixels, TextureMinFilter textureMinFilter, TextureMagFilter textureMagFilter, TextureWrapMode textureWrapMode)
 		{
 			GL.BindTexture(TextureTarget.Texture2D, Handle);
 
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, Size.X, Size.Y, 0, PixelFormat.Bgra, PixelType.UnsignedByte, pixels);
 
-			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)textureWrapMode);
+			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)textureWrapMode);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)textureMinFilter);
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)textureMagFilter);
 
@@ -81,6 +97,12 @@ namespace StoicGoose.OpenGL
 
 		public void Bind()
 		{
+			Bind(0);
+		}
+
+		public void Bind(int textureUnit)
+		{
+			GL.ActiveTexture(TextureUnit.Texture0 + textureUnit);
 			GL.BindTexture(TextureTarget.Texture2D, Handle);
 
 			if (isDirty)

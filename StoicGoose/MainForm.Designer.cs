@@ -40,9 +40,10 @@
 			this.pauseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.screenSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.rotateScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.limitFPSToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.screenSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.shadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.rotateScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.dumpRAMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,6 +53,8 @@
 			this.tsslEmulationStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.ofdOpenRom = new System.Windows.Forms.OpenFileDialog();
 			this.renderControl = new StoicGoose.OpenGL.RenderControl();
+			this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
 			this.SuspendLayout();
@@ -59,11 +62,11 @@
 			// menuStrip
 			// 
 			this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.emulationToolStripMenuItem,
-            this.optionsToolStripMenuItem,
-            this.debugToolStripMenuItem,
-            this.helpToolStripMenuItem});
+			this.fileToolStripMenuItem,
+			this.emulationToolStripMenuItem,
+			this.optionsToolStripMenuItem,
+			this.debugToolStripMenuItem,
+			this.helpToolStripMenuItem});
 			this.menuStrip.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip.Name = "menuStrip";
 			this.menuStrip.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
@@ -74,11 +77,11 @@
 			// fileToolStripMenuItem
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openROMToolStripMenuItem,
-            this.toolStripMenuItem1,
-            this.recentFilesToolStripMenuItem,
-            this.toolStripMenuItem2,
-            this.exitToolStripMenuItem});
+			this.openROMToolStripMenuItem,
+			this.toolStripMenuItem1,
+			this.recentFilesToolStripMenuItem,
+			this.toolStripMenuItem2,
+			this.exitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
 			this.fileToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -118,8 +121,8 @@
 			// emulationToolStripMenuItem
 			// 
 			this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.pauseToolStripMenuItem,
-            this.resetToolStripMenuItem});
+			this.pauseToolStripMenuItem,
+			this.resetToolStripMenuItem});
 			this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
 			this.emulationToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
@@ -144,38 +147,47 @@
 			// optionsToolStripMenuItem
 			// 
 			this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.screenSizeToolStripMenuItem,
-            this.rotateScreenToolStripMenuItem,
-            this.limitFPSToolStripMenuItem});
+			this.limitFPSToolStripMenuItem,
+			this.screenSizeToolStripMenuItem,
+			this.toolStripMenuItem3,
+			this.rotateScreenToolStripMenuItem,
+			this.toolStripMenuItem4,
+			this.shadersToolStripMenuItem           });
 			this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
 			this.optionsToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
 			this.optionsToolStripMenuItem.Text = "&Options";
 			// 
+			// limitFPSToolStripMenuItem
+			// 
+			this.limitFPSToolStripMenuItem.Name = "limitFPSToolStripMenuItem";
+			this.limitFPSToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.limitFPSToolStripMenuItem.Text = "&Limit FPS";
+			this.limitFPSToolStripMenuItem.Click += new System.EventHandler(this.limitFPSToolStripMenuItem_Click);
+			// 
 			// screenSizeToolStripMenuItem
 			// 
 			this.screenSizeToolStripMenuItem.Name = "screenSizeToolStripMenuItem";
-			this.screenSizeToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-			this.screenSizeToolStripMenuItem.Text = "&Screen Size";
+			this.screenSizeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.screenSizeToolStripMenuItem.Text = "S&creen Size";
+			// 
+			// shadersToolStripMenuItem
+			// 
+			this.shadersToolStripMenuItem.Name = "shadersToolStripMenuItem";
+			this.shadersToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.shadersToolStripMenuItem.Text = "&Shaders";
 			// 
 			// rotateScreenToolStripMenuItem
 			// 
 			this.rotateScreenToolStripMenuItem.Name = "rotateScreenToolStripMenuItem";
-			this.rotateScreenToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.rotateScreenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.rotateScreenToolStripMenuItem.Text = "&Rotate Screen";
 			this.rotateScreenToolStripMenuItem.Click += new System.EventHandler(this.rotateScreenToolStripMenuItem_Click);
-			// 
-			// limitFPSToolStripMenuItem
-			// 
-			this.limitFPSToolStripMenuItem.Name = "limitFPSToolStripMenuItem";
-			this.limitFPSToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-			this.limitFPSToolStripMenuItem.Text = "&Limit FPS";
-			this.limitFPSToolStripMenuItem.Click += new System.EventHandler(this.limitFPSToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
 			this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.dumpRAMToolStripMenuItem});
+			this.dumpRAMToolStripMenuItem});
 			this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
 			this.debugToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
@@ -184,14 +196,14 @@
 			// dumpRAMToolStripMenuItem
 			// 
 			this.dumpRAMToolStripMenuItem.Name = "dumpRAMToolStripMenuItem";
-			this.dumpRAMToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+			this.dumpRAMToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.dumpRAMToolStripMenuItem.Text = "&Dump RAM";
 			this.dumpRAMToolStripMenuItem.Click += new System.EventHandler(this.dumpRAMToolStripMenuItem_Click);
 			// 
 			// helpToolStripMenuItem
 			// 
 			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
+			this.aboutToolStripMenuItem});
 			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
 			this.helpToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
@@ -207,8 +219,8 @@
 			// statusStrip
 			// 
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsslStatus,
-            this.tsslEmulationStatus});
+			this.tsslStatus,
+			this.tsslEmulationStatus});
 			this.statusStrip.Location = new System.Drawing.Point(0, 279);
 			this.statusStrip.Name = "statusStrip";
 			this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
@@ -243,6 +255,16 @@
 			this.renderControl.Profile = OpenTK.Windowing.Common.ContextProfile.Core;
 			this.renderControl.Size = new System.Drawing.Size(448, 255);
 			this.renderControl.TabIndex = 4;
+			// 
+			// toolStripMenuItem3
+			// 
+			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+			this.toolStripMenuItem3.Size = new System.Drawing.Size(177, 6);
+			// 
+			// toolStripMenuItem4
+			// 
+			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(177, 6);
 			// 
 			// MainForm
 			// 
@@ -294,6 +316,9 @@
 		private System.Windows.Forms.ToolStripMenuItem rotateScreenToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem limitFPSToolStripMenuItem;
 		private StoicGoose.OpenGL.RenderControl renderControl;
+		private System.Windows.Forms.ToolStripMenuItem shadersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
 	}
 }
 

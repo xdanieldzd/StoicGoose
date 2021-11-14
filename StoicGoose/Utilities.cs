@@ -1,4 +1,11 @@
-﻿namespace StoicGoose
+﻿using System.Drawing;
+using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
+
+using StoicGoose.OpenGL.Shaders.Bundles;
+
+namespace StoicGoose
 {
 	public static class Utilities
 	{
@@ -19,6 +26,48 @@
 			var tmp = a;
 			a = b;
 			b = tmp;
+		}
+
+		private static Stream GetEmbeddedResourceStream(string name)
+		{
+			var assembly = Assembly.GetExecutingAssembly();
+			name = $"{Application.ProductName}.{name}";
+			return assembly.GetManifestResourceStream(name);
+		}
+
+		public static Bitmap GetEmbeddedBitmap(string name)
+		{
+			using var stream = GetEmbeddedResourceStream(name);
+			if (stream == null) return null;
+			return new Bitmap(stream);
+		}
+
+		public static string GetEmbeddedText(string name)
+		{
+			using var stream = GetEmbeddedResourceStream(name);
+			if (stream == null) return string.Empty;
+			using var reader = new StreamReader(stream);
+			return reader.ReadToEnd();
+		}
+
+		public static Bitmap GetEmbeddedSystemIcon(string name)
+		{
+			return GetEmbeddedBitmap($"Assets.Icons.{name}");
+		}
+
+		public static string GetEmbeddedShaderSource(string name)
+		{
+			return GetEmbeddedText($"Assets.Shaders.{name}");
+		}
+
+		public static string GetEmbeddedShaderBundleManifest(string name)
+		{
+			return GetEmbeddedText($"Assets.Shaders.{name}.{BundleManifest.DefaultManifestFilename}");
+		}
+
+		public static string GetEmbeddedShaderBundleSource(string name)
+		{
+			return GetEmbeddedText($"Assets.Shaders.{name}.{BundleManifest.DefaultSourceFilename}");
 		}
 	}
 }

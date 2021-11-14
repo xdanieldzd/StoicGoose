@@ -14,6 +14,7 @@ using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 using StoicGoose.Emulation;
 using StoicGoose.Handlers;
+using StoicGoose.OpenGL.Shaders.Bundles;
 
 namespace StoicGoose
 {
@@ -64,6 +65,7 @@ namespace StoicGoose
 
 			CreateRecentFilesMenu();
 			CreateScreenSizeMenu();
+			CreateShaderMenu();
 
 			InitializeUIMiscellanea();
 
@@ -284,6 +286,35 @@ namespace StoicGoose
 			}
 		}
 
+		private void CreateShaderMenu()
+		{
+			shadersToolStripMenuItem.DropDownItems.Clear();
+
+			var shaders = new List<string>() { BundleManifest.DefaultShaderName };
+			shaders.AddRange(new DirectoryInfo(Program.ShaderPath).EnumerateDirectories().Select(x => x.Name));
+
+			foreach (var shaderName in shaders)
+			{
+				var menuItem = new ToolStripMenuItem(shaderName)
+				{
+					Checked = shaderName == Program.Configuration.Video.Shader,
+					Tag = shaderName
+				};
+				menuItem.Click += (s, e) =>
+				{
+					if ((s as ToolStripMenuItem).Tag is string shader)
+					{
+						graphicsHandler?.ChangeShader(shader);
+
+						Program.Configuration.Video.Shader = shader;
+						foreach (ToolStripMenuItem shaderMenuItem in shadersToolStripMenuItem.DropDownItems)
+							shaderMenuItem.Checked = (shaderMenuItem.Tag as string) == Program.Configuration.Video.Shader;
+					}
+				};
+				shadersToolStripMenuItem.DropDownItems.Add(menuItem);
+			}
+		}
+
 		private void InitializeUIMiscellanea()
 		{
 			// ... aka all the minor stuff I didn't want directly in the Load event, but also doesn't merit a separate function
@@ -386,7 +417,11 @@ namespace StoicGoose
 		{
 			if (!emulatorHandler.IsRunning) return;
 
-			(sender as ToolStripMenuItem).Checked = !emulatorHandler.IsPaused;
+			var pausing = !emulatorHandler.IsPaused;
+
+			(sender as ToolStripMenuItem).Checked = pausing;
+			soundHandler.SetMute(pausing);
+
 			emulatorHandler.Pause();
 		}
 
