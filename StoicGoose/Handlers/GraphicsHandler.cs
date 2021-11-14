@@ -68,7 +68,7 @@ namespace StoicGoose.Handlers
 		Vector2 displayPosition = default, displaySize = default;
 
 		public Vector2i ScreenSize => displayTexture.Size;
-		public bool IsVertical { get; set; } = false;
+		public bool IsVerticalOrientation { get; set; } = false;
 
 		public GraphicsHandler(ObjectStorage metadata)
 		{
@@ -136,8 +136,8 @@ namespace StoicGoose.Handlers
 
 			GL.Viewport(clientRect);
 
-			var screenWidth = IsVertical ? (displayTexture.Size.Y + screenIconSize) : displayTexture.Size.X;
-			var screenHeight = IsVertical ? displayTexture.Size.X : (displayTexture.Size.Y + screenIconSize);
+			var screenWidth = IsVerticalOrientation ? (displayTexture.Size.Y + screenIconSize) : displayTexture.Size.X;
+			var screenHeight = IsVerticalOrientation ? displayTexture.Size.X : (displayTexture.Size.Y + screenIconSize);
 
 			var aspects = new Vector2(clientRect.Width / (float)screenWidth, clientRect.Height / (float)screenHeight);
 			var multiplier = (float)Math.Max(1, Math.Min(Math.Floor(aspects.X), Math.Floor(aspects.Y)));
@@ -147,7 +147,7 @@ namespace StoicGoose.Handlers
 			var adjustedX = (float)Math.Floor((clientRect.Width - adjustedWidth) / 2f);
 			var adjustedY = (float)Math.Floor((clientRect.Height - adjustedHeight) / 2f);
 
-			if (!IsVertical) adjustedHeight -= screenIconSize * multiplier;
+			if (!IsVerticalOrientation) adjustedHeight -= screenIconSize * multiplier;
 			else adjustedWidth -= screenIconSize * multiplier;
 
 			displayPosition = new Vector2(adjustedX, adjustedY);
@@ -159,7 +159,7 @@ namespace StoicGoose.Handlers
 
 				float x, y;
 
-				if (!IsVertical)
+				if (!IsVerticalOrientation)
 				{
 					x = adjustedX + (iconLocation.X * multiplier);
 					y = adjustedY + (iconLocation.Y * multiplier);
@@ -176,7 +176,7 @@ namespace StoicGoose.Handlers
 			}
 
 			projectionMatrix.Value = Matrix4.CreateOrthographicOffCenter(0f, clientRect.Width, clientRect.Height, 0f, -1f, 1f);
-			textureMatrix.Value = IsVertical ? Matrix2.CreateRotation(MathHelper.DegreesToRadians(90f)) : Matrix2.Identity;
+			textureMatrix.Value = IsVerticalOrientation ? Matrix2.CreateRotation(MathHelper.DegreesToRadians(90f)) : Matrix2.Identity;
 			displayModelviewMatrix.Value = Matrix4.CreateScale(displaySize.X, displaySize.Y, 1f) * Matrix4.CreateTranslation(displayPosition.X, displayPosition.Y, 0f);
 		}
 

@@ -10,10 +10,6 @@ namespace StoicGoose.Emulation
 {
 	public class EmulatorHandler
 	{
-		[System.Runtime.InteropServices.DllImport("kernel32.dll")]
-		[return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-		static extern bool AllocConsole();
-
 		readonly WonderSwan emulator;
 
 		Thread emulationThread;
@@ -66,11 +62,6 @@ namespace StoicGoose.Emulation
 		public EmulatorHandler()
 		{
 			emulator = new WonderSwan();
-
-
-
-
-			AllocConsole();
 		}
 
 		public void Startup()

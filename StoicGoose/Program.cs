@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using System.Text;
 
 using StoicGoose.Extensions;
 using StoicGoose.Interface;
@@ -16,19 +17,19 @@ namespace StoicGoose
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
-		public static Configuration Configuration { get; set; }
+		public static Configuration Configuration { get; } = LoadConfiguration(programConfigPath);
 
-		public static string SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName);
+		public static string SaveDataPath { get; } = string.Empty;
+
+		static Program()
+		{
+			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+		}
 
 		[STAThread]
 		static void Main()
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
-
-			LoadConfiguration();
-
-			if (!Directory.Exists(SaveDataPath))
-				Directory.CreateDirectory(SaveDataPath);
 
 			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.EnableVisualStyles();
@@ -36,20 +37,32 @@ namespace StoicGoose
 			Application.Run(new MainForm());
 		}
 
-		private static void LoadConfiguration()
+		private static Configuration LoadConfiguration(string filename)
 		{
-			Directory.CreateDirectory(programDataDirectory);
+			Directory.CreateDirectory(Path.GetDirectoryName(filename));
 
-			if (!File.Exists(programConfigPath) || (Configuration = programConfigPath.DeserializeFromFile<Configuration>()) == null)
+			Configuration configuration;
+			if (!File.Exists(filename) || (configuration = filename.DeserializeFromFile<Configuration>()) == null)
 			{
-				Configuration = new Configuration();
-				Configuration.SerializeToFile(programConfigPath);
+				configuration = new Configuration();
+				configuration.SerializeToFile(filename);
 			}
+
+			return configuration;
 		}
 
 		public static void SaveConfiguration()
 		{
 			Configuration.SerializeToFile(programConfigPath);
+		}
+
+		public static string GetVersionString(bool detailed)
+		{
+			var version = new Version(Application.ProductVersion);
+			var stringBuilder = new StringBuilder();
+			stringBuilder.Append($"v{version.Major:D3}{(version.Minor != 0 ? $".{version.Minor}" : string.Empty)}");
+			if (detailed) stringBuilder.Append($" ({ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : string.Empty)}{(GlobalVariables.IsDebugBuild ? "+debug" : string.Empty)})");
+			return stringBuilder.ToString();
 		}
 	}
 }

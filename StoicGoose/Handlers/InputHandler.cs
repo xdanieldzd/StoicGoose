@@ -16,7 +16,7 @@ namespace StoicGoose.Handlers
 
 		readonly List<string> lastFramePressed = new List<string>();
 
-		public bool IsVertical { get; set; } = false;
+		public bool IsVerticalOrientation { get; set; } = false;
 
 		public InputHandler(GLControl glControl)
 		{
@@ -38,7 +38,7 @@ namespace StoicGoose.Handlers
 		{
 			e.ButtonsHeld.Clear();
 
-			if (!IsVertical)
+			if (!IsVerticalOrientation)
 			{
 				e.ButtonsHeld.AddRange(GetMappedKeysHeld());
 				e.ButtonsPressed.AddRange(GetMappedKeysPressed());

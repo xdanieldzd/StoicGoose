@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 using StoicGoose.Emulation;
@@ -16,27 +19,39 @@ namespace StoicGoose
 {
 	public partial class MainForm : Form
 	{
-		// constants
+		/* Console P/Invoke */
+		[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+		[return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+		static extern bool AllocConsole();
+
+		/* Constants */
 		readonly static int maxScreenSizeFactor = 5;
 		readonly static int maxRecentFiles = 15;
 
-		// emulator handler & co
+		/* Various handlers */
 		GraphicsHandler graphicsHandler = default;
 		SoundHandler soundHandler = default;
 		InputHandler inputHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
-		// debug vars
-		readonly bool debugSoundRecording = false, debugAutostartLastRom = false;
-
-		// misc vars
-		bool isBootstrapAvailable = false, isVertical = false;
+		/* Misc. runtime variables */
+		bool isBootstrapAvailable = false, isVerticalOrientation = false;
 
 		public MainForm()
 		{
-			//OpenTK.Windowing.GraphicsLibraryFramework.GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);		//TODO doublecheck if needed for dbg
-
 			InitializeComponent();
+
+			if (GlobalVariables.IsDebugBuild && AllocConsole())
+			{
+				Console.WriteLine($"{Application.ProductName} {Program.GetVersionString(true)}");
+				Console.WriteLine("HONK, HONK, pork cheek!");
+			}
+
+			if (GlobalVariables.EnableOpenGLDebug)
+			{
+				GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
+				renderControl.Flags |= ContextFlags.Debug;
+			}
 		}
 
 		private void MainForm_Load(object sender, EventArgs e)
@@ -52,9 +67,12 @@ namespace StoicGoose
 
 			InitializeUIMiscellanea();
 
-			if (debugAutostartLastRom)
+			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
+
+
+			// TODO actually write config dialog :P
 
 			//var tmp = new SettingsForm(Program.Configuration);
 			//tmp.ShowDialog();
@@ -84,17 +102,17 @@ namespace StoicGoose
 		private void InitializeHandlers()
 		{
 			//TODO: don't directly reference wonderswan class here...somehow
-			graphicsHandler = new GraphicsHandler(Emulation.Machines.WonderSwan.Metadata) { IsVertical = isVertical };
+			graphicsHandler = new GraphicsHandler(Emulation.Machines.WonderSwan.Metadata) { IsVerticalOrientation = isVerticalOrientation };
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
 			soundHandler.SetMute(Program.Configuration.Sound.Mute);
 			soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
 
-			if (debugSoundRecording)
+			if (GlobalVariables.EnableDebugSoundRecording)
 				soundHandler.BeginRecording();
 
-			inputHandler = new InputHandler(renderControl) { IsVertical = isVertical };
+			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.Controls, Program.Configuration.Input.Hardware);
 
 			emulatorHandler = new EmulatorHandler();
@@ -154,7 +172,7 @@ namespace StoicGoose
 			var screenWidth = graphicsHandler.ScreenSize.X;
 			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.GetMetadata()["interface/icons/size"].Value.Integer;
 
-			if (!isVertical)
+			if (!isVerticalOrientation)
 				return new Size(
 					screenWidth * screenSize,
 					(screenHeight * screenSize) + menuStrip.Height + statusStrip.Height);
@@ -168,7 +186,7 @@ namespace StoicGoose
 		{
 			var titleStringBuilder = new StringBuilder();
 
-			titleStringBuilder.Append(GetProductNameAndVersionString(false));
+			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
 			var metadata = emulatorHandler.GetMetadata();
 			var cartridgeId = metadata["cartridge/id"].Value;
@@ -191,20 +209,6 @@ namespace StoicGoose
 			}
 
 			Text = titleStringBuilder.ToString();
-		}
-
-		private string GetProductNameAndVersionString(bool appendBuildName)
-		{
-			var titleStringBuilder = new StringBuilder();
-
-			var version = new Version(Application.ProductVersion);
-			var versionMinor = version.Minor != 0 ? $".{version.Minor}" : string.Empty;
-			titleStringBuilder.Append($"{Application.ProductName} v{version.Major:D3}{versionMinor}");
-
-			if (appendBuildName)
-				titleStringBuilder.Append($" (unknown build)");
-
-			return titleStringBuilder.ToString();
 		}
 
 		private void CreateRecentFilesMenu()
@@ -312,8 +316,8 @@ namespace StoicGoose
 			stream.Read(data, 0, data.Length);
 			emulatorHandler.LoadRom(data);
 
-			graphicsHandler.IsVertical = inputHandler.IsVertical = isVertical =
-					emulatorHandler.GetMetadata()["cartridge/orientation"] == "vertical";
+			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
+				emulatorHandler.GetMetadata()["cartridge/orientation"] == "vertical";
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();
@@ -388,8 +392,8 @@ namespace StoicGoose
 
 		private void rotateScreenToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			graphicsHandler.IsVertical = inputHandler.IsVertical = isVertical =
-				!isVertical;
+			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
+				!isVerticalOrientation;
 
 			SizeAndPositionWindow();
 		}
@@ -407,7 +411,7 @@ namespace StoicGoose
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			MessageBox.Show($"{GetProductNameAndVersionString(false)} by {Application.CompanyName}\n\nPrototype WIP build, should be safe to use, kinda.\n\nHONK!", $"About {Application.ProductName}", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			MessageBox.Show($"{Application.ProductName} {Program.GetVersionString(true)} by {Application.CompanyName}\n\n{ThisAssembly.Git.RepositoryUrl}\n\nPrototype WIP build, should be safe to use, kinda.{(GlobalVariables.IsDebugBuild ? "\n\nThis is a HONK!ing debug build! 🔪🦢🖥, y'all!" : string.Empty)}", $"About {Application.ProductName}", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 	}
 }

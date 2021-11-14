@@ -4,16 +4,15 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup>
     <Version>0.2.0</Version>
-    <Authors>xdaniel</Authors>
+    <Authors />
     <Company>xdaniel</Company>
-    <Copyright>Written in 2021 by xdaniel - http://github.com/xdanieldzd/</Copyright>
+    <Copyright>Written 2021 by xdaniel</Copyright>
     <Description>16-bit game handheld emulator</Description>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

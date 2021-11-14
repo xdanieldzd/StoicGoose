@@ -13,10 +13,6 @@ namespace StoicGoose.Emulation.Display
 {
 	public sealed class DisplayController
 	{
-		readonly static bool RENDERSCR1ASDEBUGCOLORS = false;
-		readonly static bool RENDERSCR2ASDEBUGCOLORS = false;
-		readonly static bool RENDERSPRASDEBUGCOLORS = false;
-
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
 		public const int HorizontalTotal = HorizontalDisp + HorizontalBlank;
@@ -256,7 +252,7 @@ namespace StoicGoose.Emulation.Display
 					SetScreenUsageFlag(y, x, screenUsageSCR1);
 					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-					if (RENDERSCR1ASDEBUGCOLORS) WriteToFramebuffer(y, x, (byte)((tileNum & 0xf) << 4), 0, 0);
+					if (GlobalVariables.EnableRenderSCR1DebugColors) WriteToFramebuffer(y, x, (byte)((tileNum & 0xf) << 4), 0, 0);
 				}
 			}
 		}
@@ -284,7 +280,7 @@ namespace StoicGoose.Emulation.Display
 						SetScreenUsageFlag(y, x, screenUsageSCR2);
 						WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-						if (RENDERSCR2ASDEBUGCOLORS) WriteToFramebuffer(y, x, 0, (byte)((tileNum & 0xf) << 4), 0);
+						if (GlobalVariables.EnableRenderSCR2DebugColors) WriteToFramebuffer(y, x, 0, (byte)((tileNum & 0xf) << 4), 0);
 					}
 				}
 			}
@@ -330,7 +326,7 @@ namespace StoicGoose.Emulation.Display
 								SetScreenUsageFlag(y, x, screenUsageSPR);
 								WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-								if (RENDERSPRASDEBUGCOLORS) WriteToFramebuffer(y, x, 0, 0, (byte)((tileNum & 0xf) << 4));
+								if (GlobalVariables.EnableRenderSPRDebugColors) WriteToFramebuffer(y, x, 0, 0, (byte)((tileNum & 0xf) << 4));
 							}
 						}
 					}

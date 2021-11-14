@@ -4,8 +4,6 @@ namespace StoicGoose.Emulation.CPU
 {
 	public sealed partial class V30MZ
 	{
-		readonly static bool ENABLESLOWDEBUGTRACELOG = false;
-
 		/* General registers */
 		Register16 ax, bx, cx, dx;
 		ushort sp, bp, si, di;
@@ -109,7 +107,7 @@ namespace StoicGoose.Emulation.CPU
 
 
 			// TODO write proper disassembler etc, replace SLOWDEBUGTRACELOG
-			if (ENABLESLOWDEBUGTRACELOG)
+			if (GlobalVariables.EnableSuperSlowCPULogger)
 			{
 				// temp debug log thingy
 				var dbg_cs = cs;
