@@ -12,6 +12,8 @@ namespace StoicGoose
 	static class Program
 	{
 		const string jsonConfigFileName = "Config.json";
+
+		const string internalEepromFileName = "Internal.eep";
 		const string saveDataDirectoryName = "Saves";
 
 		const string assetsDirectoryName = "Assets";
@@ -21,6 +23,8 @@ namespace StoicGoose
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
 		public static Configuration Configuration { get; } = LoadConfiguration(programConfigPath);
+
+		public static string InternalEepromPath { get; } = Path.Combine(programDataDirectory, internalEepromFileName);
 		public static string SaveDataPath { get; } = string.Empty;
 
 		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -63,7 +67,8 @@ namespace StoicGoose
 
 		public static void SaveConfiguration()
 		{
-			Configuration.SerializeToFile(programConfigPath);
+			if (Configuration != null)
+				Configuration.SerializeToFile(programConfigPath);
 		}
 
 		public static string GetVersionString(bool detailed)

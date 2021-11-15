@@ -96,9 +96,12 @@ namespace StoicGoose.Emulation
 		public void LoadBootstrap(byte[] data) => emulator.LoadBootstrap(data);
 		public bool IsBootstrapLoaded => emulator.IsBootstrapLoaded;
 
+		public void LoadInternalEeprom(byte[] data) => emulator.LoadInternalEeprom(data);
+
 		public void LoadRom(byte[] data) => emulator.LoadRom(data);
 		public void LoadSaveData(byte[] data) => emulator.LoadSaveData(data);
 
+		public byte[] GetInternalEeprom() => emulator.GetInternalEeprom();
 		public byte[] GetSaveData() => emulator.GetSaveData();
 
 		public ObjectStorage GetMetadata() => WonderSwan.Metadata;

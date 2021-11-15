@@ -69,6 +69,8 @@ namespace StoicGoose
 
 			InitializeUIMiscellanea();
 
+			LoadInternalEeprom();
+
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
@@ -87,7 +89,9 @@ namespace StoicGoose
 
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
+			SaveInternalEeprom();
 			SaveRam();
+
 			emulatorHandler.Shutdown();
 
 			Program.SaveConfiguration();
@@ -148,6 +152,9 @@ namespace StoicGoose
 
 			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize >= maxScreenSizeFactor)
 				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
+
+			if (Program.Configuration.Video.Shader == string.Empty || false)    // TODO: check against all available shaders
+				Program.Configuration.Video.Shader = BundleManifest.DefaultShaderName;
 		}
 
 		private void SizeAndPositionWindow()
@@ -339,11 +346,24 @@ namespace StoicGoose
 			}
 		}
 
+		private void LoadInternalEeprom()
+		{
+			if (!emulatorHandler.IsRunning && File.Exists(Program.InternalEepromPath))
+			{
+				using var stream = new FileStream(Program.InternalEepromPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				var data = new byte[stream.Length];
+				stream.Read(data, 0, data.Length);
+				emulatorHandler.LoadInternalEeprom(data);
+			}
+		}
+
 		private void LoadAndRunCartridge(string filename)
 		{
 			if (emulatorHandler.IsRunning)
 			{
+				SaveInternalEeprom();
 				SaveRam();
+
 				emulatorHandler.Shutdown();
 			}
 
@@ -393,6 +413,15 @@ namespace StoicGoose
 			stream.Write(data, 0, data.Length);
 		}
 
+		private void SaveInternalEeprom()
+		{
+			var data = emulatorHandler.GetInternalEeprom();
+			if (data.Length == 0) return;
+
+			using var stream = new FileStream(Program.InternalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+			stream.Write(data, 0, data.Length);
+		}
+
 		private void loadROMToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			var lastFile = Program.Configuration.General.RecentFiles.FirstOrDefault();
@@ -415,7 +444,12 @@ namespace StoicGoose
 
 		private void resetToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			SaveInternalEeprom();
+			SaveRam();
+
 			emulatorHandler.Reset();
+
+			Program.SaveConfiguration();
 		}
 
 		private void pauseToolStripMenuItem_Click(object sender, EventArgs e)

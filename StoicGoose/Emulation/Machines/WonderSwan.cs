@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
+using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.WinForms;
 
@@ -24,8 +25,6 @@ namespace StoicGoose.Emulation.Machines
 
 		const int internalRamSize = 16 * 1024;
 		const uint internalRamMask = internalRamSize - 1;
-
-		const int internalEepromSize = 64;
 
 		public event EventHandler<RenderScreenEventArgs> RenderScreen
 		{
@@ -49,12 +48,12 @@ namespace StoicGoose.Emulation.Machines
 		public void OnEndOfFrame(EventArgs e) { EndOfFrame?.Invoke(this, e); }
 
 		readonly byte[] internalRam = new byte[internalRamSize];
-		readonly ushort[] internalEeprom = new ushort[internalEepromSize];
 
 		readonly Cartridge cartridge = new Cartridge();
 		readonly V30MZ cpu = default;
 		readonly DisplayController display = default;
 		readonly SoundController sound = default;
+		readonly EEPROM eeprom = default;
 
 		byte[] bootstrapRom = default;
 
@@ -64,10 +63,6 @@ namespace StoicGoose.Emulation.Machines
 		bool hwCartEnable, hw16BitExtBus, hwCartRom1CycleSpeed, hwSelfTestOk;
 		/* REG_KEYPAD */
 		bool keypadButtonEnable, keypadXEnable, keypadYEnable;
-		/* REG_IEEP_xxx */
-		ushort eepData, eepAddressHiLo;
-		bool eepStart, eepWriteEnable;
-		byte eepCommand, eepAddress, eepStatus;
 		/* REG_INT_xxx */
 		byte intBase, intEnable, intStatus;
 		/* REG_SER_xxx */
@@ -81,17 +76,20 @@ namespace StoicGoose.Emulation.Machines
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
 			display = new DisplayController(ReadMemory);
 			sound = new SoundController(ReadMemory, 44100, 2);
+			eeprom = new EEPROM(64 * 2, 6);
+
+			InitializeEepromToDefaults();
 		}
 
 		public void Reset()
 		{
 			for (var i = 0; i < internalRam.Length; i++) internalRam[i] = 0;
-			InitializeEeprom();
 
 			cartridge.Reset();
 			cpu.Reset();
 			display.Reset();
 			sound.Reset();
+			eeprom.Reset();
 
 			currentMasterClockCyclesInFrame = 0;
 			totalMasterClockCyclesInFrame = (int)Math.Round(MasterClock / DisplayController.VerticalClock);
@@ -108,10 +106,6 @@ namespace StoicGoose.Emulation.Machines
 
 			keypadButtonEnable = keypadXEnable = keypadYEnable = false;
 
-			eepData = eepAddressHiLo = 0;
-			eepStart = eepWriteEnable = false;
-			eepCommand = eepAddress = eepStatus = 0;
-
 			intBase = intEnable = intStatus = 0;
 
 			serData = 0;
@@ -121,21 +115,35 @@ namespace StoicGoose.Emulation.Machines
 			serSendBufferEmpty = true;
 		}
 
-		private void InitializeEeprom()
+		private void InitializeEepromToDefaults()
 		{
-			// TODO
+			/* Not 100% verified, same caveats as ex. ares */
 
-			var username = false ? "STOICGOOSE♥♪+-?." : "WONDERSWAN";
-			InitializeEepromUsername(username);
-			internalEeprom[0x38] = 0x9919;  // Birth year BCD (ex. 87 19)
-			internalEeprom[0x39] = 0x0403;  // Birth day + month BCD (ex. 18 02)
-			internalEeprom[0x3A] = 0x0000;  // Sex + blood type
+			var data = ConvertUsernameForEeprom("WONDERSWAN");
+
+			for (var i = 0; i < data.Length; i++) eeprom.Program(0x60 + i, data[i]); // Username (0x60-0x6F, max 16 characters)
+
+			eeprom.Program(0x70, 0x19); // Year of birth [just for fun, here set to original WS release date; new systems probably had no date set?]
+			eeprom.Program(0x71, 0x99); // ""
+			eeprom.Program(0x72, 0x03); // Month of birth [again, WS release for fun]
+			eeprom.Program(0x73, 0x04); // Day of birth [and again]
+			eeprom.Program(0x74, 0x00); // Sex [set to ?]
+			eeprom.Program(0x75, 0x00); // Blood type [set to ?]
+
+			eeprom.Program(0x76, 0x00); // Last game played, publisher ID [set to presumably none]
+			eeprom.Program(0x77, 0x00); // ""
+			eeprom.Program(0x78, 0x00); // Last game played, game ID [set to presumably none]
+			eeprom.Program(0x79, 0x00); // ""
+			eeprom.Program(0x7A, 0x00); // (unknown)
+			eeprom.Program(0x7B, 0x00); // (unknown)
+			eeprom.Program(0x7C, 0x00); // Number of different games played [set to presumably none]
+			eeprom.Program(0x7D, 0x00); // Number of times settings were changes [set to presumably none]
+			eeprom.Program(0x7E, 0x00); // Number of times powered on [set to presumably none]
+			eeprom.Program(0x7F, 0x00); // ""
 		}
 
-		private void InitializeEepromUsername(string name)
+		private byte[] ConvertUsernameForEeprom(string name)
 		{
-			// TODO
-
 			var data = new byte[16];
 			for (var i = 0; i < data.Length; i++)
 			{
@@ -150,10 +158,9 @@ namespace StoicGoose.Emulation.Machines
 				else if (c == '-') data[i] = (byte)(c - '-' + 0x28);
 				else if (c == '?') data[i] = (byte)(c - '?' + 0x29);
 				else if (c == '.') data[i] = (byte)(c - '.' + 0x2A);
+				else data[i] = 0x00;
 			}
-
-			for (var i = 0; i < data.Length; i += 2)
-				internalEeprom[0x30 + (i / 2)] = (ushort)(data[i + 1] << 8 | data[i + 0]);
+			return data;
 		}
 
 		public void RunFrame()
@@ -215,6 +222,11 @@ namespace StoicGoose.Emulation.Machines
 			Buffer.BlockCopy(data, 0, bootstrapRom, 0, data.Length);
 		}
 
+		public void LoadInternalEeprom(byte[] data)
+		{
+			eeprom.LoadContents(data);
+		}
+
 		public void LoadRom(byte[] data)
 		{
 			cartridge.LoadRom(data);
@@ -233,6 +245,11 @@ namespace StoicGoose.Emulation.Machines
 			{
 				//TODO
 			}
+		}
+
+		public byte[] GetInternalEeprom()
+		{
+			return eeprom.GetContents();
 		}
 
 		public byte[] GetSaveData()
@@ -411,28 +428,16 @@ namespace StoicGoose.Emulation.Machines
 					break;
 
 				case 0xBA:
-					/* REG_IEEP_DATA (low) */
-					retVal = (byte)(eepData & 0xFF);
-					break;
-
 				case 0xBB:
-					/* REG_IEEP_DATA (high) */
-					retVal = (byte)((eepData >> 8) & 0xFF);
-					break;
-
 				case 0xBC:
-					/* REG_IEEP_ADDR (low) */
-					retVal = (byte)(eepAddressHiLo & 0xFF);
-					break;
-
 				case 0xBD:
-					/* REG_IEEP_ADDR (high) */
-					retVal = (byte)((eepAddressHiLo >> 8) & 0xFF);
-					break;
-
 				case 0xBE:
-					/* REG_IEEP_STATUS (read) */
-					retVal = (byte)(eepStatus & 0b11);
+					/* REG_IEEP_DATA (low) */
+					/* REG_IEEP_DATA (high) */
+					/* REG_IEEP_ADDR (low) */
+					/* REG_IEEP_ADDR (high) */
+					/* REG_IEEP_CMD (write) */
+					retVal = eeprom.ReadRegister((ushort)(register - 0xBA));
 					break;
 
 				/* Cartridge */
@@ -520,87 +525,16 @@ namespace StoicGoose.Emulation.Machines
 					break;
 
 				case 0xBA:
-					/* REG_IEEP_DATA (low) */
-					eepData = (ushort)((eepData & 0xFF00) | value);
-					break;
-
 				case 0xBB:
-					/* REG_IEEP_DATA (high) */
-					eepData = (ushort)((eepData & 0x00FF) | (value << 8));
-					break;
-
 				case 0xBC:
-					/* REG_IEEP_ADDR (low) */
-					eepAddressHiLo = (ushort)((eepAddressHiLo & 0xFF00) | value);
-
-					eepStart = ((eepAddressHiLo >> 8) & 0b1) == 0b1;
-					eepAddress = (byte)((eepAddressHiLo >> 0) & 0b111111);
-					eepCommand = (byte)((eepAddressHiLo >> 6) & 0b11);
-					break;
-
 				case 0xBD:
-					/* REG_IEEP_ADDR (high) */
-					eepAddressHiLo = (ushort)((eepAddressHiLo & 0x00FF) | (value << 8));
-
-					eepStart = ((eepAddressHiLo >> 8) & 0b1) == 0b1;
-					eepAddress = (byte)((eepAddressHiLo >> 0) & 0b111111);
-					eepCommand = (byte)((eepAddressHiLo >> 6) & 0b11);
-					break;
-
 				case 0xBE:
-					/* REG_IEEP_CMD (write) */
-
-					// TODO
-					if (!eepStart) break;   // ????
-
-					switch ((value >> 4) & 0b111)
-					{
-						case 0b001:
-							/* READ */
-							// TODO
-							eepData = internalEeprom[eepAddress];
-							eepStatus = 3;
-							break;
-
-						case 0b010:
-							/* WRITE/WRAL */
-							// TODO
-							eepStatus = 2;
-							break;
-
-						case 0b100:
-							/* EWEN/EWDS/ERAL/ERASE */
-							// TODO
-							if (eepCommand == 0)
-							{
-								var extCommand = (eepAddress >> 4) & 0b11;
-								switch (extCommand)
-								{
-									case 0:
-										/* EWDS */
-										eepWriteEnable = false;
-										break;
-									case 2:
-										/* ERAL */
-										if (eepWriteEnable)
-											for (var i = 0; i < internalEeprom.Length; i++)
-												internalEeprom[i] = 0xFFFF;
-										break;
-									case 3:
-										/* EWEN */
-										eepWriteEnable = true;
-										break;
-								}
-							}
-							else
-							{
-								if (eepWriteEnable)
-									internalEeprom[eepAddress] = 0;
-							}
-
-							eepStatus = 2;
-							break;
-					}
+					/* REG_IEEP_DATA (low) */
+					/* REG_IEEP_DATA (high) */
+					/* REG_IEEP_ADDR (low) */
+					/* REG_IEEP_ADDR (high) */
+					/* REG_IEEP_STATUS (read) */
+					eeprom.WriteRegister((ushort)(register - 0xBA), value);
 					break;
 
 				/* Cartridge */
