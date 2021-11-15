@@ -24,13 +24,6 @@ namespace StoicGoose.Emulation.EEPROMs
 
 		public void Reset()
 		{
-			//
-
-			ResetRegisters();
-		}
-
-		public void ResetRegisters()
-		{
 			dataLo = dataHi = 0;
 			addressLo = addressHi = 0;
 			statusCmd = 0;

@@ -137,7 +137,7 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Program(0x7A, 0x00); // (unknown)
 			eeprom.Program(0x7B, 0x00); // (unknown)
 			eeprom.Program(0x7C, 0x00); // Number of different games played [set to presumably none]
-			eeprom.Program(0x7D, 0x00); // Number of times settings were changes [set to presumably none]
+			eeprom.Program(0x7D, 0x00); // Number of times settings were changed [set to presumably none]
 			eeprom.Program(0x7E, 0x00); // Number of times powered on [set to presumably none]
 			eeprom.Program(0x7F, 0x00); // ""
 		}
