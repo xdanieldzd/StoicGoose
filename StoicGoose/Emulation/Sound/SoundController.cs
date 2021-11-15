@@ -13,11 +13,9 @@ namespace StoicGoose.Emulation.Sound
 {
 	public sealed partial class SoundController
 	{
-		// http://daifukkat.su/docs/wsman/#hw_sound
+		/* http://daifukkat.su/docs/wsman/#hw_sound */
 
 		const int numChannels = 4, maxMasterVolume = 2;
-
-		// TODO: confirm which regs are available on original WS (ex. HyperVoice is not)
 
 		readonly int sampleRate, numOutputChannels;
 
@@ -45,21 +43,21 @@ namespace StoicGoose.Emulation.Sound
 		bool headphonesConnected; // read-only
 		byte speakerVolumeShift;
 
-		public SoundController(MemoryReadDelegate memoryRead)
+		public SoundController(MemoryReadDelegate memoryRead, int rate, int outChannels)
 		{
 			memoryReadDelegate = memoryRead;
 
-			sampleRate = 44100;
-			numOutputChannels = 2;
+			sampleRate = rate;
+			numOutputChannels = outChannels;
 
-			channels[0] = new Wave((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)); }, false);
+			channels[0] = new Wave(false, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)); });
 			channels[1] = new Voice((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (1 << 4) + a)); });
-			channels[2] = new Wave((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)); }, true);
+			channels[2] = new Wave(true, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)); });
 			channels[3] = new Noise((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)); });
 
 			mixedSampleBuffer = new List<short>();
 
-			clockRate = WonderSwan.MasterClock / 4.0;   // ????
+			clockRate = WonderSwan.MasterClock / 4.0;
 			refreshRate = Display.DisplayController.VerticalClock;
 
 			samplesPerFrame = (int)(sampleRate / refreshRate);

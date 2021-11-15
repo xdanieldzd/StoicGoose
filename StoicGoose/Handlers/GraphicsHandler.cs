@@ -24,6 +24,12 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Handlers
 {
+	public enum ShaderRenderMode : int
+	{
+		Display = 0,
+		Icons = 1
+	}
+
 	public class GraphicsHandler
 	{
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
@@ -35,8 +41,10 @@ namespace StoicGoose.Handlers
 
 		readonly Matrix4Uniform projectionMatrix = new Matrix4Uniform(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new Matrix4Uniform(nameof(textureMatrix));
+		readonly IntUniform renderMode = new IntUniform(nameof(renderMode));
 
 		readonly Matrix4Uniform displayModelviewMatrix = new Matrix4Uniform(defaultModelviewMatrixName);
+		readonly Matrix4Uniform iconBackgroundModelviewMatrix = new Matrix4Uniform(defaultModelviewMatrixName);
 		readonly Dictionary<string, Matrix4Uniform> iconModelviewMatrices = new Dictionary<string, Matrix4Uniform>();
 
 		readonly Vector4Uniform outputViewport = new Vector4Uniform(nameof(outputViewport));
@@ -45,11 +53,13 @@ namespace StoicGoose.Handlers
 		readonly Texture[] displayTextures = new Texture[maxTextureSamplerCount];
 		int lastTextureUpdate = 0;
 
-		VertexArray displayVertexArray = default, iconVertexArray = default;
+		readonly Texture iconBackgroundTexture = new Texture(8, 8);
+
+		VertexArray displayVertexArray = default, iconBackgroundVertexArray = default, iconVertexArray = default;
 
 		string commonVertexShaderSource = string.Empty, commonFragmentShaderBaseSource = string.Empty;
 
-		ShaderProgram mainShaderProgram = default, iconShaderProgram = default;
+		ShaderProgram mainShaderProgram = default;
 		BundleManifest mainBundleManifest = default;
 
 		Vector2 displayPosition = default, displaySize = default;
@@ -75,7 +85,7 @@ namespace StoicGoose.Handlers
 
 		private void SetInitialOpenGLState()
 		{
-			GL.ClearColor(Color.White);
+			GL.ClearColor(Color.Black);
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Blend);
 			GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -112,6 +122,10 @@ namespace StoicGoose.Handlers
 			displayVertexBuffer.Update(vertices);
 			displayVertexArray = new VertexArray(displayVertexBuffer);
 
+			var iconBackgroundVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
+			iconBackgroundVertexBuffer.Update(vertices);
+			iconBackgroundVertexArray = new VertexArray(iconBackgroundVertexBuffer);
+
 			var iconVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
 			iconVertexBuffer.Update(vertices);
 			iconVertexArray = new VertexArray(iconVertexBuffer);
@@ -121,10 +135,6 @@ namespace StoicGoose.Handlers
 		{
 			commonVertexShaderSource = GetEmbeddedShaderSource("Vertex.glsl");
 			commonFragmentShaderBaseSource = GetEmbeddedShaderSource("FragmentBase.glsl");
-
-			iconShaderProgram = new ShaderProgram(
-				ShaderFactory.FromSource(ShaderType.VertexShader, commonVertexShaderSource),
-				ShaderFactory.FromSource(ShaderType.FragmentShader, GetEmbeddedShaderSource("IconFragment.glsl")));
 		}
 
 		private (BundleManifest, ShaderProgram) LoadShaderBundle(string name)
@@ -261,6 +271,19 @@ namespace StoicGoose.Handlers
 				Matrix4.Identity;
 			displayModelviewMatrix.Value = Matrix4.CreateScale(displaySize.X, displaySize.Y, 1f) * Matrix4.CreateTranslation(displayPosition.X, displayPosition.Y, 0f);
 
+			if (!IsVerticalOrientation)
+			{
+				iconBackgroundModelviewMatrix.Value =
+					Matrix4.CreateScale(adjustedWidth, screenIconSize * multiplier, 1f) *
+					Matrix4.CreateTranslation(adjustedX, adjustedY + adjustedHeight, -0.5f);
+			}
+			else
+			{
+				iconBackgroundModelviewMatrix.Value =
+					Matrix4.CreateScale(screenIconSize * multiplier, adjustedHeight, 1f) *
+					Matrix4.CreateTranslation(adjustedX + adjustedWidth, adjustedY, -0.5f);
+			}
+
 			outputViewport.Value = new Vector4(adjustedX, adjustedY, adjustedWidth, adjustedHeight);
 			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? ScreenSize.Y : ScreenSize.X, IsVerticalOrientation ? ScreenSize.X : ScreenSize.Y);
 		}
@@ -270,6 +293,9 @@ namespace StoicGoose.Handlers
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
 			mainShaderProgram.Bind();
+
+			renderMode.Value = (int)ShaderRenderMode.Display;
+			renderMode.SubmitToProgram(mainShaderProgram);
 
 			projectionMatrix.SubmitToProgram(mainShaderProgram);
 			textureMatrix.SubmitToProgram(mainShaderProgram);
@@ -282,19 +308,21 @@ namespace StoicGoose.Handlers
 				displayTextures[i].Bind((lastTextureUpdate + i) % mainBundleManifest.Samplers);
 			displayVertexArray.Draw(PrimitiveType.Triangles);
 
+			renderMode.Value = (int)ShaderRenderMode.Icons;
+			renderMode.SubmitToProgram(mainShaderProgram);
+
+			iconBackgroundModelviewMatrix.SubmitToProgram(mainShaderProgram);
+			iconBackgroundTexture.Bind();
+			iconBackgroundVertexArray.Draw(PrimitiveType.Triangles);
+
 			var activeIcons = metadata["machine/display/icons/active"].Value?.StringArray;
 			if (activeIcons != null)
 			{
-				iconShaderProgram.Bind();
-
-				projectionMatrix.SubmitToProgram(iconShaderProgram);
-				textureMatrix.SubmitToProgram(iconShaderProgram);
-
 				foreach (var icon in activeIcons)
 				{
-					iconModelviewMatrices[icon].SubmitToProgram(iconShaderProgram);
+					iconModelviewMatrices[icon].SubmitToProgram(mainShaderProgram);
 
-					iconTextures[icon].Bind();
+					iconTextures[icon].Bind(0);
 					iconVertexArray.Draw(PrimitiveType.Triangles);
 				}
 			}

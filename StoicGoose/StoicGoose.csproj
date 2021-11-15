@@ -40,7 +40,6 @@
     <None Remove="Assets\Shaders\Basic\FragmentBase.glsl" />
     <None Remove="Assets\Shaders\Basic\Manifest.json" />
     <None Remove="Assets\Shaders\FragmentBase.glsl" />
-    <None Remove="Assets\Shaders\IconFragment.glsl" />
     <None Remove="Assets\Shaders\Vertex.glsl" />
   </ItemGroup>
 
@@ -59,7 +58,6 @@
     <EmbeddedResource Include="Assets\Icons\Volume1.png" />
     <EmbeddedResource Include="Assets\Icons\Volume2.png" />
     <EmbeddedResource Include="Assets\Shaders\Basic\Fragment.glsl" />
-    <EmbeddedResource Include="Assets\Shaders\IconFragment.glsl" />
     <EmbeddedResource Include="Assets\Shaders\FragmentBase.glsl" />
     <EmbeddedResource Include="Assets\Shaders\Vertex.glsl" />
   </ItemGroup>

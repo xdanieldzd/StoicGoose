@@ -319,7 +319,12 @@ namespace StoicGoose
 		{
 			// ... aka all the minor stuff I didn't want directly in the Load event, but also doesn't merit a separate function
 
-			limitFPSToolStripMenuItem.Checked = emulatorHandler.LimitFps = Program.Configuration.General.LimitFps; // TODO databinding?
+			limitFPSToolStripMenuItem.DataBindings.Add(nameof(limitFPSToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.LimitFps), false, DataSourceUpdateMode.OnPropertyChanged);
+			limitFPSToolStripMenuItem.CheckedChanged += (s, e) => { emulatorHandler.LimitFps = Program.Configuration.General.LimitFps; };
+
+			muteSoundToolStripMenuItem.DataBindings.Add(nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute), false, DataSourceUpdateMode.OnPropertyChanged);
+			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
+
 			ofdOpenRom.Filter = $"{emulatorHandler.GetMetadata()["interface/files/romfilter"]}|All Files (*.*)|*.*";
 		}
 
@@ -417,12 +422,10 @@ namespace StoicGoose
 		{
 			if (!emulatorHandler.IsRunning) return;
 
-			var pausing = !emulatorHandler.IsPaused;
-
-			(sender as ToolStripMenuItem).Checked = pausing;
-			soundHandler.SetMute(pausing);
+			(sender as ToolStripMenuItem).Checked = !emulatorHandler.IsPaused;
 
 			emulatorHandler.Pause();
+			soundHandler.Pause();
 		}
 
 		private void rotateScreenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -431,12 +434,6 @@ namespace StoicGoose
 				!isVerticalOrientation;
 
 			SizeAndPositionWindow();
-		}
-
-		private void limitFPSToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			(sender as ToolStripMenuItem).Checked = !emulatorHandler.LimitFps;
-			emulatorHandler.LimitFps = Program.Configuration.General.LimitFps = !emulatorHandler.LimitFps;
 		}
 
 		private void dumpRAMToolStripMenuItem_Click(object sender, EventArgs e)

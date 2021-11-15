@@ -31,7 +31,13 @@ namespace StoicGoose.OpenGL
 			Size = new Vector2i(width, height);
 
 			var data = new byte[width * height * 4];
-			for (var i = 0; i < data.Length; i += 4) data[i + 3] = 255;
+			for (var i = 0; i < data.Length; i += 4)
+			{
+				data[i + 0] = 255;
+				data[i + 1] = 255;
+				data[i + 2] = 255;
+				data[i + 3] = 255;
+			}
 
 			var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
 			var pointer = handle.AddrOfPinnedObject();

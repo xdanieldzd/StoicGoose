@@ -19,8 +19,8 @@ namespace StoicGoose.Emulation.Machines
 	{
 		// http://daifukkat.su/docs/wsman/
 
-		public const double MasterClock = 12288000;
-		public const double CpuClock = MasterClock / 4.0;
+		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
+		public const double CpuClock = MasterClock / 4.0; /* /4 = 3.072 MHz */
 
 		const int internalRamSize = 16 * 1024;
 		const uint internalRamMask = internalRamSize - 1;
@@ -80,7 +80,7 @@ namespace StoicGoose.Emulation.Machines
 		{
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
 			display = new DisplayController(ReadMemory);
-			sound = new SoundController(ReadMemory);
+			sound = new SoundController(ReadMemory, 44100, 2);
 		}
 
 		public void Reset()

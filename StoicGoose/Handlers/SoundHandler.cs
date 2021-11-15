@@ -31,7 +31,8 @@ namespace StoicGoose.Handlers
 		float volume = 1.0f;
 
 		Thread audioThread = default;
-		volatile bool audioThreadRunning = false;
+		volatile bool audioThreadRunning = false, audioThreadPaused = false;
+		volatile bool isPauseToggleRequested = false;
 
 		// TODO: move sound recording stuff to separate class?
 		WaveHeader waveHeader;
@@ -92,6 +93,11 @@ namespace StoicGoose.Handlers
 			sampleQueue.Clear();
 		}
 
+		public void Pause()
+		{
+			isPauseToggleRequested = true;
+		}
+
 		public void BeginRecording()
 		{
 			waveHeader = new WaveHeader();
@@ -126,17 +132,26 @@ namespace StoicGoose.Handlers
 				if (!audioThreadRunning)
 					break;
 
-				AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
-				while (buffersProcessed-- > 0)
+				if (isPauseToggleRequested)
 				{
-					int buffer = AL.SourceUnqueueBuffer(source);
-					if (buffer != 0)
-						GenerateBuffer(buffer);
+					audioThreadPaused = !audioThreadPaused;
+					isPauseToggleRequested = false;
 				}
 
-				AL.GetSource(source, ALGetSourcei.SourceState, out int state);
-				if ((ALSourceState)state != ALSourceState.Playing)
-					AL.SourcePlay(source);
+				if (!audioThreadPaused)
+				{
+					AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
+					while (buffersProcessed-- > 0)
+					{
+						int buffer = AL.SourceUnqueueBuffer(source);
+						if (buffer != 0)
+							GenerateBuffer(buffer);
+					}
+
+					AL.GetSource(source, ALGetSourcei.SourceState, out int state);
+					if ((ALSourceState)state != ALSourceState.Playing)
+						AL.SourcePlay(source);
+				}
 			}
 		}
 

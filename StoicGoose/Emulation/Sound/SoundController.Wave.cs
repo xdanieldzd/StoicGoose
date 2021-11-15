@@ -34,10 +34,10 @@
 
 			bool isSweep => Mode;
 
-			public Wave(WaveTableReadDelegate waveTableRead, bool hasSweep)
+			public Wave(bool hasSweep, WaveTableReadDelegate waveTableRead)
 			{
-				waveTableReadDelegate = waveTableRead;
 				channelSupportsSweep = hasSweep;
+				waveTableReadDelegate = waveTableRead;
 			}
 
 			public virtual void Reset()

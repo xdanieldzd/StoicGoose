@@ -1,4 +1,9 @@
-﻿void main()
+﻿vec4 display()
 {
-	fragColor = texture(textureSamplers[0], texCoord);
+	return texture(textureSamplers[0], texCoord);
+}
+
+vec4 icons()
+{
+	return texture(textureSamplers[0], texCoord);
 }

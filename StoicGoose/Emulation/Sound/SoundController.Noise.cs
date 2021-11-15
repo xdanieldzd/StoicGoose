@@ -15,7 +15,7 @@
 
 			bool isNoise => Mode;
 
-			public Noise(WaveTableReadDelegate waveTableRead) : base(waveTableRead, false) { }
+			public Noise(WaveTableReadDelegate waveTableRead) : base(false, waveTableRead) { }
 
 			public sealed override void Reset()
 			{

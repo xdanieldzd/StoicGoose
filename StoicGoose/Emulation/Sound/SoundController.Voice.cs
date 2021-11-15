@@ -12,7 +12,7 @@
 
 			bool isVoice => Mode;
 
-			public Voice(WaveTableReadDelegate waveTableRead) : base(waveTableRead, false) { }
+			public Voice(WaveTableReadDelegate waveTableRead) : base(false, waveTableRead) { }
 
 			public sealed override void Reset()
 			{
