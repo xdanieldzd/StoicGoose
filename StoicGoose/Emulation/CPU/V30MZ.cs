@@ -64,29 +64,32 @@ namespace StoicGoose.Emulation.CPU
 
 		private void CheckAndServiceInterrupt()
 		{
-			if (pendingIntVector != -1 && IsFlagSet(Flags.InterruptEnable))
+			if (pendingIntVector != -1)
 			{
-				/* Service interrupt */
-				var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
-				var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
-
-				sp -= 2;
-				WriteMemory16(ss, sp, (ushort)flags);
-				sp -= 2;
-				WriteMemory16(ss, sp, cs);
-				sp -= 2;
-				WriteMemory16(ss, sp, ip);
-
-				cs = segment;
-				ip = offset;
-
-				ResetPrefixes();
-				modRm.Reset();
-
-				ClearFlags(Flags.InterruptEnable);
-				pendingIntVector = -1;
-
 				halted = false;
+
+				if (IsFlagSet(Flags.InterruptEnable))
+				{
+					/* Service interrupt */
+					var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
+					var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
+
+					sp -= 2;
+					WriteMemory16(ss, sp, (ushort)flags);
+					sp -= 2;
+					WriteMemory16(ss, sp, cs);
+					sp -= 2;
+					WriteMemory16(ss, sp, ip);
+
+					cs = segment;
+					ip = offset;
+
+					ResetPrefixes();
+					modRm.Reset();
+
+					ClearFlags(Flags.InterruptEnable);
+					pendingIntVector = -1;
+				}
 			}
 		}
 
@@ -98,7 +101,16 @@ namespace StoicGoose.Emulation.CPU
 			CheckAndServiceInterrupt();
 
 			/* Is CPU halted? */
-			if (halted) return 2;
+			if (halted) return 1;
+
+
+			if (cs == 0xf16f && ip == 0x1af6)
+			{
+				bool tmp = false;
+
+				//digimon anode title screen corruption:  gets es:0000 bx:0000, SHOULD get es:4000 bx:0000   data comes from sram
+			}
+
 
 			/* Read any prefixes & opcode */
 			byte opcode;

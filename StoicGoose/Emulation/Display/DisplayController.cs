@@ -26,6 +26,8 @@ namespace StoicGoose.Emulation.Display
 		public const int ScreenWidth = HorizontalDisp;
 		public const int ScreenHeight = VerticalDisp;
 
+		const int maxSpriteCount = 128;
+
 		public event EventHandler<RenderScreenEventArgs> RenderScreen;
 		public void OnRenderScreen(RenderScreenEventArgs e) { RenderScreen?.Invoke(this, e); }
 
@@ -39,7 +41,8 @@ namespace StoicGoose.Emulation.Display
 			HBlankTimer = 1 << 3
 		}
 
-		readonly uint[] spriteData = new uint[128];
+		readonly uint[] spriteData = new uint[maxSpriteCount];
+		readonly uint[] spriteDataNextFrame = new uint[maxSpriteCount];
 		readonly List<uint> activeSpritesOnLine = new List<uint>();
 
 		const byte screenUsageEmpty = 0;
@@ -103,6 +106,9 @@ namespace StoicGoose.Emulation.Display
 			ResetScreenUsageMap();
 			ResetFramebuffer();
 
+			for (var i = 0; i < maxSpriteCount; i++)
+				spriteData[i] = spriteDataNextFrame[i] = 0;
+
 			ResetRegisters();
 		}
 
@@ -153,54 +159,54 @@ namespace StoicGoose.Emulation.Display
 
 			if (cycleCount >= clockCyclesPerLine)
 			{
+				// render line
+				if (lineCurrent < VerticalDisp)
+					RenderScanline(lineCurrent);
+
 				// sprite fetch
 				if (lineCurrent == VerticalDisp - 2)
 				{
-					for (var i = 0; i < spriteData.Length; i++) spriteData[i] = 0;
-					for (var i = sprFirst; i < sprFirst + Math.Min(128, sprCount); i++)
+					for (var i = 0; i < spriteDataNextFrame.Length; i++) spriteDataNextFrame[i] = 0;
+					for (var i = sprFirst; i < sprFirst + Math.Min(maxSpriteCount, sprCount); i++)
 					{
 						var j = (uint)((sprBase << 9) + (i << 2));
-
-						spriteData[i] = (uint)(memoryReadDelegate(j + 3) << 24 | memoryReadDelegate(j + 2) << 16 | memoryReadDelegate(j + 1) << 8 | memoryReadDelegate(j + 0));
-						//spriteData[i] = (uint)(ReadMemory16(j + 2) << 16 | ReadMemory16(j + 0));
+						spriteDataNextFrame[i] = (uint)(memoryReadDelegate(j + 3) << 24 | memoryReadDelegate(j + 2) << 16 | memoryReadDelegate(j + 1) << 8 | memoryReadDelegate(j + 0));
 					}
 				}
 
-				// render line
-				if (lineCurrent < VerticalDisp)
-					RenderScanline(lineCurrent % (vtotal + 1));
-
-				// go to next scanline
-				lineCurrent++;
-
-				// is frame finished
-				if (lineCurrent >= Math.Max(144, vtotal + 1))
+				// V-blank interrupt
+				if (lineCurrent == VerticalDisp)
 				{
-					lineCurrent = 0;
+					interrupt |= DisplayInterrupts.VBlank;
 
-					OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
-					ResetScreenUsageMap();
-				}
-				else
-				{
-					// line compare interrupt
-					if (lineCurrent == lineCompare)
-						interrupt |= DisplayInterrupts.LineCompare;
-
-					// V-blank interrupt
-					if (lineCurrent == VerticalDisp)
-					{
-						interrupt |= DisplayInterrupts.VBlank;
-
-						// V-timer interrupt
-						if (vBlankTimer.Step())
-							interrupt |= DisplayInterrupts.VBlankTimer;
-					}
+					// V-timer interrupt
+					if (vBlankTimer.Step())
+						interrupt |= DisplayInterrupts.VBlankTimer;
 				}
 
 				// H-timer interrupt
 				if (hBlankTimer.Step())
 					interrupt |= DisplayInterrupts.HBlankTimer;
+
+				// go to next scanline
+				lineCurrent++;
+
+				// line compare interrupt
+				if (lineCurrent == lineCompare)
+					interrupt |= DisplayInterrupts.LineCompare;
+
+				// is frame finished
+				if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
+				{
+					lineCurrent = 0;
+
+					// copy sprite data for next frame
+					for (var i = 0; i < maxSpriteCount; i++)
+						spriteData[i] = spriteDataNextFrame[i];
+
+					OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
+					ResetScreenUsageMap();
+				}
 
 				// end of scanline
 				cycleCount -= clockCyclesPerLine;
@@ -292,7 +298,7 @@ namespace StoicGoose.Emulation.Display
 
 			activeSpritesOnLine.Clear();
 
-			for (var i = sprFirst + Math.Min(128, sprCount) - 1; i >= sprFirst; i--)
+			for (var i = sprFirst + Math.Min(maxSpriteCount, sprCount) - 1; i >= sprFirst; i--)
 			{
 				if (spriteData[i] == 0) continue;   //HACK: helps prevent garbage sprites in ex. pocket fighter, but prob only b/c inaccurate timing?
 
@@ -595,8 +601,6 @@ namespace StoicGoose.Emulation.Display
 					retVal |= (byte)(vsync & 0xFF);
 					break;
 
-				//
-
 				case 0x1C:
 				case 0x1D:
 				case 0x1E:
@@ -612,14 +616,10 @@ namespace StoicGoose.Emulation.Display
 					retVal |= (byte)(palMonoData[(register >> 1) & 0b1111, ((register & 0b1) << 1) | 1] << 4);
 					break;
 
-				//
-
 				case 0x60:
 					/* REG_DISP_MODE */
 					ChangeBit(ref retVal, 5, isDisplayFormatPacked);
 					break;
-
-				//
 
 				case 0xA2:
 					/* REG_TMR_CTRL */
@@ -789,8 +789,6 @@ namespace StoicGoose.Emulation.Display
 					vsync = (byte)(value & 0xFF);
 					break;
 
-				//
-
 				case 0x1C:
 				case 0x1D:
 				case 0x1E:
@@ -806,14 +804,10 @@ namespace StoicGoose.Emulation.Display
 					palMonoData[(register >> 1) & 0b1111, ((register & 0b1) << 1) | 1] = (byte)((value >> 4) & 0b111);
 					break;
 
-				//
-
 				case 0x60:
 					/* REG_DISP_MODE */
 					isDisplayFormatPacked = IsBitSet(value, 5);
 					break;
-
-				//
 
 				case 0xA2:
 					/* REG_TMR_CTRL */
@@ -828,8 +822,6 @@ namespace StoicGoose.Emulation.Display
 					vBlankTimer.Enable = vEnable;
 					vBlankTimer.Repeating = IsBitSet(value, 3);
 					break;
-
-				//
 
 				case 0xA4:
 					/* REG_HTMR_FREQ (low) */
@@ -856,7 +848,5 @@ namespace StoicGoose.Emulation.Display
 					break;
 			}
 		}
-
-		//
 	}
 }

@@ -7,6 +7,7 @@
 #else
 		public static readonly bool IsDebugBuild = false;
 #endif
+		public static readonly bool EnableConsoleOutput = true;
 		public static readonly bool EnableOpenGLDebug = false;
 
 		public static readonly bool EnableDebugSoundRecording = false;

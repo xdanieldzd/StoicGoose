@@ -186,16 +186,16 @@ namespace StoicGoose.Emulation.Machines
 
 			var displayInterrupt = display.Step((int)Math.Round(currentCpuClockCycles));
 
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.LineCompare) && IsBitSet(intEnable, 4))
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.LineCompare))
 				ChangeBit(ref intStatus, 4, true);
 
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlankTimer) && IsBitSet(intEnable, 5))
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlankTimer))
 				ChangeBit(ref intStatus, 5, true);
 
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlank) && IsBitSet(intEnable, 6))
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlank))
 				ChangeBit(ref intStatus, 6, true);
 
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.HBlankTimer) && IsBitSet(intEnable, 7))
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.HBlankTimer))
 				ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
@@ -211,7 +211,6 @@ namespace StoicGoose.Emulation.Machines
 			{
 				if (!IsBitSet(intEnable, i) || !IsBitSet(intStatus, i)) continue;
 				cpu.RaiseInterrupt(intBase + i);
-				ChangeBit(ref intStatus, i, false);
 				break;
 			}
 		}
@@ -492,7 +491,7 @@ namespace StoicGoose.Emulation.Machines
 				case 0xB2:
 					/* REG_INT_ENABLE */
 					intEnable = value;
-					//intStatus &= (byte)~intEnable;	// TODO verify
+					intStatus &= (byte)~intEnable; // TODO verify
 					break;
 
 				case 0xB3:

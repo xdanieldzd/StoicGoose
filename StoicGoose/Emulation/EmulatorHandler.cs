@@ -115,16 +115,16 @@ namespace StoicGoose.Emulation
 
 
 			var stopWatch = Stopwatch.StartNew();
-			/*
+
 			TimeSpan accumulatedTime = TimeSpan.Zero, lastStartTime = TimeSpan.Zero, lastEndTime = TimeSpan.Zero;
 
 			var frameCounter = 0;
 			var sampleTimespan = TimeSpan.FromSeconds(0.5);
 
 			var targetElapsedTime = TimeSpan.FromTicks((long)Math.Round(TimeSpan.TicksPerSecond / emulator.GetRefreshRate()));
-			*/
 
-			var intervalMs = 1000.0 / emulator.GetRefreshRate();
+
+			//var intervalMs = 1000.0 / emulator.GetRefreshRate();
 
 			while (true)
 			{
@@ -148,7 +148,7 @@ namespace StoicGoose.Emulation
 				}
 
 				// run emulation & limit fps if requested
-
+				/*
 				if (!emulationThreadPaused)
 				{
 					var startTime = stopWatch.Elapsed.TotalMilliseconds;
@@ -159,6 +159,7 @@ namespace StoicGoose.Emulation
 
 					//Console.WriteLine($"{intervalMs}, {(stopWatch.Elapsed.TotalMilliseconds - startTime)}");
 				}
+				*/
 
 
 
@@ -169,7 +170,6 @@ namespace StoicGoose.Emulation
 
 
 
-				/*
 				var startTime = stopWatch.Elapsed;
 				if (!emulationThreadPaused)
 				{
@@ -207,7 +207,7 @@ namespace StoicGoose.Emulation
 				else
 				{
 					lastEndTime = stopWatch.Elapsed;
-				}*/
+				}
 			}
 		}
 	}

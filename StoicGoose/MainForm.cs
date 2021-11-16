@@ -42,7 +42,7 @@ namespace StoicGoose
 		{
 			InitializeComponent();
 
-			if (GlobalVariables.IsDebugBuild && AllocConsole())
+			if (GlobalVariables.EnableConsoleOutput && AllocConsole())
 			{
 				Console.WriteLine($"{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");

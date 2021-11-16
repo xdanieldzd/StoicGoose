@@ -45,7 +45,7 @@
 
 				case ModRM.Modes.TwoByteDisplacement:
 					{
-						var displacement = ReadMemory16(cs, ip);
+						var displacement = (short)ReadMemory16(cs, ip);
 						ip += 2;
 						switch (modRm.Mem)
 						{

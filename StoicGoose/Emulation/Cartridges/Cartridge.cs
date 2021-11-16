@@ -32,7 +32,7 @@ namespace StoicGoose.Emulation.Cartridges
 			romBank0 = 0xFF;
 			romBank1 = 0xFF;
 
-			eeprom.Reset();
+			eeprom?.Reset();
 		}
 
 		public void LoadRom(byte[] data)
@@ -70,7 +70,7 @@ namespace StoicGoose.Emulation.Cartridges
 
 		public void LoadEeprom(byte[] data)
 		{
-			eeprom.LoadContents(data);
+			eeprom?.LoadContents(data);
 		}
 
 		public byte[] GetSram()
@@ -80,7 +80,7 @@ namespace StoicGoose.Emulation.Cartridges
 
 		public byte[] GetEeprom()
 		{
-			return eeprom.GetContents().Clone() as byte[];
+			return eeprom?.GetContents().Clone() as byte[];
 		}
 
 		public byte ReadMemory(uint address)
@@ -120,15 +120,15 @@ namespace StoicGoose.Emulation.Cartridges
 				/* REG_BANK_ROM1 */
 				0xC3 => romBank1,
 				/* REG_EEP_DATA (low) */
-				0xC4 => eeprom.ReadRegister((byte)(register - 0xC4)),
+				0xC4 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* REG_EEP_DATA (high) */
-				0xC5 => eeprom.ReadRegister((byte)(register - 0xC4)),
+				0xC5 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* REG_EEP_ADDR (low) */
-				0xC6 => eeprom.ReadRegister((byte)(register - 0xC4)),
+				0xC6 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* REG_EEP_ADDR (high) */
-				0xC7 => eeprom.ReadRegister((byte)(register - 0xC4)),
+				0xC7 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* REG_EEP_STATUS (read) */
-				0xC8 => eeprom.ReadRegister((byte)(register - 0xC4)),
+				0xC8 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* Unmapped */
 				_ => 0x90,
 			};
@@ -168,7 +168,7 @@ namespace StoicGoose.Emulation.Cartridges
 					/* REG_EEP_ADDR (low) */
 					/* REG_EEP_ADDR (high) */
 					/* REG_EEP_CMD (write) */
-					eeprom.WriteRegister((byte)(register - 0xC4), value);
+					eeprom?.WriteRegister((byte)(register - 0xC4), value);
 					break;
 			}
 		}
