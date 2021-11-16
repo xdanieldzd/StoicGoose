@@ -13,7 +13,6 @@ namespace StoicGoose.Emulation.EEPROMs
 
 		bool eraseWriteEnable = false;
 
-		/* REG_IEEP_xxx */
 		byte dataLo, dataHi, addressLo, addressHi, statusCmd;
 
 		public EEPROM(int size, int addressBits)

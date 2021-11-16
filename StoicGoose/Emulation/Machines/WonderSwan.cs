@@ -242,9 +242,7 @@ namespace StoicGoose.Emulation.Machines
 			if (Metadata["cartridge/savetype"] == "sram")
 				cartridge.LoadSram(data);
 			else if (Metadata["cartridge/savetype"] == "eeprom")
-			{
-				//TODO
-			}
+				cartridge.LoadEeprom(data);
 		}
 
 		public byte[] GetInternalEeprom()
@@ -257,10 +255,9 @@ namespace StoicGoose.Emulation.Machines
 			if (Metadata["cartridge/savetype"] == "sram")
 				return cartridge.GetSram();
 			else if (Metadata["cartridge/savetype"] == "eeprom")
-			{
-				//TODO
-			}
-			return new byte[0];
+				return cartridge.GetEeprom();
+
+			return Array.Empty<byte>();
 		}
 
 		public byte[] GetInternalRam()

@@ -96,9 +96,9 @@ namespace StoicGoose.Emulation.Cartridges
 			{ SaveTypes.Sram1Mbit, 1024 * 128 },
 			{ SaveTypes.Sram2Mbit, 1024 * 256 },
 			{ SaveTypes.Sram4Mbit, 1024 * 512 },
-			{ SaveTypes.Eeprom1Kbit, 128 },
-			{ SaveTypes.Eeprom16Kbit, 2048 },
-			{ SaveTypes.Eeprom8Kbit, 1024 },		// ???
+			{ SaveTypes.Eeprom1Kbit, 2 * 64 },
+			{ SaveTypes.Eeprom16Kbit, 2 * 1024 },
+			{ SaveTypes.Eeprom8Kbit, 2 * 512 },
 		};
 
 		public byte PublisherId { get; private set; }

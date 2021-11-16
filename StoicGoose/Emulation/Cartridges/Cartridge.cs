@@ -1,11 +1,12 @@
 ﻿using System;
 
+using StoicGoose.Emulation.EEPROMs;
+
 namespace StoicGoose.Emulation.Cartridges
 {
 	public class Cartridge
 	{
 		byte[] rom, sram;
-		ushort[] eeprom;
 		uint romMask, sramMask;
 
 		Metadata metadata;
@@ -13,13 +14,8 @@ namespace StoicGoose.Emulation.Cartridges
 		/* REG_BANK_xxx */
 		byte romBank2, sramBank, romBank0, romBank1;
 
-		/* REG_EEP_xxx */
-		// TODO merge internal & cart eeproms to separate eeprom class
-		ushort eepData, eepAddressHiLo;
-		bool eepStart, eepWriteEnable;
-		byte eepCommand, eepAddress, eepStatus;
-
-		// REG_...
+		/* REG_EEP_xxx -> EEPROM class */
+		EEPROM eeprom = default;
 
 		public Metadata Metadata => metadata;
 
@@ -27,7 +23,6 @@ namespace StoicGoose.Emulation.Cartridges
 		{
 			rom = Array.Empty<byte>();
 			sram = Array.Empty<byte>();
-			eeprom = Array.Empty<ushort>();
 		}
 
 		public void Reset()
@@ -37,9 +32,7 @@ namespace StoicGoose.Emulation.Cartridges
 			romBank0 = 0xFF;
 			romBank1 = 0xFF;
 
-			eepData = eepAddressHiLo = 0;
-			eepStart = eepWriteEnable = false;
-			eepCommand = eepAddress = eepStatus = 0;
+			eeprom.Reset();
 		}
 
 		public void LoadRom(byte[] data)
@@ -58,7 +51,13 @@ namespace StoicGoose.Emulation.Cartridges
 				}
 				else if (metadata.IsEepromSave)
 				{
-					eeprom = new ushort[metadata.SaveSize];
+					switch (metadata.SaveType)
+					{
+						// TODO: verify size/address bits
+						case Metadata.SaveTypes.Eeprom1Kbit: eeprom = new EEPROM(metadata.SaveSize, 6); break;
+						case Metadata.SaveTypes.Eeprom16Kbit: eeprom = new EEPROM(metadata.SaveSize, 10); break;
+						case Metadata.SaveTypes.Eeprom8Kbit: eeprom = new EEPROM(metadata.SaveSize, 9); break;
+					}
 				}
 			}
 		}
@@ -69,9 +68,19 @@ namespace StoicGoose.Emulation.Cartridges
 			Buffer.BlockCopy(data, 0, sram, 0, data.Length);
 		}
 
+		public void LoadEeprom(byte[] data)
+		{
+			eeprom.LoadContents(data);
+		}
+
 		public byte[] GetSram()
 		{
 			return sram.Clone() as byte[];
+		}
+
+		public byte[] GetEeprom()
+		{
+			return eeprom.GetContents().Clone() as byte[];
 		}
 
 		public byte ReadMemory(uint address)
@@ -111,15 +120,15 @@ namespace StoicGoose.Emulation.Cartridges
 				/* REG_BANK_ROM1 */
 				0xC3 => romBank1,
 				/* REG_EEP_DATA (low) */
-				0xC4 => (byte)(eepData & 0xFF),
+				0xC4 => eeprom.ReadRegister((byte)(register - 0xC4)),
 				/* REG_EEP_DATA (high) */
-				0xC5 => (byte)((eepData >> 8) & 0xFF),
+				0xC5 => eeprom.ReadRegister((byte)(register - 0xC4)),
 				/* REG_EEP_ADDR (low) */
-				0xC6 => (byte)(eepAddressHiLo & 0xFF),
+				0xC6 => eeprom.ReadRegister((byte)(register - 0xC4)),
 				/* REG_EEP_ADDR (high) */
-				0xC7 => (byte)((eepAddressHiLo >> 8) & 0xFF),
+				0xC7 => eeprom.ReadRegister((byte)(register - 0xC4)),
 				/* REG_EEP_STATUS (read) */
-				0xC8 => (byte)(eepStatus & 0b11),
+				0xC8 => eeprom.ReadRegister((byte)(register - 0xC4)),
 				/* Unmapped */
 				_ => 0x90,
 			};
@@ -150,90 +159,17 @@ namespace StoicGoose.Emulation.Cartridges
 					break;
 
 				case 0xC4:
-					/* REG_EEP_DATA (low) */
-					eepData = (ushort)((eepData & 0xFF00) | value);
-					break;
-
 				case 0xC5:
-					/* REG_EEP_DATA (high) */
-					eepData = (ushort)((eepData & 0x00FF) | (value << 8));
-					break;
-
 				case 0xC6:
-					/* REG_EEP_ADDR (low) */
-					eepAddressHiLo = (ushort)((eepAddressHiLo & 0xFF00) | value);
-
-					eepStart = ((eepAddressHiLo >> 8) & 0b1) == 0b1;
-					eepAddress = (byte)((eepAddressHiLo >> 0) & 0b111111);
-					eepCommand = (byte)((eepAddressHiLo >> 6) & 0b11);
-					break;
-
 				case 0xC7:
-					/* REG_EEP_ADDR (high) */
-					eepAddressHiLo = (ushort)((eepAddressHiLo & 0x00FF) | (value << 8));
-
-					eepStart = ((eepAddressHiLo >> 8) & 0b1) == 0b1;
-					eepAddress = (byte)((eepAddressHiLo >> 0) & 0b111111);
-					eepCommand = (byte)((eepAddressHiLo >> 6) & 0b11);
-					break;
-
 				case 0xC8:
+					/* REG_EEP_DATA (low) */
+					/* REG_EEP_DATA (high) */
+					/* REG_EEP_ADDR (low) */
+					/* REG_EEP_ADDR (high) */
 					/* REG_EEP_CMD (write) */
-
-					// TODO
-					if (!eepStart) break;   // ????
-
-					switch ((value >> 4) & 0b111)
-					{
-						case 0b001:
-							/* READ */
-							// TODO
-							eepData = eeprom[eepAddress];
-							eepStatus = 3;
-							break;
-
-						case 0b010:
-							/* WRITE/WRAL */
-							// TODO
-							eepStatus = 2;
-							break;
-
-						case 0b100:
-							/* EWEN/EWDS/ERAL/ERASE */
-							// TODO
-							if (eepCommand == 0)
-							{
-								var extCommand = (eepAddress >> 4) & 0b11;
-								switch (extCommand)
-								{
-									case 0:
-										/* EWDS */
-										eepWriteEnable = false;
-										break;
-									case 2:
-										/* ERAL */
-										if (eepWriteEnable)
-											for (var i = 0; i < eeprom.Length; i++)
-												eeprom[i] = 0xFFFF;
-										break;
-									case 3:
-										/* EWEN */
-										eepWriteEnable = true;
-										break;
-								}
-							}
-							else
-							{
-								if (eepWriteEnable)
-									eeprom[eepAddress] = 0;
-							}
-
-							eepStatus = 2;
-							break;
-					}
+					eeprom.WriteRegister((byte)(register - 0xC4), value);
 					break;
-
-					//
 			}
 		}
 	}
