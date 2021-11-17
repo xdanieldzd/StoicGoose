@@ -57,7 +57,7 @@ namespace StoicGoose.Emulation.Machines
 
 		byte[] bootstrapRom = default;
 
-		int currentMasterClockCyclesInFrame, totalMasterClockCyclesInFrame;
+		int currentClockCyclesInFrame, totalClockCyclesInFrame;
 
 		/* REG_HW_FLAGS */
 		bool hwCartEnable, hw16BitExtBus, hwCartRom1CycleSpeed, hwSelfTestOk;
@@ -91,8 +91,8 @@ namespace StoicGoose.Emulation.Machines
 			sound.Reset();
 			eeprom.Reset();
 
-			currentMasterClockCyclesInFrame = 0;
-			totalMasterClockCyclesInFrame = (int)Math.Round(MasterClock / DisplayController.VerticalClock);
+			currentClockCyclesInFrame = 0;
+			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayController.VerticalClock);
 
 			ResetRegisters();
 		}
@@ -169,10 +169,10 @@ namespace StoicGoose.Emulation.Machines
 			OnStartOfFrame(startOfFrameEventArgs);
 			if (startOfFrameEventArgs.ToggleMasterVolume) sound.ToggleMasterVolume();
 
-			while (currentMasterClockCyclesInFrame < totalMasterClockCyclesInFrame)
+			while (currentClockCyclesInFrame < totalClockCyclesInFrame)
 				RunStep();
 
-			currentMasterClockCyclesInFrame -= totalMasterClockCyclesInFrame;
+			currentClockCyclesInFrame -= totalClockCyclesInFrame;
 
 			UpdateMetadata();
 
@@ -181,28 +181,19 @@ namespace StoicGoose.Emulation.Machines
 
 		private void RunStep()
 		{
-			double currentCpuClockCycles = 0.0;
-			currentCpuClockCycles += cpu.Step();
+			var currentCpuClockCycles = cpu.Step();
 
-			var displayInterrupt = display.Step((int)Math.Round(currentCpuClockCycles));
-
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.LineCompare))
-				ChangeBit(ref intStatus, 4, true);
-
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlankTimer))
-				ChangeBit(ref intStatus, 5, true);
-
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlank))
-				ChangeBit(ref intStatus, 6, true);
-
-			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.HBlankTimer))
-				ChangeBit(ref intStatus, 7, true);
+			var displayInterrupt = display.Step(currentCpuClockCycles);
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
+			if (displayInterrupt.HasFlag(DisplayController.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
-			sound.Step((int)Math.Round(currentCpuClockCycles));
+			sound.Step(currentCpuClockCycles);
 
-			currentMasterClockCyclesInFrame += (int)Math.Round(currentCpuClockCycles);
+			currentClockCyclesInFrame += currentCpuClockCycles;
 		}
 
 		private void CheckAndRaiseInterrupts()
@@ -388,6 +379,9 @@ namespace StoicGoose.Emulation.Machines
 					ChangeBit(ref retVal, 4, keypadYEnable);
 					ChangeBit(ref retVal, 5, keypadXEnable);
 					ChangeBit(ref retVal, 6, keypadButtonEnable);
+
+					if (eventArgs.ButtonsHeld.Any())
+						ChangeBit(ref intStatus, 1, true);
 
 					if (keypadYEnable)
 					{

@@ -83,8 +83,9 @@ namespace StoicGoose.Emulation.CPU
 					modRm.Reset();
 
 					ClearFlags(Flags.InterruptEnable);
-					pendingIntVector = -1;
 				}
+
+				pendingIntVector = -1;  // TODO ????? correct????
 			}
 		}
 
@@ -97,15 +98,6 @@ namespace StoicGoose.Emulation.CPU
 
 			/* Is CPU halted? */
 			if (halted) return 1;
-
-
-			if (cs == 0xf16f && ip == 0x1af6)
-			{
-				bool tmp = false;
-
-				//digimon anode title screen corruption:  gets es:0000 bx:0000, SHOULD get es:4000 bx:0000   data comes from sram
-			}
-
 
 			/* Read any prefixes & opcode */
 			byte opcode;
@@ -907,7 +899,7 @@ namespace StoicGoose.Emulation.CPU
 						case 0x5: /* SUB */ WriteOpcodeEb(Sub8(false, ReadOpcodeEb(), ReadOpcodeIb())); cycles = 1; break;
 						case 0x6: /* XOR */ WriteOpcodeEb(Xor8(ReadOpcodeEb(), ReadOpcodeIb())); cycles = 1; break;
 						case 0x7: /* CMP */ Sub8(false, ReadOpcodeEb(), ReadOpcodeIb()); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -924,7 +916,7 @@ namespace StoicGoose.Emulation.CPU
 						case 0x5: /* SUB */ WriteOpcodeEw(Sub16(false, ReadOpcodeEw(), ReadOpcodeIw())); cycles = 1; break;
 						case 0x6: /* XOR */ WriteOpcodeEw(Xor16(ReadOpcodeEw(), ReadOpcodeIw())); cycles = 1; break;
 						case 0x7: /* CMP */ Sub16(false, ReadOpcodeEw(), ReadOpcodeIw()); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -941,7 +933,7 @@ namespace StoicGoose.Emulation.CPU
 						case 0x5: /* SUB */ WriteOpcodeEw(Sub16(false, ReadOpcodeEw(), (ushort)(sbyte)ReadOpcodeIb())); cycles = 1; break;
 						case 0x6: /* XOR */ WriteOpcodeEw(Xor16(ReadOpcodeEw(), (ushort)(sbyte)ReadOpcodeIb())); cycles = 1; break;
 						case 0x7: /* CMP */ Sub16(false, ReadOpcodeEw(), (ushort)(sbyte)ReadOpcodeIb()); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1010,7 +1002,12 @@ namespace StoicGoose.Emulation.CPU
 				case 0x8D:
 					/* LEA Gw M */
 					ReadModRM();
-					if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
+					if (modRm.Mod == ModRM.Modes.Register)
+					{
+						RaiseInterrupt(6);
+						cycles = 8;
+						break;
+					}
 					WriteOpcodeGw(modRm.Offset);
 					cycles = 8;
 					break;
@@ -1424,9 +1421,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEb(Ror8(true, ReadOpcodeEb(), ReadOpcodeIb())); cycles = 3; break;
 						case 0x4: /* SHL */ WriteOpcodeEb(Shl8(ReadOpcodeEb(), ReadOpcodeIb())); cycles = 3; break;
 						case 0x5: /* SHR */ WriteOpcodeEb(Shr8(false, ReadOpcodeEb(), ReadOpcodeIb())); cycles = 3; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEb(Shr8(true, ReadOpcodeEb(), ReadOpcodeIb())); cycles = 3; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1441,9 +1438,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEw(Ror16(true, ReadOpcodeEw(), ReadOpcodeIb())); cycles = 3; break;
 						case 0x4: /* SHL */ WriteOpcodeEw(Shl16(ReadOpcodeEw(), ReadOpcodeIb())); cycles = 3; break;
 						case 0x5: /* SHR */ WriteOpcodeEw(Shr16(false, ReadOpcodeEw(), ReadOpcodeIb())); cycles = 3; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEw(Shr16(true, ReadOpcodeEw(), ReadOpcodeIb())); cycles = 3; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1466,7 +1463,12 @@ namespace StoicGoose.Emulation.CPU
 				case 0xC4:
 					/* LES Gw Mp */
 					ReadModRM();
-					if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
+					if (modRm.Mod == ModRM.Modes.Register)
+					{
+						RaiseInterrupt(6);
+						cycles = 8;
+						break;
+					}
 					WriteOpcodeGw(ReadOpcodeEw());
 					es = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
 					cycles = 8;
@@ -1475,7 +1477,12 @@ namespace StoicGoose.Emulation.CPU
 				case 0xC5:
 					/* LDS Gw Mp */
 					ReadModRM();
-					if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
+					if (modRm.Mod == ModRM.Modes.Register)
+					{
+						RaiseInterrupt(6);
+						cycles = 8;
+						break;
+					}
 					WriteOpcodeGw(ReadOpcodeEw());
 					ds = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
 					cycles = 8;
@@ -1577,9 +1584,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEb(Ror8(true, ReadOpcodeEb(), 1)); cycles = 1; break;
 						case 0x4: /* SHL */ WriteOpcodeEb(Shl8(ReadOpcodeEb(), 1)); cycles = 1; break;
 						case 0x5: /* SHR */ WriteOpcodeEb(Shr8(false, ReadOpcodeEb(), 1)); cycles = 1; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEb(Shr8(true, ReadOpcodeEb(), 1)); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1594,9 +1601,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEw(Ror16(true, ReadOpcodeEw(), 1)); cycles = 1; break;
 						case 0x4: /* SHL */ WriteOpcodeEw(Shl16(ReadOpcodeEw(), 1)); cycles = 1; break;
 						case 0x5: /* SHR */ WriteOpcodeEw(Shr16(false, ReadOpcodeEw(), 1)); cycles = 1; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEw(Shr16(true, ReadOpcodeEw(), 1)); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1611,9 +1618,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEb(Ror8(true, ReadOpcodeEb(), cx.Low)); cycles = 3; break;
 						case 0x4: /* SHL */ WriteOpcodeEb(Shl8(ReadOpcodeEb(), cx.Low)); cycles = 3; break;
 						case 0x5: /* SHR */ WriteOpcodeEb(Shr8(false, ReadOpcodeEb(), cx.Low)); cycles = 3; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEb(Shr8(true, ReadOpcodeEb(), cx.Low)); cycles = 3; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1628,9 +1635,9 @@ namespace StoicGoose.Emulation.CPU
 						case 0x3: /* RCR */ WriteOpcodeEw(Ror16(true, ReadOpcodeEw(), cx.Low)); cycles = 3; break;
 						case 0x4: /* SHL */ WriteOpcodeEw(Shl16(ReadOpcodeEw(), cx.Low)); cycles = 3; break;
 						case 0x5: /* SHR */ WriteOpcodeEw(Shr16(false, ReadOpcodeEw(), cx.Low)); cycles = 3; break;
-						case 0x6: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x6: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x7: /* SAR */ WriteOpcodeEw(Shr16(true, ReadOpcodeEw(), cx.Low)); cycles = 3; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1798,14 +1805,14 @@ namespace StoicGoose.Emulation.CPU
 					switch (modRm.Reg)
 					{
 						case 0x0: /* TEST */ And8(ReadOpcodeEb(), ReadOpcodeIb()); cycles = 1; break;
-						case 0x1: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x1: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x2: /* NOT */ WriteOpcodeEb((byte)~ReadOpcodeEb()); cycles = 1; break;
 						case 0x3: /* NEG */ WriteOpcodeEb(Neg8(ReadOpcodeEb())); cycles = 1; break;
 						case 0x4: /* MUL */ ax.Word = Mul8(false, ax.Low, ReadOpcodeEb()); cycles = 3; break;
 						case 0x5: /* IMUL */ ax.Word = Mul8(true, ax.Low, ReadOpcodeEb()); cycles = 3; break;
 						case 0x6: /* DIV */ ax.Word = Div8(false, ax.Word, ReadOpcodeEb()); cycles = 15; break;
 						case 0x7: /* IDIV */ ax.Word = Div8(true, ax.Word, ReadOpcodeEb()); cycles = 17; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1815,14 +1822,14 @@ namespace StoicGoose.Emulation.CPU
 					switch (modRm.Reg)
 					{
 						case 0x0: /* TEST */ And16(ReadOpcodeEw(), ReadOpcodeIw()); cycles = 1; break;
-						case 0x1: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x1: /* --- */ RaiseInterrupt(6); cycles = 8; break;
 						case 0x2: /* NOT */ WriteOpcodeEw((ushort)~ReadOpcodeEw()); cycles = 1; break;
 						case 0x3: /* NEG */ WriteOpcodeEw(Neg16(ReadOpcodeEw())); cycles = 1; break;
 						case 0x4: /* MUL */ { var result = Mul16(false, ax.Word, ReadOpcodeEw()); dx.Word = (ushort)((result >> 16) & 0xFFFF); ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
 						case 0x5: /* IMUL */ { var result = Mul16(true, ax.Word, ReadOpcodeEw()); dx.Word = (ushort)((result >> 16) & 0xFFFF); ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
 						case 0x6: /* DIV */ { var result = Div16(false, (uint)(dx.Word << 16 | ax.Word), ReadOpcodeEw()); dx.Word = (ushort)((result >> 16) & 0xFFFF); ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 23; } break;
 						case 0x7: /* IDIV */ { var result = Div16(true, (uint)(dx.Word << 16 | ax.Word), ReadOpcodeEw()); dx.Word = (ushort)((result >> 16) & 0xFFFF); ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 24; } break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1869,7 +1876,7 @@ namespace StoicGoose.Emulation.CPU
 					{
 						case 0x0: /* INC */ WriteOpcodeEb(Inc8(ReadOpcodeEb())); cycles = 1; break;
 						case 0x1: /* DEC */ WriteOpcodeEb(Dec8(ReadOpcodeEb())); cycles = 1; break;
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
@@ -1890,7 +1897,12 @@ namespace StoicGoose.Emulation.CPU
 							break;
 						case 0x3: /* CALL Mp */
 							{
-								if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
+								if (modRm.Mod == ModRM.Modes.Register)
+								{
+									RaiseInterrupt(6);
+									cycles = 8;
+									break;
+								}
 								var offset = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 0));
 								var segment = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
 								Push(cs);
@@ -1903,20 +1915,27 @@ namespace StoicGoose.Emulation.CPU
 						case 0x4: /* JMP */ ip = ReadOpcodeEw(); cycles = 4; break;
 						case 0x5: /* JMP Mp */
 							{
-								if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
+								if (modRm.Mod == ModRM.Modes.Register)
+								{
+									RaiseInterrupt(6);
+									cycles = 8;
+									break;
+								}
 								ip = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 0));
 								cs = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
 								cycles = 9;
 							}
 							break;
 						case 0x6: /* PUSH */  Push(ReadOpcodeEw()); cycles = 3; break;
-						case 0x7: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));     // undocumented mirror of PUSH?
-						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
+						case 0x7: /* --- */ RaiseInterrupt(6); cycles = 8; break; // undocumented mirror of PUSH?
+						default: RaiseInterrupt(6); cycles = 8; break;
 					}
 					break;
 
 				default:
-					throw new NotImplementedException($"Unimplemented opcode or prefix 0x{opcode:X2}");
+					RaiseInterrupt(6);
+					cycles = 8;
+					break;
 			}
 
 			ResetPrefixes();

@@ -27,7 +27,7 @@ namespace StoicGoose.Emulation.Sound
 
 		readonly double clockRate, refreshRate;
 		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
-		int sampleCycleCount, frameCycleCount;
+		int cycleCount;
 
 		int masterVolume, masterVolumeChange;
 
@@ -57,7 +57,7 @@ namespace StoicGoose.Emulation.Sound
 
 			mixedSampleBuffer = new List<short>();
 
-			clockRate = WonderSwan.MasterClock / 4.0;
+			clockRate = WonderSwan.CpuClock;
 			refreshRate = Display.DisplayController.VerticalClock;
 
 			samplesPerFrame = (int)(sampleRate / refreshRate);
@@ -67,7 +67,7 @@ namespace StoicGoose.Emulation.Sound
 
 		public void Reset()
 		{
-			sampleCycleCount = frameCycleCount = 0;
+			cycleCount = 0;
 
 			for (var i = 0; i < numChannels; i++)
 				channels[i].Reset();
@@ -98,8 +98,7 @@ namespace StoicGoose.Emulation.Sound
 
 		public void Step(int clockCyclesInStep)
 		{
-			sampleCycleCount += clockCyclesInStep;
-			frameCycleCount += clockCyclesInStep;
+			cycleCount += clockCyclesInStep;
 
 			for (int i = 0; i < clockCyclesInStep; i++)
 			{
@@ -107,24 +106,16 @@ namespace StoicGoose.Emulation.Sound
 					channels[j].Step();
 			}
 
-			if (sampleCycleCount >= cyclesPerSample)
+			if (cycleCount >= cyclesPerSample)
 			{
 				GenerateSample();
-
-				sampleCycleCount -= cyclesPerSample;
+				cycleCount -= cyclesPerSample;
 			}
 
 			if (mixedSampleBuffer.Count >= (samplesPerFrame * numOutputChannels))
 			{
 				OnEnqueueSamples(new EnqueueSamplesEventArgs(numChannels, mixedSampleBuffer.ToArray()));
-
 				FlushSamples();
-			}
-
-			if (frameCycleCount >= cyclesPerFrame)
-			{
-				frameCycleCount -= cyclesPerFrame;
-				sampleCycleCount = frameCycleCount;
 
 				if (masterVolumeChange != -1)
 				{
@@ -150,15 +141,12 @@ namespace StoicGoose.Emulation.Sound
 			if (channels[3].Enable) mixedRight += channels[3].OutputRight;
 			mixedRight = (mixedRight & 0x07FF) << 4;
 
-			if (headphonesConnected)
-			{
-				if (headphoneEnable)
-					mixedLeft = mixedRight = (mixedLeft + mixedRight) / 2;
-				else
-					mixedLeft = mixedRight = 0;
-			}
-			else if (!speakerEnable)
+			if (headphonesConnected && !headphoneEnable && !speakerEnable)
+				/* Headphones connected but neither headphones nor speaker enabled? Don't output sound */
 				mixedLeft = mixedRight = 0;
+			else if (!headphonesConnected)
+				/* Otherwise, no headphones connected? Mix down to mono */
+				mixedLeft = mixedRight = (mixedLeft + mixedRight) / 2;
 
 			mixedSampleBuffer.Add((short)(mixedLeft * (masterVolume / 2.0)));
 			mixedSampleBuffer.Add((short)(mixedRight * (masterVolume / 2.0)));
