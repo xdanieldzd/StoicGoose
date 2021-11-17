@@ -13,6 +13,7 @@
 		public static readonly bool EnableDebugSoundRecording = false;
 		public static readonly bool EnableAutostartLastRom = false;
 
+		public static readonly bool EnableSkipBootstrapIfFound = true;
 		public static readonly bool EnableSuperSlowCPULogger = false;
 
 		public static readonly bool EnableRenderSCR1DebugColors = false;

@@ -23,7 +23,7 @@
 		{
 			var increment = GetIncrement(is16Bit, IsFlagSet(Flags.Direction));
 
-			temp = GetSegmentViaOverride(SegmentNumber.DS);
+			var temp = GetSegmentViaOverride(SegmentNumber.DS);
 
 			if (!is16Bit)
 				WriteRegister8(dx.Word, ReadMemory8(temp, si));
@@ -37,7 +37,7 @@
 		{
 			var increment = GetIncrement(is16Bit, IsFlagSet(Flags.Direction));
 
-			temp = GetSegmentViaOverride(SegmentNumber.DS);
+			var temp = GetSegmentViaOverride(SegmentNumber.DS);
 
 			if (!is16Bit)
 				WriteMemory8(es, di, ReadMemory8(temp, si));
@@ -52,7 +52,7 @@
 		{
 			var increment = GetIncrement(is16Bit, IsFlagSet(Flags.Direction));
 
-			temp = GetSegmentViaOverride(SegmentNumber.DS);
+			var temp = GetSegmentViaOverride(SegmentNumber.DS);
 
 			if (!is16Bit)
 				Sub8(false, ReadMemory8(temp, si), ReadMemory8(es, di));
@@ -79,7 +79,7 @@
 		{
 			var increment = GetIncrement(is16Bit, IsFlagSet(Flags.Direction));
 
-			temp = GetSegmentViaOverride(SegmentNumber.DS);
+			var temp = GetSegmentViaOverride(SegmentNumber.DS);
 
 			if (!is16Bit)
 				ax.Low = ReadMemory8(temp, si);

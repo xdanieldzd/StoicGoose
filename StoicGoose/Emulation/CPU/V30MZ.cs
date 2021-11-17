@@ -13,7 +13,6 @@ namespace StoicGoose.Emulation.CPU
 		ushort ip;
 		Flags flags;
 
-		ushort temp;
 		bool halted;
 
 		int pendingIntVector;
@@ -48,7 +47,6 @@ namespace StoicGoose.Emulation.CPU
 			es = 0x0000;
 
 			/* Misc variables */
-			temp = 0x0000;
 			halted = false;
 
 			pendingIntVector = -1;
@@ -74,12 +72,9 @@ namespace StoicGoose.Emulation.CPU
 					var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
 					var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
 
-					sp -= 2;
-					WriteMemory16(ss, sp, (ushort)flags);
-					sp -= 2;
-					WriteMemory16(ss, sp, cs);
-					sp -= 2;
-					WriteMemory16(ss, sp, ip);
+					Push((ushort)flags);
+					Push(cs);
+					Push(ip);
 
 					cs = segment;
 					ip = offset;
@@ -175,15 +170,13 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x06:
 					/* PUSH ES */
-					sp -= 2;
-					WriteMemory16(ss, sp, es);
+					Push(es);
 					cycles = 1;
 					break;
 
 				case 0x07:
 					/* POP ES */
-					es = ReadMemory16(ss, sp);
-					sp += 2;
+					es = Pop();
 					cycles = 1;
 					break;
 
@@ -225,8 +218,7 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x0E:
 					/* PUSH CS */
-					sp -= 2;
-					WriteMemory16(ss, sp, cs);
+					Push(cs);
 					cycles = 1;
 					break;
 
@@ -270,15 +262,13 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x16:
 					/* PUSH SS */
-					sp -= 2;
-					WriteMemory16(ss, sp, ss);
+					Push(ss);
 					cycles = 1;
 					break;
 
 				case 0x17:
 					/* POP SS */
-					ss = ReadMemory16(ss, sp);
-					sp += 2;
+					ss = Pop();
 					cycles = 1;
 					break;
 
@@ -320,15 +310,13 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x1E:
 					/* PUSH DS */
-					sp -= 2;
-					WriteMemory16(ss, sp, ds);
+					Push(ds);
 					cycles = 1;
 					break;
 
 				case 0x1F:
 					/* POP DS */
-					ds = ReadMemory16(ss, sp);
-					sp += 2;
+					ds = Pop();
 					cycles = 1;
 					break;
 
@@ -606,136 +594,112 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x50:
 					/* PUSH AX */
-					sp -= 2;
-					WriteMemory16(ss, sp, ax.Word);
+					Push(ax.Word);
 					cycles = 1;
 					break;
 
 				case 0x51:
 					/* PUSH CX */
-					sp -= 2;
-					WriteMemory16(ss, sp, cx.Word);
+					Push(cx.Word);
 					cycles = 1;
 					break;
 
 				case 0x52:
 					/* PUSH DX */
-					sp -= 2;
-					WriteMemory16(ss, sp, dx.Word);
+					Push(dx.Word);
 					cycles = 1;
 					break;
 
 				case 0x53:
 					/* PUSH BX */
-					sp -= 2;
-					WriteMemory16(ss, sp, bx.Word);
+					Push(bx.Word);
 					cycles = 1;
 					break;
 
 				case 0x54:
 					/* PUSH SP */
-					sp -= 2;
-					WriteMemory16(ss, sp, sp);
+					Push(sp);
 					cycles = 1;
 					break;
 
 				case 0x55:
 					/* PUSH BP */
-					sp -= 2;
-					WriteMemory16(ss, sp, bp);
+					Push(bp);
 					cycles = 1;
 					break;
 
 				case 0x56:
 					/* PUSH SI */
-					sp -= 2;
-					WriteMemory16(ss, sp, si);
+					Push(si);
 					cycles = 1;
 					break;
 
 				case 0x57:
 					/* PUSH DI */
-					sp -= 2;
-					WriteMemory16(ss, sp, di);
+					Push(di);
 					cycles = 1;
 					break;
 
 				case 0x58:
 					/* POP AX */
-					ax.Word = ReadMemory16(ss, sp);
-					sp += 2;
+					ax.Word = Pop();
 					cycles = 1;
 					break;
 
 				case 0x59:
 					/* POP CX */
-					cx.Word = ReadMemory16(ss, sp);
-					sp += 2;
+					cx.Word = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5A:
 					/* POP DX */
-					dx.Word = ReadMemory16(ss, sp);
-					sp += 2;
+					dx.Word = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5B:
 					/* POP BX */
-					bx.Word = ReadMemory16(ss, sp);
-					sp += 2;
+					bx.Word = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5C:
 					/* POP SP */
-					sp = ReadMemory16(ss, sp);
-					sp += 2;
+					sp = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5D:
 					/* POP BP */
-					bp = ReadMemory16(ss, sp);
-					sp += 2;
+					bp = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5E:
 					/* POP SI */
-					si = ReadMemory16(ss, sp);
-					sp += 2;
+					si = Pop();
 					cycles = 1;
 					break;
 
 				case 0x5F:
 					/* POP DI */
-					di = ReadMemory16(ss, sp);
-					sp += 2;
+					di = Pop();
 					cycles = 1;
 					break;
 
 				case 0x60:
 					/* PUSHA -- 80186 */
 					{
-						temp = sp;
-						sp -= 2;
-						WriteMemory16(ss, sp, ax.Word);
-						sp -= 2;
-						WriteMemory16(ss, sp, cx.Word);
-						sp -= 2;
-						WriteMemory16(ss, sp, dx.Word);
-						sp -= 2;
-						WriteMemory16(ss, sp, bx.Word);
-						sp -= 2;
-						WriteMemory16(ss, sp, temp);
-						sp -= 2;
-						WriteMemory16(ss, sp, bp);
-						sp -= 2;
-						WriteMemory16(ss, sp, si);
-						sp -= 2;
-						WriteMemory16(ss, sp, di);
+						var oldSp = sp;
+						Push(ax.Word);
+						Push(cx.Word);
+						Push(dx.Word);
+						Push(bx.Word);
+						Push(oldSp);
+						Push(bp);
+						Push(si);
+						Push(di);
 						cycles = 8;
 					}
 					break;
@@ -743,22 +707,14 @@ namespace StoicGoose.Emulation.CPU
 				case 0x61:
 					/* POPA -- 80186 */
 					{
-						di = ReadMemory16(ss, sp);
-						sp += 2;
-						si = ReadMemory16(ss, sp);
-						sp += 2;
-						bp = ReadMemory16(ss, sp);
-						sp += 2;
-						ReadMemory16(ss, sp); /* don't restore SP */
-						sp += 2;
-						bx.Word = ReadMemory16(ss, sp);
-						sp += 2;
-						dx.Word = ReadMemory16(ss, sp);
-						sp += 2;
-						cx.Word = ReadMemory16(ss, sp);
-						sp += 2;
-						ax.Word = ReadMemory16(ss, sp);
-						sp += 2;
+						di = Pop();
+						si = Pop();
+						bp = Pop();
+						Pop(); /* don't restore SP */
+						bx.Word = Pop();
+						dx.Word = Pop();
+						cx.Word = Pop();
+						ax.Word = Pop();
 						cycles = 8;
 					}
 					break;
@@ -777,9 +733,7 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x68:
 					/* PUSH Iw -- 80186 */
-					temp = ReadOpcodeIw();
-					sp -= 2;
-					WriteMemory16(ss, sp, temp);
+					Push(ReadOpcodeIw());
 					cycles = 1;
 					break;
 
@@ -791,10 +745,7 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x6A:
 					/* PUSH Ib -- 80186 */
-					temp = ReadOpcodeIb();
-					temp |= (ushort)(((temp >> 7) != 0) ? 0xFF00 : 0);
-					sp -= 2;
-					WriteMemory16(ss, sp, temp);
+					Push((ushort)(sbyte)ReadOpcodeIb());
 					cycles = 1;
 					break;
 
@@ -1008,18 +959,22 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x86:
 					/* XCHG Gb Eb */
-					temp = ReadOpcodeGb();
-					WriteOpcodeGb(ReadOpcodeEb());
-					WriteOpcodeEb((byte)temp);
-					cycles = 3;
+					{
+						var temp = ReadOpcodeGb();
+						WriteOpcodeGb(ReadOpcodeEb());
+						WriteOpcodeEb(temp);
+						cycles = 3;
+					}
 					break;
 
 				case 0x87:
 					/* XCHG Gw Ew */
-					temp = ReadOpcodeGw();
-					WriteOpcodeGw(ReadOpcodeEw());
-					WriteOpcodeEw(temp);
-					cycles = 3;
+					{
+						var temp = ReadOpcodeGw();
+						WriteOpcodeGw(ReadOpcodeEw());
+						WriteOpcodeEw(temp);
+						cycles = 3;
+					}
 					break;
 
 				case 0x88:
@@ -1068,72 +1023,87 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x8F:
 					/* POP Ew */
-					WriteOpcodeEw(ReadMemory16(ss, sp));
-					sp += 2;
+					WriteOpcodeEw(Pop());
 					cycles = 1;
 					break;
 
 				case 0x90:
 					/* NOP (XCHG AX AX) */
-					temp = ax.Word;
-					ax.Word = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x91:
 					/* XCHG CX AX */
-					temp = ax.Word;
-					ax.Word = cx.Word;
-					cx.Word = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = cx.Word;
+						cx.Word = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x92:
 					/* XCHG DX AX */
-					temp = ax.Word;
-					ax.Word = dx.Word;
-					dx.Word = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = dx.Word;
+						dx.Word = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x93:
 					/* XCHG BX AX */
-					temp = ax.Word;
-					ax.Word = bx.Word;
-					bx.Word = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = bx.Word;
+						bx.Word = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x94:
 					/* XCHG SP AX */
-					temp = ax.Word;
-					ax.Word = sp;
-					sp = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = sp;
+						sp = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x95:
 					/* XCHG BP AX */
-					temp = ax.Word;
-					ax.Word = bp;
-					bp = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = bp;
+						bp = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x96:
 					/* XCHG SI AX */
-					temp = ax.Word;
-					ax.Word = si;
-					si = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = si;
+						si = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x97:
 					/* XCHG DI AX */
-					temp = ax.Word;
-					ax.Word = di;
-					di = temp;
-					cycles = 3;
+					{
+						var temp = ax.Word;
+						ax.Word = di;
+						di = temp;
+						cycles = 3;
+					}
 					break;
 
 				case 0x98:
@@ -1154,20 +1124,18 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x9A:
 					/* CALL Ap */
-					temp = ReadMemory16(cs, ip);
-					ip += 2;
-					var newCs = ReadMemory16(cs, ip);
-					ip += 2;
+					{
+						var newIp = ReadOpcodeIw();
+						var newCs = ReadOpcodeIw();
 
-					sp -= 2;
-					WriteMemory16(ss, sp, cs);
-					sp -= 2;
-					WriteMemory16(ss, sp, ip);
+						Push(cs);
+						Push(ip);
 
-					ip = temp;
-					cs = newCs;
+						ip = newIp;
+						cs = newCs;
 
-					cycles = 9;
+						cycles = 9;
+					}
 					break;
 
 				case 0x9B:
@@ -1177,15 +1145,13 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x9C:
 					/* PUSHF */
-					sp -= 2;
-					WriteMemory16(ss, sp, (ushort)flags);
+					Push((ushort)flags);
 					cycles = 1;
 					break;
 
 				case 0x9D:
 					/* POPF */
-					flags = (Flags)ReadMemory16(ss, sp);
-					sp += 2;
+					flags = (Flags)Pop();
 					cycles = 1;
 					break;
 
@@ -1207,33 +1173,25 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xA0:
 					/* MOV AL Aw */
-					temp = ReadMemory16(cs, ip);
-					ip += 2;
-					ax.Low = ReadMemory8(GetSegmentViaOverride(SegmentNumber.DS), temp);
+					ax.Low = ReadMemory8(GetSegmentViaOverride(SegmentNumber.DS), ReadOpcodeIw());
 					cycles = 1;
 					break;
 
 				case 0xA1:
 					/* MOV AX Aw */
-					temp = ReadMemory16(cs, ip);
-					ip += 2;
-					ax.Word = ReadMemory16(GetSegmentViaOverride(SegmentNumber.DS), temp);
+					ax.Word = ReadMemory16(GetSegmentViaOverride(SegmentNumber.DS), ReadOpcodeIw());
 					cycles = 1;
 					break;
 
 				case 0xA2:
 					/* MOV Aw AL */
-					temp = ReadMemory16(cs, ip);
-					ip += 2;
-					WriteMemory8(GetSegmentViaOverride(SegmentNumber.DS), temp, ax.Low);
+					WriteMemory8(GetSegmentViaOverride(SegmentNumber.DS), ReadOpcodeIw(), ax.Low);
 					cycles = 1;
 					break;
 
 				case 0xA3:
 					/* MOV Aw AX */
-					temp = ReadMemory16(cs, ip);
-					ip += 2;
-					WriteMemory16(GetSegmentViaOverride(SegmentNumber.DS), temp, ax.Word);
+					WriteMemory16(GetSegmentViaOverride(SegmentNumber.DS), ReadOpcodeIw(), ax.Word);
 					cycles = 1;
 					break;
 
@@ -1491,16 +1449,17 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xC2:
 					/* RET Iw */
-					temp = ReadOpcodeIw();
-					ip = ReadMemory16(ss, sp);
-					sp += (ushort)(temp + 2);
-					cycles = 5;
+					{
+						var offset = ReadOpcodeIw();
+						ip = Pop();
+						sp += offset;
+						cycles = 5;
+					}
 					break;
 
 				case 0xC3:
 					/* RET */
-					ip = ReadMemory16(ss, sp);
-					sp += 2;
+					ip = Pop();
 					cycles = 5;
 					break;
 
@@ -1540,29 +1499,18 @@ namespace StoicGoose.Emulation.CPU
 					/* ENTER -- 80186 */
 					{
 						var offset = ReadOpcodeIw();
-						var length = ReadOpcodeIb() & 0x1F;
+						var length = (byte)(ReadOpcodeIb() & 0x1F);
 
-						sp -= 2;
-						WriteMemory16(ss, sp, bp);
-
-						if (length == 0)
-							bp = sp;
-						else
-						{
-							temp = sp;
-							for (var i = 0; i < length - 1; i++)
-							{
-								bp -= 2;
-								sp -= 2;
-								WriteMemory16(ss, sp, ReadMemory16(ss, bp));
-							}
-							sp -= 2;
-							WriteMemory16(ss, sp, temp);
-
-							bp = temp;
-						}
+						Push(bp);
+						bp = sp;
 						sp -= offset;
 
+						if (length != 0)
+						{
+							for (var i = 1; i < length; i++)
+								Push(ReadMemory16(ss, (ushort)(bp - i * 2)));
+							Push(bp);
+						}
 						cycles = 7;
 					}
 					break;
@@ -1570,29 +1518,25 @@ namespace StoicGoose.Emulation.CPU
 				case 0xC9:
 					/* LEAVE -- 80186 */
 					sp = bp;
-					bp = ReadMemory16(ss, sp);
-					sp += 2;
-
+					bp = Pop();
 					cycles = 1;
 					break;
 
 				case 0xCA:
 					/* RETF Iw */
-					temp = ReadOpcodeIw();
-					ip = ReadMemory16(ss, sp);
-					sp += 2;
-					cs = ReadMemory16(ss, sp);
-					sp += 2;
-					sp += temp;
-					cycles = 8;
+					{
+						var offset = ReadOpcodeIw();
+						ip = Pop();
+						cs = Pop();
+						sp += offset;
+						cycles = 8;
+					}
 					break;
 
 				case 0xCB:
 					/* RETF */
-					ip = ReadMemory16(ss, sp);
-					sp += 2;
-					cs = ReadMemory16(ss, sp);
-					sp += 2;
+					ip = Pop();
+					cs = Pop();
 					cycles = 7;
 					break;
 
@@ -1616,10 +1560,9 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xCF:
 					/* IRET */
-					ip = ReadMemory16(ss, (ushort)(sp + 0));
-					cs = ReadMemory16(ss, (ushort)(sp + 2));
-					flags = (Flags)ReadMemory16(ss, (ushort)(sp + 4));
-					sp += 6;
+					ip = Pop();
+					cs = Pop();
+					flags = (Flags)Pop();
 					cycles = 9;
 					break;
 
@@ -1721,8 +1664,7 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xD7:
 					/* XLAT */
-					temp = GetSegmentViaOverride(SegmentNumber.DS);
-					ax.Low = ReadMemory8(temp, (ushort)(bx.Word + ax.Low));
+					ax.Low = ReadMemory8(GetSegmentViaOverride(SegmentNumber.DS), (ushort)(bx.Word + ax.Low));
 					cycles = 4;
 					break;
 
@@ -1774,29 +1716,34 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xE8:
 					/* CALL Jv */
-					temp = ReadOpcodeIw();
-
-					sp -= 2;
-					WriteMemory16(ss, sp, ip);
-
-					ip += temp;
-
-					cycles = 4;
+					{
+						var offset = ReadOpcodeIw();
+						Push(ip);
+						ip += offset;
+						cycles = 4;
+					}
 					break;
 
 				case 0xE9:
 					/* JMP Jv */
-					temp = ReadOpcodeIw();
-					ip += temp;
-					cycles = 3;
+					{
+						var offset = ReadOpcodeIw();
+						ip += offset;
+						cycles = 3;
+					}
 					break;
 
 				case 0xEA:
 					/* JMP Ap */
-					temp = ReadOpcodeIw();
-					cs = ReadOpcodeIw();
-					ip = temp;
-					cycles = 6;
+					{
+						var newIp = ReadOpcodeIw();
+						var newCs = ReadOpcodeIw();
+
+						ip = newIp;
+						cs = newCs;
+
+						cycles = 6;
+					}
 					break;
 
 				case 0xEB:
@@ -1933,16 +1880,21 @@ namespace StoicGoose.Emulation.CPU
 					{
 						case 0x0: /* INC */ WriteOpcodeEw(Inc16(ReadOpcodeEw())); cycles = 1; break;
 						case 0x1: /* DEC */ WriteOpcodeEw(Dec16(ReadOpcodeEw())); cycles = 1; break;
-						case 0x2: /* CALL */ { var offset = ReadOpcodeEw(); sp -= 2; WriteMemory16(ss, sp, ip); ip = offset; cycles = 5; } break;
+						case 0x2: /* CALL */
+							{
+								var offset = ReadOpcodeEw();
+								Push(ip);
+								ip = offset;
+								cycles = 5;
+							}
+							break;
 						case 0x3: /* CALL Mp */
 							{
 								if (modRm.Mod == ModRM.Modes.Register) throw new ArgumentException("Invalid mode", nameof(modRm.Mod));
 								var offset = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 0));
 								var segment = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
-								sp -= 2;
-								WriteMemory16(ss, sp, cs);
-								sp -= 2;
-								WriteMemory16(ss, sp, ip);
+								Push(cs);
+								Push(ip);
 								cs = segment;
 								ip = offset;
 								cycles = 11;
@@ -1957,7 +1909,7 @@ namespace StoicGoose.Emulation.CPU
 								cycles = 9;
 							}
 							break;
-						case 0x6: /* PUSH */ temp = ReadOpcodeEw(); sp -= 2; WriteMemory16(ss, sp, temp); cycles = 3; break;
+						case 0x6: /* PUSH */  Push(ReadOpcodeEw()); cycles = 3; break;
 						case 0x7: /* --- */ throw new ArgumentException("Invalid function", nameof(modRm.Reg));     // undocumented mirror of PUSH?
 						default: throw new ArgumentException("Invalid function", nameof(modRm.Reg));
 					}

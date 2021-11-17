@@ -78,6 +78,7 @@ namespace StoicGoose.Emulation.Cartridges
 			{ 0x26, ("KDK", "Kadokawa Shoten") },
 			{ 0x27, ("SHL", "Shall Luck") },
 			{ 0x28, ("SQR", "Squaresoft") },
+			{ 0x2A, ("SCC", "NTT DoCoMo (?)") },	/* MobileWonderGate */
 			{ 0x2B, ("TMC", "Tom Create") },
 			{ 0x2D, ("NMC", "Namco") },
 			{ 0x2E, ("SES", "Movic (?)") },

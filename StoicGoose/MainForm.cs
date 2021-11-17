@@ -337,6 +337,8 @@ namespace StoicGoose
 
 		private void LoadBootstrap(string filename)
 		{
+			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
+
 			if (!emulatorHandler.IsRunning && isBootstrapAvailable && !emulatorHandler.IsBootstrapLoaded)
 			{
 				using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);

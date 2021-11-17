@@ -2,6 +2,19 @@
 {
 	public sealed partial class V30MZ
 	{
+		private void Push(ushort value)
+		{
+			sp -= 2;
+			WriteMemory16(ss, sp, value);
+		}
+
+		private ushort Pop()
+		{
+			var value = ReadMemory16(ss, sp);
+			sp += 2;
+			return value;
+		}
+
 		private int JumpConditional(bool condition)
 		{
 			if (condition) { ip = ReadOpcodeJb(); return 4; }
