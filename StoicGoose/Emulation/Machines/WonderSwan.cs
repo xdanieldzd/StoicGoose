@@ -134,8 +134,8 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Program(0x77, 0x00); // ""
 			eeprom.Program(0x78, 0x00); // Last game played, game ID [set to presumably none]
 			eeprom.Program(0x79, 0x00); // ""
-			eeprom.Program(0x7A, 0x00); // (unknown)
-			eeprom.Program(0x7B, 0x00); // (unknown)
+			eeprom.Program(0x7A, 0x00); // (unknown)  -- Swan ID? (see Mama Mitte)
+			eeprom.Program(0x7B, 0x00); // (unknown)  -- ""
 			eeprom.Program(0x7C, 0x00); // Number of different games played [set to presumably none]
 			eeprom.Program(0x7D, 0x00); // Number of times settings were changed [set to presumably none]
 			eeprom.Program(0x7E, 0x00); // Number of times powered on [set to presumably none]
