@@ -18,7 +18,7 @@ namespace StoicGoose.Emulation
 		volatile bool limitFps = true, isResetRequested = false, isPauseToggleRequested = false;
 
 		public bool IsRunning => emulationThreadRunning;
-		public bool IsPaused => emulationThreadPaused;
+		public bool IsPaused { get; private set; }
 
 		public bool LimitFps
 		{
@@ -80,6 +80,8 @@ namespace StoicGoose.Emulation
 		public void Pause()
 		{
 			isPauseToggleRequested = true;
+
+			IsPaused = !emulationThreadPaused;
 		}
 
 		public void Shutdown()
@@ -144,6 +146,10 @@ namespace StoicGoose.Emulation
 						lastTime = stopWatch.Elapsed.TotalMilliseconds;
 
 					emulator.RunFrame();
+				}
+				else
+				{
+					lastTime = stopWatch.Elapsed.TotalMilliseconds;
 				}
 			}
 		}
