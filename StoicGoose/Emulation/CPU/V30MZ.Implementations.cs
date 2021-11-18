@@ -462,6 +462,8 @@
 
 		private ushort Div8(bool signed, ushort a, byte b)
 		{
+			if (b == 0) RaiseInterrupt(0);
+
 			int quotient = signed ? ((short)a / (sbyte)b) : (a / b);
 			int remainder = signed ? ((short)a % (sbyte)b) : (a % b);
 
@@ -472,6 +474,8 @@
 
 		private uint Div16(bool signed, uint a, ushort b)
 		{
+			if (b == 0) RaiseInterrupt(0);
+
 			int quotient = signed ? ((int)a / (short)b) : (int)(a / b);
 			int remainder = signed ? ((int)a % (short)b) : (int)(a % b);
 

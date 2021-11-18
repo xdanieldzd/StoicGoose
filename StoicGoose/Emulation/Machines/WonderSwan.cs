@@ -485,7 +485,6 @@ namespace StoicGoose.Emulation.Machines
 				case 0xB2:
 					/* REG_INT_ENABLE */
 					intEnable = value;
-					intStatus &= (byte)~intEnable; // TODO verify
 					break;
 
 				case 0xB3:

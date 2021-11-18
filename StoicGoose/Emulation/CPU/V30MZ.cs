@@ -62,31 +62,29 @@ namespace StoicGoose.Emulation.CPU
 
 		private void CheckAndServiceInterrupt()
 		{
-			if (pendingIntVector != -1)
+			/* Interrupts enabled AND interrupt pending? */
+			if (IsFlagSet(Flags.InterruptEnable) && pendingIntVector != -1)
 			{
+				/* Service interrupt */
+				var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
+				var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
+
+				Push((ushort)flags);
+				Push(cs);
+				Push(ip);
+
+				cs = segment;
+				ip = offset;
+
+				ResetPrefixes();
+				modRm.Reset();
+
+				ClearFlags(Flags.InterruptEnable);
+
 				halted = false;
-
-				if (IsFlagSet(Flags.InterruptEnable))
-				{
-					/* Service interrupt */
-					var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
-					var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
-
-					Push((ushort)flags);
-					Push(cs);
-					Push(ip);
-
-					cs = segment;
-					ip = offset;
-
-					ResetPrefixes();
-					modRm.Reset();
-
-					ClearFlags(Flags.InterruptEnable);
-				}
-
-				pendingIntVector = -1;  // TODO ????? correct????
 			}
+
+			pendingIntVector = -1;
 		}
 
 		public int Step()

@@ -95,7 +95,7 @@ namespace StoicGoose.Emulation.Display
 
 			screenUsage = new byte[HorizontalDisp * VerticalDisp];
 
-			clockCyclesPerLine = (int)Math.Round(WonderSwan.CpuClock / VerticalClock / VerticalTotal);
+			clockCyclesPerLine = HorizontalTotal;
 			outputFramebuffer = new byte[ScreenWidth * ScreenHeight * 4];
 		}
 
@@ -155,144 +155,141 @@ namespace StoicGoose.Emulation.Display
 		{
 			var interrupt = DisplayInterrupts.None;
 
-			cycleCount += clockCyclesInStep;
-
-			if (cycleCount >= clockCyclesPerLine)
+			for (var i = 0; i < clockCyclesInStep; i++)
 			{
-				// render line
-				if (lineCurrent < VerticalDisp)
-					RenderScanline(lineCurrent);
-
-				// sprite fetch
-				if (lineCurrent == VerticalDisp - 2)
+				if (cycleCount == 0)
 				{
-					for (var i = 0; i < spriteDataNextFrame.Length; i++) spriteDataNextFrame[i] = 0;
-					for (var i = sprFirst; i < sprFirst + Math.Min(maxSpriteCount, sprCount); i++)
+					// V-blank interrupt
+					if (lineCurrent == VerticalDisp)
 					{
-						var j = (uint)((sprBase << 9) + (i << 2));
-						spriteDataNextFrame[i] = (uint)(memoryReadDelegate(j + 3) << 24 | memoryReadDelegate(j + 2) << 16 | memoryReadDelegate(j + 1) << 8 | memoryReadDelegate(j + 0));
+						interrupt |= DisplayInterrupts.VBlank;
+
+						// V-timer interrupt
+						if (vBlankTimer.Step())
+							interrupt |= DisplayInterrupts.VBlankTimer;
+					}
+
+					// line compare interrupt
+					if (lineCurrent == lineCompare)
+						interrupt |= DisplayInterrupts.LineCompare;
+
+					// sprite fetch
+					if (lineCurrent == VerticalDisp - 2)
+					{
+						for (var j = 0; j < spriteDataNextFrame.Length; j++) spriteDataNextFrame[j] = 0;
+						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
+						{
+							var k = (uint)((sprBase << 9) + (j << 2));
+							spriteDataNextFrame[j] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
+						}
 					}
 				}
 
-				// V-blank interrupt
-				if (lineCurrent == VerticalDisp)
-				{
-					interrupt |= DisplayInterrupts.VBlank;
+				// render pixel
+				RenderPixel(lineCurrent, cycleCount++);
 
-					// V-timer interrupt
-					if (vBlankTimer.Step())
-						interrupt |= DisplayInterrupts.VBlankTimer;
+				if (cycleCount == HorizontalDisp)
+				{
+					// H-timer interrupt
+					if (hBlankTimer.Step())
+						interrupt |= DisplayInterrupts.HBlankTimer;
 				}
 
-				// H-timer interrupt
-				if (hBlankTimer.Step())
-					interrupt |= DisplayInterrupts.HBlankTimer;
-
-				// go to next scanline
-				lineCurrent++;
-
-				// line compare interrupt
-				if (lineCurrent == lineCompare)
-					interrupt |= DisplayInterrupts.LineCompare;
-
-				// is frame finished
-				if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
+				if (cycleCount == clockCyclesPerLine)
 				{
-					lineCurrent = 0;
+					// go to next scanline
+					lineCurrent++;
 
-					// copy sprite data for next frame
-					for (var i = 0; i < maxSpriteCount; i++)
-						spriteData[i] = spriteDataNextFrame[i];
+					// is frame finished
+					if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
+					{
+						lineCurrent = 0;
 
-					OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
-					ResetScreenUsageMap();
+						// copy sprite data for next frame
+						for (var j = 0; j < maxSpriteCount; j++)
+							spriteData[j] = spriteDataNextFrame[j];
+
+						OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
+						ResetScreenUsageMap();
+					}
+
+					// end of scanline
+					cycleCount = 0;
 				}
-
-				// end of scanline
-				cycleCount -= clockCyclesPerLine;
-				if (cycleCount < -clockCyclesPerLine) cycleCount = 0;
 			}
 
 			return interrupt;
 		}
 
-		private void RenderScanline(int y)
+		private void RenderPixel(int y, int x)
 		{
-			if (y < 0 || y >= VerticalDisp) return;
+			if (y < 0 || y >= VerticalDisp || x < 0 || x >= HorizontalDisp) return;
 
 			if (lcdActive)
 			{
-				for (var x = 0; x < HorizontalDisp; x++)
-					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColor & 0b0111]));
+				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColor & 0b0111]));
 
-				RenderSCR1(y);
-				RenderSCR2(y);
-				RenderSprites(y);
+				RenderSCR1(y, x);
+				RenderSCR2(y, x);
+				RenderSprites(y, x);
 			}
 			else
 			{
 				// LCD sleeping
-				for (var x = 0; x < HorizontalDisp; x++)
-					WriteToFramebuffer(y, x, 255, 255, 255);
+				WriteToFramebuffer(y, x, 255, 255, 255);
 			}
 		}
 
-		private void RenderSCR1(int y)
+		private void RenderSCR1(int y, int x)
 		{
 			if (!scr1Enable) return;
 
-			for (var x = 0; x < HorizontalDisp; x++)
+			var scrollX = (x + scr1ScrollX) & 0xFF;
+			var scrollY = (y + scr1ScrollY) & 0xFF;
+
+			var mapOffset = GetMapOffset(scr1Base, scrollY, scrollX);
+			var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
+			var tileNum = (ushort)(attribs & 0x01FF);
+			var tilePal = (attribs >> 9) & 0b1111;
+
+			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
+
+			if (IsColorOpaque((byte)tilePal, color))
 			{
-				var scrollX = (x + scr1ScrollX) & 0xFF;
-				var scrollY = (y + scr1ScrollY) & 0xFF;
+				SetScreenUsageFlag(y, x, screenUsageSCR1);
+				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-				var mapOffset = GetMapOffset(scr1Base, scrollY, scrollX);
-				var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
-				var tileNum = (ushort)(attribs & 0x01FF);
-				var tilePal = (attribs >> 9) & 0b1111;
-
-				var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-				if (IsColorOpaque((byte)tilePal, color))
-				{
-					SetScreenUsageFlag(y, x, screenUsageSCR1);
-					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
-
-					if (GlobalVariables.EnableRenderSCR1DebugColors) WriteToFramebuffer(y, x, (byte)((tileNum & 0xf) << 4), 0, 0);
-				}
+				if (GlobalVariables.EnableRenderSCR1DebugColors) WriteToFramebuffer(y, x, (byte)((tileNum & 0xf) << 4), 0, 0);
 			}
 		}
 
-		private void RenderSCR2(int y)
+		private void RenderSCR2(int y, int x)
 		{
 			if (!scr2Enable) return;
 
-			for (var x = 0; x < HorizontalDisp; x++)
+			var scrollX = (x + scr2ScrollX) & 0xFF;
+			var scrollY = (y + scr2ScrollY) & 0xFF;
+
+			var mapOffset = GetMapOffset(scr2Base, scrollY, scrollX);
+			var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
+			var tileNum = (ushort)(attribs & 0x01FF);
+			var tilePal = (attribs >> 9) & 0b1111;
+
+			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
+
+			if (IsColorOpaque((byte)tilePal, color))
 			{
-				var scrollX = (x + scr2ScrollX) & 0xFF;
-				var scrollY = (y + scr2ScrollY) & 0xFF;
-
-				var mapOffset = GetMapOffset(scr2Base, scrollY, scrollX);
-				var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
-				var tileNum = (ushort)(attribs & 0x01FF);
-				var tilePal = (attribs >> 9) & 0b1111;
-
-				var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-				if (IsColorOpaque((byte)tilePal, color))
+				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
-					if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
-					{
-						SetScreenUsageFlag(y, x, screenUsageSCR2);
-						WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
+					SetScreenUsageFlag(y, x, screenUsageSCR2);
+					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-						if (GlobalVariables.EnableRenderSCR2DebugColors) WriteToFramebuffer(y, x, 0, (byte)((tileNum & 0xf) << 4), 0);
-					}
+					if (GlobalVariables.EnableRenderSCR2DebugColors) WriteToFramebuffer(y, x, 0, (byte)((tileNum & 0xf) << 4), 0);
 				}
 			}
 		}
 
-		private void RenderSprites(int y)
+		private void RenderSprites(int y, int x)
 		{
 			if (!sprEnable) return;
 
@@ -303,7 +300,9 @@ namespace StoicGoose.Emulation.Display
 				if (spriteData[i] == 0) continue;   //HACK: helps prevent garbage sprites in ex. pocket fighter, but prob only b/c inaccurate timing?
 
 				var spriteY = (int)((spriteData[i] >> 16) & 0xFF);
-				if (y >= spriteY && y < spriteY + 8 && activeSpritesOnLine.Count < 32)
+				var spriteX = (int)((spriteData[i] >> 24) & 0xFF);
+
+				if (y >= spriteY && y < spriteY + 8 && x >= spriteX && x < spriteX + 8 && activeSpritesOnLine.Count < 32)
 					activeSpritesOnLine.Add(spriteData[i]);
 			}
 
@@ -317,23 +316,20 @@ namespace StoicGoose.Emulation.Display
 				var spriteY = (int)((activeSprite >> 16) & 0xFF);
 				var spriteX = (int)((activeSprite >> 24) & 0xFF);
 
-				for (var x = spriteX; x < spriteX + 8; x++)
+				if (x < 0 || x >= HorizontalDisp) continue;
+
+				byte color = GetPixelColor(tileNum, (int)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (int)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
+
+				if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
 				{
-					if (x < 0 || x >= HorizontalDisp) continue;
-
-					byte color = GetPixelColor(tileNum, (int)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (int)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
-
-					if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
+					if (IsColorOpaque((byte)tilePal, color) && (!IsScreenUsageFlagSet(y, x, screenUsageSCR2) || priorityAboveSCR2))
 					{
-						if (IsColorOpaque((byte)tilePal, color) && (!IsScreenUsageFlagSet(y, x, screenUsageSCR2) || priorityAboveSCR2))
+						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 						{
-							if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
-							{
-								SetScreenUsageFlag(y, x, screenUsageSPR);
-								WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
+							SetScreenUsageFlag(y, x, screenUsageSPR);
+							WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
 
-								if (GlobalVariables.EnableRenderSPRDebugColors) WriteToFramebuffer(y, x, 0, 0, (byte)((tileNum & 0xf) << 4));
-							}
+							if (GlobalVariables.EnableRenderSPRDebugColors) WriteToFramebuffer(y, x, 0, 0, (byte)((tileNum & 0xf) << 4));
 						}
 					}
 				}
