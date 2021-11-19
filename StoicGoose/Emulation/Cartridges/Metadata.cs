@@ -41,7 +41,7 @@ namespace StoicGoose.Emulation.Cartridges
 			Speed1Cycle = 1 << 2
 		}
 
-		readonly Dictionary<byte, (string code, string name)> publishers = new Dictionary<byte, (string code, string name)>
+		readonly Dictionary<byte, (string code, string name)> publishers = new()
 		{
 			{ 0x00, ("---", "Misc. (invalid)") },
 			{ 0x01, ("BAN", "Bandai") },
@@ -78,7 +78,7 @@ namespace StoicGoose.Emulation.Cartridges
 			{ 0x26, ("KDK", "Kadokawa Shoten") },
 			{ 0x27, ("SHL", "Shall Luck") },
 			{ 0x28, ("SQR", "Squaresoft") },
-			{ 0x2A, ("SCC", "NTT DoCoMo (?)") },	/* MobileWonderGate */
+			{ 0x2A, ("SCC", "NTT DoCoMo (?)") },    /* MobileWonderGate */
 			{ 0x2B, ("TMC", "Tom Create") },
 			{ 0x2D, ("NMC", "Namco") },
 			{ 0x2E, ("SES", "Movic (?)") },
@@ -89,7 +89,7 @@ namespace StoicGoose.Emulation.Cartridges
 			{ 0x36, ("CAP", "Capcom") },
 		};
 
-		readonly Dictionary<SaveTypes, int> saveSizes = new Dictionary<SaveTypes, int>()
+		readonly Dictionary<SaveTypes, int> saveSizes = new()
 		{
 			{ SaveTypes.None, 0 },
 			{ SaveTypes.Sram64Kbit, 1024 * 8 },

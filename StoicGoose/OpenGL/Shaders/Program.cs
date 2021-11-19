@@ -9,7 +9,7 @@ namespace StoicGoose.OpenGL.Shaders
 	{
 		public int Handle { get; } = GL.CreateProgram();
 
-		readonly Dictionary<string, int> uniformLocations = new Dictionary<string, int>();
+		readonly Dictionary<string, int> uniformLocations = new();
 
 		bool disposed = false;
 

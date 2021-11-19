@@ -10,7 +10,7 @@ namespace StoicGoose.OpenGL.Vertices
 {
 	public sealed class VertexArray : IDisposable
 	{
-		static readonly Dictionary<Type, VertexAttribMethodType> methodTypeIdentifier = new Dictionary<Type, VertexAttribMethodType>()
+		static readonly Dictionary<Type, VertexAttribMethodType> methodTypeIdentifier = new()
 		{
 			{ typeof(sbyte), VertexAttribMethodType.Integer },
 			{ typeof(byte), VertexAttribMethodType.Integer },
@@ -32,7 +32,7 @@ namespace StoicGoose.OpenGL.Vertices
 			{ typeof(Vector4i), VertexAttribMethodType.Integer }
 		};
 
-		static readonly Dictionary<Type, VertexAttribPointerType> pointerTypeTranslator = new Dictionary<Type, VertexAttribPointerType>()
+		static readonly Dictionary<Type, VertexAttribPointerType> pointerTypeTranslator = new()
 		{
 			{ typeof(sbyte), VertexAttribPointerType.Byte },
 			{ typeof(byte), VertexAttribPointerType.UnsignedByte },
@@ -54,7 +54,7 @@ namespace StoicGoose.OpenGL.Vertices
 			{ typeof(Vector4i), VertexAttribPointerType.Int }
 		};
 
-		static readonly Dictionary<Type, VertexAttribIntegerType> integerTypeTranslator = new Dictionary<Type, VertexAttribIntegerType>()
+		static readonly Dictionary<Type, VertexAttribIntegerType> integerTypeTranslator = new()
 		{
 			{ typeof(sbyte), VertexAttribIntegerType.Byte },
 			{ typeof(byte), VertexAttribIntegerType.UnsignedByte },
@@ -67,7 +67,7 @@ namespace StoicGoose.OpenGL.Vertices
 			{ typeof(Vector4i), VertexAttribIntegerType.Int }
 		};
 
-		static readonly Dictionary<Type, DrawElementsType> drawElementsTypeTranslator = new Dictionary<Type, DrawElementsType>()
+		static readonly Dictionary<Type, DrawElementsType> drawElementsTypeTranslator = new()
 		{
 			{ typeof(byte), DrawElementsType.UnsignedByte },
 			{ typeof(ushort), DrawElementsType.UnsignedShort },
@@ -132,6 +132,8 @@ namespace StoicGoose.OpenGL.Vertices
 
 			vertexBuffer?.Dispose();
 			indexBuffer?.Dispose();
+
+			GC.SuppressFinalize(this);
 		}
 
 		private static VertexAttribute[] DeconstructVertexLayout(Type vertexType)

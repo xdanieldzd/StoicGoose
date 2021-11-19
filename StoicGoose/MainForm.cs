@@ -37,7 +37,8 @@ namespace StoicGoose
 		EmulatorHandler emulatorHandler = default;
 
 		/* Misc. runtime variables */
-		bool isBootstrapAvailable = false, isVerticalOrientation = false;
+		readonly List<Binding> uiDataBindings = new();
+		bool isVerticalOrientation = false;
 
 		public MainForm()
 		{
@@ -127,8 +128,6 @@ namespace StoicGoose
 		private void VerifyConfiguration()
 		{
 			var metadata = emulatorHandler.GetMetadata();
-
-			isBootstrapAvailable = File.Exists(Program.Configuration.General.BootstrapFile);
 
 			foreach (var button in metadata["machine/input/controls"].Value.StringArray)
 			{
@@ -314,14 +313,23 @@ namespace StoicGoose
 			}
 		}
 
+		private void CreateDataBinding(ControlBindingsCollection bindings, string propertyName, object dataSource, string dataMember)
+		{
+			var binding = new Binding(propertyName, dataSource, dataMember, false, DataSourceUpdateMode.OnPropertyChanged);
+			bindings.Add(binding);
+			uiDataBindings.Add(binding);
+		}
+
 		private void InitializeUIMiscellanea()
 		{
 			// ... aka all the minor stuff I didn't want directly in the Load event, but also doesn't merit a separate function
 
-			limitFPSToolStripMenuItem.DataBindings.Add(nameof(limitFPSToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.LimitFps), false, DataSourceUpdateMode.OnPropertyChanged);
+			uiDataBindings.Clear();
+
+			CreateDataBinding(limitFPSToolStripMenuItem.DataBindings, nameof(limitFPSToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.LimitFps));
 			limitFPSToolStripMenuItem.CheckedChanged += (s, e) => { emulatorHandler.LimitFps = Program.Configuration.General.LimitFps; };
 
-			muteSoundToolStripMenuItem.DataBindings.Add(nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute), false, DataSourceUpdateMode.OnPropertyChanged);
+			CreateDataBinding(muteSoundToolStripMenuItem.DataBindings, nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute));
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
 			ofdOpenRom.Filter = $"{emulatorHandler.GetMetadata()["interface/files/romfilter"]}|All Files (*.*)|*.*";
@@ -331,7 +339,8 @@ namespace StoicGoose
 		{
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
 
-			if (!emulatorHandler.IsRunning && isBootstrapAvailable && !emulatorHandler.IsBootstrapLoaded)
+			if (!emulatorHandler.IsRunning &&
+				Program.Configuration.General.UseBootstrap && File.Exists(Program.Configuration.General.BootstrapFile) && !emulatorHandler.IsBootstrapLoaded)
 			{
 				using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				var data = new byte[stream.Length];
@@ -488,6 +497,8 @@ namespace StoicGoose
 			{
 				Program.ReplaceConfiguration(dialog.Configuration);
 				VerifyConfiguration();
+
+				foreach (var binding in uiDataBindings) binding.ReadValue();
 			}
 
 			TogglePause();

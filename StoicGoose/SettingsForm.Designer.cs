@@ -80,8 +80,8 @@ namespace StoicGoose
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tlpSettings.AutoSize = true;
 			this.tlpSettings.ColumnCount = 2;
-			this.tlpSettings.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
-			this.tlpSettings.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 75F));
+			this.tlpSettings.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+			this.tlpSettings.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
 			this.tlpSettings.ImeMode = System.Windows.Forms.ImeMode.On;
 			this.tlpSettings.Location = new System.Drawing.Point(168, 12);
 			this.tlpSettings.Name = "tlpSettings";

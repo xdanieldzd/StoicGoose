@@ -37,23 +37,23 @@ namespace StoicGoose.Handlers
 
 		readonly ObjectStorage metadata = default;
 
-		readonly Dictionary<string, Texture> iconTextures = new Dictionary<string, Texture>();
+		readonly Dictionary<string, Texture> iconTextures = new();
 
-		readonly Matrix4Uniform projectionMatrix = new Matrix4Uniform(nameof(projectionMatrix));
-		readonly Matrix4Uniform textureMatrix = new Matrix4Uniform(nameof(textureMatrix));
-		readonly IntUniform renderMode = new IntUniform(nameof(renderMode));
+		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
+		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
+		readonly IntUniform renderMode = new(nameof(renderMode));
 
-		readonly Matrix4Uniform displayModelviewMatrix = new Matrix4Uniform(defaultModelviewMatrixName);
-		readonly Matrix4Uniform iconBackgroundModelviewMatrix = new Matrix4Uniform(defaultModelviewMatrixName);
-		readonly Dictionary<string, Matrix4Uniform> iconModelviewMatrices = new Dictionary<string, Matrix4Uniform>();
+		readonly Matrix4Uniform displayModelviewMatrix = new(defaultModelviewMatrixName);
+		readonly Matrix4Uniform iconBackgroundModelviewMatrix = new(defaultModelviewMatrixName);
+		readonly Dictionary<string, Matrix4Uniform> iconModelviewMatrices = new();
 
-		readonly Vector4Uniform outputViewport = new Vector4Uniform(nameof(outputViewport));
-		readonly Vector4Uniform inputViewport = new Vector4Uniform(nameof(inputViewport));
+		readonly Vector4Uniform outputViewport = new(nameof(outputViewport));
+		readonly Vector4Uniform inputViewport = new(nameof(inputViewport));
 
 		readonly Texture[] displayTextures = new Texture[maxTextureSamplerCount];
 		int lastTextureUpdate = 0;
 
-		readonly Texture iconBackgroundTexture = new Texture(8, 8);
+		readonly Texture iconBackgroundTexture = new(8, 8);
 
 		VertexArray displayVertexArray = default, iconBackgroundVertexArray = default, iconVertexArray = default;
 

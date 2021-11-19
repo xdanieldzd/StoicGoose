@@ -35,9 +35,11 @@ namespace StoicGoose.OpenGL
 		{
 			if (GL.IsBuffer(handle))
 				GL.DeleteBuffer(handle);
+
+			GC.SuppressFinalize(this);
 		}
 
-		public static Buffer CreateBuffer<T>(BufferTarget target, BufferUsageHint usage) where T : struct => new Buffer(typeof(T), target, usage);
+		public static Buffer CreateBuffer<T>(BufferTarget target, BufferUsageHint usage) where T : struct => new(typeof(T), target, usage);
 		public static Buffer CreateVertexBuffer<T>(BufferUsageHint usage) where T : struct, IVertexStruct => CreateBuffer<T>(BufferTarget.ArrayBuffer, usage);
 		public static Buffer CreateIndexBuffer<T>(BufferUsageHint usage) where T : struct, IConvertible => CreateBuffer<T>(BufferTarget.ElementArrayBuffer, usage);
 

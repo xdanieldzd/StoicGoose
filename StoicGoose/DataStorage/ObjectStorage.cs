@@ -7,9 +7,9 @@ namespace StoicGoose.DataStorage
 {
 	public class ObjectStorage
 	{
-		static readonly Dictionary<Type, MethodInfo> conversionMethods = new Dictionary<Type, MethodInfo>();
+		static readonly Dictionary<Type, MethodInfo> conversionMethods = new();
 
-		readonly Dictionary<string, object> storageDict = new Dictionary<string, object>();
+		readonly Dictionary<string, object> storageDict = new();
 
 		public ObjectValue Value { get; set; }
 

@@ -14,6 +14,10 @@ using static StoicGoose.WinForms.ControlHelpers;
 
 namespace StoicGoose
 {
+	// TODO add brightness/contrast to video section?
+	// use smth like https://github.com/spite/Wagner/blob/87dde4895e38ab8c2ef432b1e623ece9484ea5cc/fragment-shaders/brightness-contrast-fs.glsl ?
+	// compare w/ https://alaingalvan.tumblr.com/post/79864187609/glsl-color-correction-shaders ?
+
 	public partial class SettingsForm : Form
 	{
 		public Configuration Configuration { get; } = default;
@@ -33,6 +37,7 @@ namespace StoicGoose
 		private void InitializePages()
 		{
 			var pageGeneral = new SettingsPage(Configuration, nameof(Configuration.General));
+			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.UseBootstrap)));
 			pageGeneral.Append(CreatePathSelector(Configuration.General, nameof(Configuration.General.BootstrapFile)));
 			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.LimitFps)));
 			pageGeneral.Attach(tvSettings);

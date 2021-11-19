@@ -67,7 +67,8 @@ namespace StoicGoose
 
 		public static void ReplaceConfiguration(Configuration newConfig)
 		{
-			Configuration = newConfig ?? throw new ArgumentNullException(nameof(newConfig), "Replacement configuration cannot be null");
+			ConfigurationBase.CopyConfiguration(newConfig, Configuration);
+			SaveConfiguration();
 		}
 
 		public static void SaveConfiguration()

@@ -58,19 +58,19 @@ namespace StoicGoose.DataStorage
 
 		public static implicit operator string(ObjectValue value) => value?.value;
 
-		public static implicit operator ObjectValue(string value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(bool value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(sbyte value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(short value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(int value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(long value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(byte value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(ushort value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(uint value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(ulong value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(float value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(double value) => new ObjectValue(value);
-		public static implicit operator ObjectValue(Point value) => new ObjectValue(value);
+		public static implicit operator ObjectValue(string value) => new(value);
+		public static implicit operator ObjectValue(bool value) => new(value);
+		public static implicit operator ObjectValue(sbyte value) => new(value);
+		public static implicit operator ObjectValue(short value) => new(value);
+		public static implicit operator ObjectValue(int value) => new(value);
+		public static implicit operator ObjectValue(long value) => new(value);
+		public static implicit operator ObjectValue(byte value) => new(value);
+		public static implicit operator ObjectValue(ushort value) => new(value);
+		public static implicit operator ObjectValue(uint value) => new(value);
+		public static implicit operator ObjectValue(ulong value) => new(value);
+		public static implicit operator ObjectValue(float value) => new(value);
+		public static implicit operator ObjectValue(double value) => new(value);
+		public static implicit operator ObjectValue(Point value) => new(value);
 
 		private static string GetString(string value) => value;
 		private static bool GetBool(string value) => value == true.ToString();
@@ -84,7 +84,7 @@ namespace StoicGoose.DataStorage
 		private static ulong GetULong(string value) => Convert.ToUInt64(value, GetBase(value));
 		private static float GetFloat(string value) => Convert.ToSingle(value);
 		private static double GetDouble(string value) => Convert.ToDouble(value);
-		private static Point GetPoint(string value) => new Point(int.Parse(value.Split(',')[0]), int.Parse(value.Split(',')[1]));
+		private static Point GetPoint(string value) => new(int.Parse(value.Split(',')[0]), int.Parse(value.Split(',')[1]));
 
 		public override string ToString() => value;
 	}

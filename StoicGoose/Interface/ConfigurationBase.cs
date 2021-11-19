@@ -35,4 +35,33 @@ namespace StoicGoose.Interface
 			property.SetValue(this, Defaults[name]);
 		}
 	}
+
+	public static class ConfigurationBase
+	{
+		public static void CopyConfiguration(object source, object destination)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source), "Source cannot be null");
+			if (destination == null) throw new ArgumentNullException(nameof(destination), "Destination cannot be null");
+
+			var sourceType = source.GetType();
+			var destType = destination.GetType();
+
+			foreach (var sourceProperty in sourceType.GetProperties().Where(x => x.CanRead))
+			{
+				var destProperty = destType.GetProperty(sourceProperty.Name);
+				if (destProperty == null || !destProperty.CanWrite || destProperty.GetSetMethod(true) == null || destProperty.GetSetMethod(true).IsPrivate ||
+					destProperty.GetSetMethod(true).Attributes.HasFlag(System.Reflection.MethodAttributes.Static) ||
+					!destProperty.PropertyType.IsAssignableFrom(sourceProperty.PropertyType))
+					continue;
+
+				var sourceValue = sourceProperty.GetValue(source, null);
+				var destValue = destProperty.GetValue(destination, null);
+
+				if ((sourceProperty.PropertyType.BaseType.IsGenericType ? sourceProperty.PropertyType.BaseType.GetGenericTypeDefinition() : sourceProperty.PropertyType.BaseType) == typeof(ConfigurationBase<>))
+					CopyConfiguration(sourceValue, destValue);
+				else
+					destProperty.SetValue(destination, sourceValue);
+			}
+		}
+	}
 }

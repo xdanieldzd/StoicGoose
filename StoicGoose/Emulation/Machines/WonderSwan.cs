@@ -49,7 +49,7 @@ namespace StoicGoose.Emulation.Machines
 
 		readonly byte[] internalRam = new byte[internalRamSize];
 
-		readonly Cartridge cartridge = new Cartridge();
+		readonly Cartridge cartridge = new();
 		readonly V30MZ cpu = default;
 		readonly DisplayController display = default;
 		readonly SoundController sound = default;

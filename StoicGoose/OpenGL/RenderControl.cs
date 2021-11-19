@@ -29,21 +29,11 @@ namespace StoicGoose.OpenGL
 
 		protected override bool IsInputKey(Keys keyData)
 		{
-			switch (keyData)
+			return keyData switch
 			{
-				case Keys.Right:
-				case Keys.Left:
-				case Keys.Up:
-				case Keys.Down:
-				case Keys.Shift | Keys.Right:
-				case Keys.Shift | Keys.Left:
-				case Keys.Shift | Keys.Up:
-				case Keys.Shift | Keys.Down:
-					return true;
-
-				default:
-					return base.IsInputKey(keyData);
-			}
+				Keys.Right or Keys.Left or Keys.Up or Keys.Down or Keys.Shift | Keys.Right or Keys.Shift | Keys.Left or Keys.Shift | Keys.Up or Keys.Shift | Keys.Down => true,
+				_ => base.IsInputKey(keyData),
+			};
 		}
 
 		protected override void OnHandleDestroyed(EventArgs e)

@@ -12,9 +12,9 @@ namespace StoicGoose.Handlers
 	public class InputHandler
 	{
 		readonly INativeInput nativeInput = default;
-		readonly Dictionary<string, Keys> keyMapping = new Dictionary<string, Keys>();
+		readonly Dictionary<string, Keys> keyMapping = new();
 
-		readonly List<string> lastFramePressed = new List<string>();
+		readonly List<string> lastFramePressed = new();
 
 		public bool IsVerticalOrientation { get; set; } = false;
 

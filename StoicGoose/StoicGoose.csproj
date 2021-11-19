@@ -13,6 +13,7 @@
     <Company>xdaniel</Company>
     <Copyright>Written 2021 by xdaniel</Copyright>
     <Description>16-bit game handheld emulator</Description>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -66,6 +67,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Shaders\Basic\Manifest.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
   <ItemGroup>

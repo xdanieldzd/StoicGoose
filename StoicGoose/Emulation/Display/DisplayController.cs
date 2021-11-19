@@ -43,7 +43,7 @@ namespace StoicGoose.Emulation.Display
 
 		readonly uint[] spriteData = new uint[maxSpriteCount];
 		readonly uint[] spriteDataNextFrame = new uint[maxSpriteCount];
-		readonly List<uint> activeSpritesOnLine = new List<uint>();
+		readonly List<uint> activeSpritesOnLine = new();
 
 		const byte screenUsageEmpty = 0;
 		const byte screenUsageSCR1 = 1 << 0;
@@ -87,7 +87,7 @@ namespace StoicGoose.Emulation.Display
 		/* REG_DISP_MODE */
 		bool isDisplayFormatPacked;
 		/* REG_xTMR_xxx */
-		readonly DisplayTimer hBlankTimer = new DisplayTimer(), vBlankTimer = new DisplayTimer();
+		readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
 
 		public DisplayController(MemoryReadDelegate memoryRead)
 		{

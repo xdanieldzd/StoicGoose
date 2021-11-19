@@ -25,7 +25,7 @@ namespace StoicGoose.Handlers
 		int source = -1, filter = -1;
 		int[] buffers = new int[numBuffers];
 
-		readonly Queue<short[]> sampleQueue = new Queue<short[]>();
+		readonly Queue<short[]> sampleQueue = new();
 		short[] lastSamples = new short[512];
 
 		float volume = 1.0f;
@@ -110,7 +110,7 @@ namespace StoicGoose.Handlers
 
 		public void SaveRecording(string filename)
 		{
-			using (FileStream file = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+			using (FileStream file = new(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
 			{
 				file.Write(waveHeader.GetBytes(), 0, (int)waveHeader.Length());
 				file.Write(formatChunk.GetBytes(), 0, (int)formatChunk.Length());
@@ -230,7 +230,7 @@ namespace StoicGoose.Handlers
 
 			public byte[] GetBytes()
 			{
-				List<byte> chunkData = new List<byte>();
+				List<byte> chunkData = new();
 
 				chunkData.AddRange(Encoding.ASCII.GetBytes(FileTypeId));
 				chunkData.AddRange(BitConverter.GetBytes(FileLength));
@@ -303,7 +303,7 @@ namespace StoicGoose.Handlers
 
 			public byte[] GetBytes()
 			{
-				List<byte> chunkBytes = new List<byte>();
+				List<byte> chunkBytes = new();
 
 				chunkBytes.AddRange(Encoding.ASCII.GetBytes(ChunkId));
 				chunkBytes.AddRange(BitConverter.GetBytes(ChunkSize));
@@ -340,7 +340,7 @@ namespace StoicGoose.Handlers
 
 			public byte[] GetBytes()
 			{
-				List<byte> chunkBytes = new List<byte>();
+				List<byte> chunkBytes = new();
 
 				chunkBytes.AddRange(Encoding.ASCII.GetBytes(ChunkId));
 				chunkBytes.AddRange(BitConverter.GetBytes(ChunkSize));
