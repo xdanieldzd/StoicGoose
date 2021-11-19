@@ -22,7 +22,7 @@ namespace StoicGoose
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
-		public static Configuration Configuration { get; } = LoadConfiguration(programConfigPath);
+		public static Configuration Configuration { get; private set; } = LoadConfiguration(programConfigPath);
 
 		public static string InternalEepromPath { get; } = Path.Combine(programDataDirectory, internalEepromFileName);
 		public static string SaveDataPath { get; } = string.Empty;
@@ -63,6 +63,11 @@ namespace StoicGoose
 			}
 
 			return configuration;
+		}
+
+		public static void ReplaceConfiguration(Configuration newConfig)
+		{
+			Configuration = newConfig ?? throw new ArgumentNullException(nameof(newConfig), "Replacement configuration cannot be null");
 		}
 
 		public static void SaveConfiguration()

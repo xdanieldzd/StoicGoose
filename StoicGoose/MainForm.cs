@@ -13,6 +13,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 using StoicGoose.Emulation;
+using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 using StoicGoose.OpenGL.Shaders.Bundles;
 
@@ -69,17 +70,8 @@ namespace StoicGoose
 
 			InitializeUIMiscellanea();
 
-			LoadInternalEeprom();
-
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
-
-
-
-			// TODO actually write config dialog :P
-
-			//var tmp = new SettingsForm(Program.Configuration);
-			//tmp.ShowDialog();
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
@@ -119,7 +111,7 @@ namespace StoicGoose
 				soundHandler.BeginRecording();
 
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
-			inputHandler.SetKeyMapping(Program.Configuration.Input.Controls, Program.Configuration.Input.Hardware);
+			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
 			emulatorHandler = new EmulatorHandler();
 			emulatorHandler.RenderScreen += graphicsHandler.RenderScreen;
@@ -140,14 +132,14 @@ namespace StoicGoose
 
 			foreach (var button in metadata["machine/input/controls"].Value.StringArray)
 			{
-				if (!Program.Configuration.Input.Controls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.Controls[button]))
-					Program.Configuration.Input.Controls[button] = string.Empty;
+				if (!Program.Configuration.Input.GameControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.GameControls[button]))
+					Program.Configuration.Input.GameControls[button] = string.Empty;
 			}
 
 			foreach (var button in metadata["machine/input/hardware"].Value.StringArray)
 			{
-				if (!Program.Configuration.Input.Hardware.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.Hardware[button]))
-					Program.Configuration.Input.Hardware[button] = string.Empty;
+				if (!Program.Configuration.Input.SystemControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.SystemControls[button]))
+					Program.Configuration.Input.SystemControls[button] = string.Empty;
 			}
 
 			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize >= maxScreenSizeFactor)
@@ -383,6 +375,7 @@ namespace StoicGoose
 			LoadRam();
 
 			LoadBootstrap(Program.Configuration.General.BootstrapFile);
+			LoadInternalEeprom();
 
 			emulatorHandler.Startup();
 
@@ -484,6 +477,20 @@ namespace StoicGoose
 				!isVerticalOrientation;
 
 			SizeAndPositionWindow();
+		}
+
+		private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			TogglePause();
+
+			using var dialog = new SettingsForm(Program.Configuration.Clone());
+			if (dialog.ShowDialog() == DialogResult.OK)
+			{
+				Program.ReplaceConfiguration(dialog.Configuration);
+				VerifyConfiguration();
+			}
+
+			TogglePause();
 		}
 
 		private void dumpRAMToolStripMenuItem_Click(object sender, EventArgs e)
