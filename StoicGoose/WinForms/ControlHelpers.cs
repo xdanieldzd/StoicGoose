@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -127,6 +128,30 @@ namespace StoicGoose.WinForms
 			return new Control[] { checkBox };
 		}
 
+		private static TrackBar CreateTrackbar(object obj, string propertyName)
+		{
+			return new()
+			{
+				Name = $"{obj}_{propertyName}_{nameof(TrackBar)}",
+				Dock = DockStyle.Fill,
+				TickStyle = TickStyle.Both,
+				TickFrequency = 10
+			};
+		}
+
+		public static Control[] CreateSlider<T>(object obj, string propertyName) where T : struct
+		{
+			var label = CreateLabel(obj, propertyName);
+			var trackBar = CreateTrackbar(obj, propertyName);
+			var (minimum, maximum) = GetRange<T>(obj.GetType(), propertyName);
+			trackBar.Minimum = (int)(object)minimum;
+			trackBar.Maximum = (int)(object)maximum;
+			trackBar.SmallChange = 5;
+			trackBar.LargeChange = 20;
+			trackBar.DataBindings.Add(nameof(TrackBar.Value), obj, propertyName);
+			return new Control[] { label, trackBar };
+		}
+
 		private static string GetDisplayName(Type type, string propertyName)
 		{
 			return (type.GetProperty(propertyName).GetCustomAttribute(typeof(DisplayNameAttribute), false) as DisplayNameAttribute)?.DisplayName ?? propertyName;
@@ -135,6 +160,12 @@ namespace StoicGoose.WinForms
 		private static string GetDescription(Type type, string propertyName)
 		{
 			return (type.GetProperty(propertyName).GetCustomAttribute(typeof(DescriptionAttribute), false) as DescriptionAttribute)?.Description ?? $"{propertyName} has no description";
+		}
+
+		private static (T, T) GetRange<T>(Type type, string propertyName)
+		{
+			if (type.GetProperty(propertyName).GetCustomAttribute(typeof(RangeAttribute), false) is not RangeAttribute rangeAttrib || rangeAttrib.OperandType != typeof(T)) return (default(T), default(T));
+			return ((T)rangeAttrib.Minimum, (T)rangeAttrib.Maximum);
 		}
 	}
 }

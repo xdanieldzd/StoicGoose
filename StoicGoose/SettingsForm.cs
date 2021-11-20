@@ -43,7 +43,9 @@ namespace StoicGoose
 			pageGeneral.Attach(tvSettings);
 
 			var pageVideo = new SettingsPage(Configuration, nameof(Configuration.Video));
-			//
+			pageVideo.Append(CreateSlider<int>(Configuration.Video, nameof(Configuration.Video.Brightness)));
+			pageVideo.Append(CreateSlider<int>(Configuration.Video, nameof(Configuration.Video.Contrast)));
+			pageVideo.Append(CreateSlider<int>(Configuration.Video, nameof(Configuration.Video.Saturation)));
 			pageVideo.Attach(tvSettings);
 
 			var pageSound = new SettingsPage(Configuration, nameof(Configuration.Sound));

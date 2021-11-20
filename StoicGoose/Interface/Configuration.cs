@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
 namespace StoicGoose.Interface
@@ -43,6 +44,18 @@ namespace StoicGoose.Interface
 		[DisplayName("Shader")]
 		[Description("Currently selected shader.")]
 		public string Shader { get; set; } = string.Empty;
+		[DisplayName("Brightness")]
+		[Description("Adjust the brightness of the emulated screen, in percent.")]
+		[Range(-100, 100)]
+		public int Brightness { get; set; } = 0;
+		[DisplayName("Contrast")]
+		[Description("Adjust the contrast of the emulated screen, in percent.")]
+		[Range(0, 200)]
+		public int Contrast { get; set; } = 100;
+		[DisplayName("Saturation")]
+		[Description("Adjust the saturation of the emulated screen, in percent.")]
+		[Range(0, 200)]
+		public int Saturation { get; set; } = 100;
 	}
 
 	public sealed class SoundConfiguration : ConfigurationBase<SoundConfiguration>

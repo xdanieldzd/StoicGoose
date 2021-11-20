@@ -50,6 +50,10 @@ namespace StoicGoose.Handlers
 		readonly Vector4Uniform outputViewport = new(nameof(outputViewport));
 		readonly Vector4Uniform inputViewport = new(nameof(inputViewport));
 
+		readonly FloatUniform displayBrightness = new(nameof(displayBrightness), 0.0f);
+		readonly FloatUniform displayContrast = new(nameof(displayContrast), 1.0f);
+		readonly FloatUniform displaySaturation = new(nameof(displaySaturation), 1.0f);
+
 		readonly Texture[] displayTextures = new Texture[maxTextureSamplerCount];
 		int lastTextureUpdate = 0;
 
@@ -303,6 +307,13 @@ namespace StoicGoose.Handlers
 
 			outputViewport.SubmitToProgram(mainShaderProgram);
 			inputViewport.SubmitToProgram(mainShaderProgram);
+
+			displayBrightness.Value = Program.Configuration.Video.Brightness * 0.01f;
+			displayBrightness.SubmitToProgram(mainShaderProgram);
+			displayContrast.Value = Program.Configuration.Video.Contrast * 0.01f;
+			displayContrast.SubmitToProgram(mainShaderProgram);
+			displaySaturation.Value = Program.Configuration.Video.Saturation * 0.01f;
+			displaySaturation.SubmitToProgram(mainShaderProgram);
 
 			for (var i = 0; i < mainBundleManifest.Samplers; i++)
 				displayTextures[i].Bind((lastTextureUpdate + i) % mainBundleManifest.Samplers);
