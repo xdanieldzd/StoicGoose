@@ -426,20 +426,29 @@ namespace StoicGoose
 			stream.Write(data, 0, data.Length);
 		}
 
-		private void TogglePause()
+		private void PauseEmulation()
 		{
-			if (emulatorHandler.IsRunning)
-			{
-				emulatorHandler.Pause();
-				soundHandler.Pause();
+			if (!emulatorHandler.IsRunning) return;
 
-				SetWindowTitleAndStatus();
-			}
+			emulatorHandler.Pause();
+			soundHandler.Pause();
+
+			SetWindowTitleAndStatus();
+		}
+
+		private void UnpauseEmulation()
+		{
+			if (!emulatorHandler.IsRunning) return;
+
+			emulatorHandler.Unpause();
+			soundHandler.Unpause();
+
+			SetWindowTitleAndStatus();
 		}
 
 		private void loadROMToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			TogglePause();
+			PauseEmulation();
 
 			var lastFile = Program.Configuration.General.RecentFiles.FirstOrDefault();
 			if (lastFile != string.Empty)
@@ -453,7 +462,7 @@ namespace StoicGoose
 				LoadAndRunCartridge(ofdOpenRom.FileName);
 			}
 
-			TogglePause();
+			UnpauseEmulation();
 		}
 
 		private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -475,9 +484,19 @@ namespace StoicGoose
 		{
 			if (!emulatorHandler.IsRunning) return;
 
-			(sender as ToolStripMenuItem).Checked = !emulatorHandler.IsPaused;
-
-			TogglePause();
+			if (sender is ToolStripMenuItem pauseMenuItem)
+			{
+				if (!pauseMenuItem.Checked)
+				{
+					PauseEmulation();
+					pauseMenuItem.Checked = true;
+				}
+				else
+				{
+					UnpauseEmulation();
+					pauseMenuItem.Checked = false;
+				}
+			}
 		}
 
 		private void rotateScreenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -490,7 +509,7 @@ namespace StoicGoose
 
 		private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			TogglePause();
+			PauseEmulation();
 
 			using var dialog = new SettingsForm(Program.Configuration.Clone());
 			if (dialog.ShowDialog() == DialogResult.OK)
@@ -501,21 +520,25 @@ namespace StoicGoose
 				foreach (var binding in uiDataBindings) binding.ReadValue();
 			}
 
-			TogglePause();
+			UnpauseEmulation();
 		}
 
 		private void dumpRAMToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			PauseEmulation();
+
 			File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.GetInternalRam());
+
+			UnpauseEmulation();
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			TogglePause();
+			PauseEmulation();
 
 			MessageBox.Show($"{Application.ProductName} {Program.GetVersionString(true)} by {Application.CompanyName}\n\n{ThisAssembly.Git.RepositoryUrl}\n\nPrototype WIP build, should be safe to use, kinda.{(GlobalVariables.IsDebugBuild ? "\n\nThis is a HONK!ing debug build! 🔪🦢🖥, y'all!" : string.Empty)}", $"About {Application.ProductName}", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-			TogglePause();
+			UnpauseEmulation();
 		}
 	}
 }

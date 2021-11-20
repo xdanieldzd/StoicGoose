@@ -14,6 +14,7 @@ namespace StoicGoose.Handlers
 {
 	public class SoundHandler
 	{
+		const string audioThreadName = "StoicGooseAudio";
 		const int numBuffers = 4;
 
 		public int SampleRate { get; private set; } = 0;
@@ -29,10 +30,6 @@ namespace StoicGoose.Handlers
 		short[] lastSamples = new short[512];
 
 		float volume = 1.0f;
-
-		Thread audioThread = default;
-		volatile bool audioThreadRunning = false, audioThreadPaused = false;
-		volatile bool isPauseToggleRequested = false;
 
 		// TODO: move sound recording stuff to separate class?
 		WaveHeader waveHeader;
@@ -71,21 +68,16 @@ namespace StoicGoose.Handlers
 
 		public void Startup()
 		{
-			audioThreadRunning = true;
-
 			buffers = AL.GenBuffers(numBuffers);
 			for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
 			AL.SourcePlay(source);
 
-			audioThread = new Thread(ThreadMainLoop) { Name = "StoicGooseAudio", Priority = ThreadPriority.BelowNormal, IsBackground = true };
-			audioThread.Start();
+			ThreadManager.Create(audioThreadName, ThreadPriority.BelowNormal, true, ThreadMainLoop, null);
 		}
 
 		public void Shutdown()
 		{
-			audioThreadRunning = false;
-
-			audioThread?.Join();
+			ThreadManager.Stop(audioThreadName);
 
 			foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
 				AL.DeleteBuffer(buffer);
@@ -95,7 +87,12 @@ namespace StoicGoose.Handlers
 
 		public void Pause()
 		{
-			isPauseToggleRequested = true;
+			ThreadManager.Pause(audioThreadName);
+		}
+
+		public void Unpause()
+		{
+			ThreadManager.Unpause(audioThreadName);
 		}
 
 		public void BeginRecording()
@@ -127,32 +124,17 @@ namespace StoicGoose.Handlers
 
 		private void ThreadMainLoop()
 		{
-			while (true)
+			AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
+			while (buffersProcessed-- > 0)
 			{
-				if (!audioThreadRunning)
-					break;
-
-				if (isPauseToggleRequested)
-				{
-					audioThreadPaused = !audioThreadPaused;
-					isPauseToggleRequested = false;
-				}
-
-				if (!audioThreadPaused)
-				{
-					AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
-					while (buffersProcessed-- > 0)
-					{
-						int buffer = AL.SourceUnqueueBuffer(source);
-						if (buffer != 0)
-							GenerateBuffer(buffer);
-					}
-
-					AL.GetSource(source, ALGetSourcei.SourceState, out int state);
-					if ((ALSourceState)state != ALSourceState.Playing)
-						AL.SourcePlay(source);
-				}
+				int buffer = AL.SourceUnqueueBuffer(source);
+				if (buffer != 0)
+					GenerateBuffer(buffer);
 			}
+
+			AL.GetSource(source, ALGetSourcei.SourceState, out int state);
+			if ((ALSourceState)state != ALSourceState.Playing)
+				AL.SourcePlay(source);
 		}
 
 		public void SetVolume(float value)

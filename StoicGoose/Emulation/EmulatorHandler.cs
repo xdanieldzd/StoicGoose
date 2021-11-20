@@ -10,15 +10,18 @@ namespace StoicGoose.Emulation
 {
 	public class EmulatorHandler
 	{
-		readonly WonderSwan emulator;
+		const string threadName = "StoicGooseEmulation";
 
-		Thread emulationThread;
+		readonly WonderSwan emulator = null;
 
-		volatile bool emulationThreadRunning = false, emulationThreadPaused = false;
-		volatile bool limitFps = true, isResetRequested = false, isPauseToggleRequested = false;
+		readonly Stopwatch stopWatch = Stopwatch.StartNew();
+		readonly double interval = 0.0;
+		double lastTime = 0.0;
 
-		public bool IsRunning => emulationThreadRunning;
-		public bool IsPaused { get; private set; }
+		bool limitFps = true, isResetRequested = false;
+
+		public bool IsRunning => ThreadManager.GetState(threadName).HasFlag(ThreadState.Running);
+		public bool IsPaused => ThreadManager.GetState(threadName).HasFlag(ThreadState.Paused);
 
 		public bool LimitFps
 		{
@@ -59,17 +62,14 @@ namespace StoicGoose.Emulation
 		public EmulatorHandler()
 		{
 			emulator = new WonderSwan();
+			interval = 1000.0 / emulator.GetRefreshRate();
 		}
 
 		public void Startup()
 		{
-			emulationThreadRunning = true;
-			emulationThreadPaused = false;
-
 			emulator.Reset();
 
-			emulationThread = new Thread(ThreadMainLoop) { Name = "StoicGooseEmulation", Priority = ThreadPriority.AboveNormal, IsBackground = false };
-			emulationThread.Start();
+			ThreadManager.Create(threadName, ThreadPriority.AboveNormal, false, ThreadMainLoop, ThreadMainPaused);
 		}
 
 		public void Reset()
@@ -79,17 +79,17 @@ namespace StoicGoose.Emulation
 
 		public void Pause()
 		{
-			isPauseToggleRequested = true;
+			ThreadManager.Pause(threadName);
+		}
 
-			IsPaused = !emulationThreadPaused;
+		public void Unpause()
+		{
+			ThreadManager.Unpause(threadName);
 		}
 
 		public void Shutdown()
 		{
-			emulationThreadRunning = false;
-			emulationThreadPaused = false;
-
-			emulationThread?.Join();
+			ThreadManager.Stop(threadName);
 		}
 
 		public void LoadBootstrap(byte[] data) => emulator.LoadBootstrap(data);
@@ -109,49 +109,28 @@ namespace StoicGoose.Emulation
 
 		private void ThreadMainLoop()
 		{
-			var stopWatch = Stopwatch.StartNew();
-
-			var interval = 1000.0 / emulator.GetRefreshRate();
-			var lastTime = 0.0;
-
-			while (true)
+			if (isResetRequested)
 			{
-				// break if thread should stop
-				if (!emulationThreadRunning) break;
-
-				// check for requested changes (reset, pause)
-				if (isResetRequested)
-				{
-					emulator.Reset();
-					isResetRequested = false;
-				}
-
-				if (isPauseToggleRequested)
-				{
-					emulationThreadPaused = !emulationThreadPaused;
-					isPauseToggleRequested = false;
-				}
-
-				// run emulation & limit fps if requested
-				if (!emulationThreadPaused)
-				{
-					if (limitFps)
-					{
-						while ((stopWatch.Elapsed.TotalMilliseconds - lastTime) < interval)
-							Thread.Sleep(0);
-
-						lastTime += interval;
-					}
-					else
-						lastTime = stopWatch.Elapsed.TotalMilliseconds;
-
-					emulator.RunFrame();
-				}
-				else
-				{
-					lastTime = stopWatch.Elapsed.TotalMilliseconds;
-				}
+				emulator.Reset();
+				isResetRequested = false;
 			}
+
+			if (limitFps)
+			{
+				while ((stopWatch.Elapsed.TotalMilliseconds - lastTime) < interval)
+					Thread.Sleep(0);
+
+				lastTime += interval;
+			}
+			else
+				lastTime = stopWatch.Elapsed.TotalMilliseconds;
+
+			emulator.RunFrame();
+		}
+
+		private void ThreadMainPaused()
+		{
+			lastTime = stopWatch.Elapsed.TotalMilliseconds;
 		}
 	}
 }
