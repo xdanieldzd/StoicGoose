@@ -13,6 +13,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 using StoicGoose.Emulation;
+using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 using StoicGoose.OpenGL.Shaders.Bundles;
@@ -59,7 +60,7 @@ namespace StoicGoose
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			InitializeHandlers();
+			InitializeHandlers(typeof(WonderSwan));
 			VerifyConfiguration();
 
 			SizeAndPositionWindow();
@@ -98,10 +99,9 @@ namespace StoicGoose
 			MinimumSize = CalculateRequiredClientSize(2) + (Size - ClientSize);
 		}
 
-		private void InitializeHandlers()
+		private void InitializeHandlers(Type machineType)
 		{
-			//TODO: don't directly reference wonderswan class here...somehow
-			graphicsHandler = new GraphicsHandler(Emulation.Machines.WonderSwan.Metadata) { IsVerticalOrientation = isVerticalOrientation };
+			graphicsHandler = new GraphicsHandler(machineType) { IsVerticalOrientation = isVerticalOrientation };
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
@@ -114,7 +114,7 @@ namespace StoicGoose
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
-			emulatorHandler = new EmulatorHandler();
+			emulatorHandler = new EmulatorHandler(machineType);
 			emulatorHandler.RenderScreen += graphicsHandler.RenderScreen;
 			emulatorHandler.EnqueueSamples += soundHandler.EnqueueSamples;
 			emulatorHandler.PollInput += inputHandler.PollInput;
@@ -127,7 +127,7 @@ namespace StoicGoose
 
 		private void VerifyConfiguration()
 		{
-			var metadata = emulatorHandler.GetMetadata();
+			var metadata = emulatorHandler.Metadata;
 
 			foreach (var button in metadata["machine/input/controls"].Value.StringArray)
 			{
@@ -170,7 +170,7 @@ namespace StoicGoose
 				return ClientSize;
 
 			var screenWidth = graphicsHandler.ScreenSize.X;
-			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.GetMetadata()["interface/icons/size"].Value.Integer;
+			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Metadata["interface/icons/size"].Value.Integer;
 
 			if (!isVerticalOrientation)
 				return new Size(
@@ -188,7 +188,7 @@ namespace StoicGoose
 
 			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
-			var metadata = emulatorHandler.GetMetadata();
+			var metadata = emulatorHandler.Metadata;
 			var cartridgeId = metadata["cartridge/id"].Value;
 
 			if (cartridgeId != null)
@@ -332,7 +332,7 @@ namespace StoicGoose
 			CreateDataBinding(muteSoundToolStripMenuItem.DataBindings, nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute));
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
-			ofdOpenRom.Filter = $"{emulatorHandler.GetMetadata()["interface/files/romfilter"]}|All Files (*.*)|*.*";
+			ofdOpenRom.Filter = $"{emulatorHandler.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
 		}
 
 		private void LoadBootstrap(string filename)
@@ -376,7 +376,7 @@ namespace StoicGoose
 			emulatorHandler.LoadRom(data);
 
 			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				emulatorHandler.GetMetadata()["cartridge/orientation"] == "vertical";
+				emulatorHandler.Metadata["cartridge/orientation"] == "vertical";
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();

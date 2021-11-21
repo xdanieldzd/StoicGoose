@@ -12,9 +12,9 @@ namespace StoicGoose.Emulation
 	{
 		const string threadName = "StoicGooseEmulation";
 
-		readonly WonderSwan emulator = null;
+		readonly IMachine machine = null;
 
-		readonly Stopwatch stopWatch = Stopwatch.StartNew();
+		readonly Stopwatch stopWatch = new();
 		readonly double interval = 0.0;
 		double lastTime = 0.0;
 
@@ -26,43 +26,45 @@ namespace StoicGoose.Emulation
 
 		public event EventHandler<RenderScreenEventArgs> RenderScreen
 		{
-			add { emulator.RenderScreen += value; }
-			remove { emulator.RenderScreen -= value; }
+			add { machine.RenderScreen += value; }
+			remove { machine.RenderScreen -= value; }
 		}
 
 		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples
 		{
-			add { emulator.EnqueueSamples += value; }
-			remove { emulator.EnqueueSamples -= value; }
+			add { machine.EnqueueSamples += value; }
+			remove { machine.EnqueueSamples -= value; }
 		}
 
 		public event EventHandler<PollInputEventArgs> PollInput
 		{
-			add { emulator.PollInput += value; }
-			remove { emulator.PollInput -= value; }
+			add { machine.PollInput += value; }
+			remove { machine.PollInput -= value; }
 		}
 
 		public event EventHandler<StartOfFrameEventArgs> StartOfFrame
 		{
-			add { emulator.StartOfFrame += value; }
-			remove { emulator.StartOfFrame -= value; }
+			add { machine.StartOfFrame += value; }
+			remove { machine.StartOfFrame -= value; }
 		}
 
 		public event EventHandler<EventArgs> EndOfFrame
 		{
-			add { emulator.EndOfFrame += value; }
-			remove { emulator.EndOfFrame -= value; }
+			add { machine.EndOfFrame += value; }
+			remove { machine.EndOfFrame -= value; }
 		}
 
-		public EmulatorHandler()
+		public EmulatorHandler(Type machineType)
 		{
-			emulator = new WonderSwan();
-			interval = 1000.0 / emulator.GetRefreshRate();
+			machine = Activator.CreateInstance(machineType) as IMachine;
+			machine.Initialize();
+			interval = 1000.0 / machine.GetRefreshRate();
 		}
 
 		public void Startup()
 		{
-			emulator.Reset();
+			machine.Reset();
+			stopWatch.Restart();
 
 			ThreadManager.Create(threadName, ThreadPriority.AboveNormal, false, ThreadMainLoop, ThreadMainPaused);
 		}
@@ -93,26 +95,29 @@ namespace StoicGoose.Emulation
 			newLimitFps = value;
 		}
 
-		public void LoadBootstrap(byte[] data) => emulator.LoadBootstrap(data);
-		public bool IsBootstrapLoaded => emulator.IsBootstrapLoaded;
+		public void LoadBootstrap(byte[] data) => machine.LoadBootstrap(data);
+		public bool IsBootstrapLoaded => machine.IsBootstrapLoaded;
 
-		public void LoadInternalEeprom(byte[] data) => emulator.LoadInternalEeprom(data);
+		public void LoadInternalEeprom(byte[] data) => machine.LoadInternalEeprom(data);
 
-		public void LoadRom(byte[] data) => emulator.LoadRom(data);
-		public void LoadSaveData(byte[] data) => emulator.LoadSaveData(data);
+		public void LoadRom(byte[] data) => machine.LoadRom(data);
+		public void LoadSaveData(byte[] data) => machine.LoadSaveData(data);
 
-		public byte[] GetInternalEeprom() => emulator.GetInternalEeprom();
-		public byte[] GetSaveData() => emulator.GetSaveData();
+		public byte[] GetInternalEeprom() => machine.GetInternalEeprom();
+		public byte[] GetSaveData() => machine.GetSaveData();
 
-		public ObjectStorage GetMetadata() => WonderSwan.Metadata;
+		public ObjectStorage Metadata => machine.Metadata;
 
-		public byte[] GetInternalRam() => emulator.GetInternalRam();
+		public byte[] GetInternalRam() => machine.GetInternalRam();
 
 		private void ThreadMainLoop()
 		{
 			if (isResetRequested)
 			{
-				emulator.Reset();
+				machine.Reset();
+				stopWatch.Restart();
+				lastTime = 0.0;
+
 				isResetRequested = false;
 			}
 
@@ -132,7 +137,7 @@ namespace StoicGoose.Emulation
 			else
 				lastTime = stopWatch.Elapsed.TotalMilliseconds;
 
-			emulator.RunFrame();
+			machine.RunFrame();
 		}
 
 		private void ThreadMainPaused()

@@ -10,6 +10,7 @@ using OpenTK.Mathematics;
 
 using StoicGoose.DataStorage;
 using StoicGoose.Extensions;
+using StoicGoose.Emulation.Machines;
 using StoicGoose.OpenGL;
 using StoicGoose.OpenGL.Shaders;
 using StoicGoose.OpenGL.Shaders.Bundles;
@@ -72,9 +73,9 @@ namespace StoicGoose.Handlers
 		public Vector2i ScreenSize { get; private set; } = Vector2i.Zero;
 		public bool IsVerticalOrientation { get; set; } = false;
 
-		public GraphicsHandler(ObjectStorage metadata)
+		public GraphicsHandler(Type machineType)
 		{
-			this.metadata = metadata;
+			metadata = (Activator.CreateInstance(machineType) as IMachine).Metadata;
 
 			ScreenSize = new Vector2i(metadata["machine/display/width"].Get<int>(), metadata["machine/display/height"].Get<int>());
 

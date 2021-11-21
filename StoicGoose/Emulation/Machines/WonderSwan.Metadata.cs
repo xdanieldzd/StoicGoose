@@ -7,9 +7,9 @@ namespace StoicGoose.Emulation.Machines
 {
 	public partial class WonderSwan
 	{
-		public static ObjectStorage Metadata { get; } = new ObjectStorage();
+		public ObjectStorage Metadata { get; } = new ObjectStorage();
 
-		static WonderSwan()
+		private void FillMetadata()
 		{
 			Metadata["machine/description/manufacturer"].Value = "Bandai";
 			Metadata["machine/description/model"].Value = "WonderSwan";

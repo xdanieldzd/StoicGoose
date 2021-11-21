@@ -16,7 +16,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Machines
 {
-	public partial class WonderSwan
+	public partial class WonderSwan : IMachine
 	{
 		// http://daifukkat.su/docs/wsman/
 
@@ -50,10 +50,10 @@ namespace StoicGoose.Emulation.Machines
 		readonly byte[] internalRam = new byte[internalRamSize];
 
 		readonly Cartridge cartridge = new();
-		readonly V30MZ cpu = default;
-		readonly DisplayController display = default;
-		readonly SoundController sound = default;
-		readonly EEPROM eeprom = default;
+		V30MZ cpu = default;
+		DisplayController display = default;
+		SoundController sound = default;
+		EEPROM eeprom = default;
 
 		byte[] bootstrapRom = default;
 
@@ -71,7 +71,9 @@ namespace StoicGoose.Emulation.Machines
 
 		public bool IsBootstrapLoaded => bootstrapRom != null;
 
-		public WonderSwan()
+		public WonderSwan() => FillMetadata();
+
+		public void Initialize()
 		{
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
 			display = new DisplayController(ReadMemory);
