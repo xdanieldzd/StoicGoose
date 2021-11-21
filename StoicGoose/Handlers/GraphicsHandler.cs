@@ -73,9 +73,9 @@ namespace StoicGoose.Handlers
 		public Vector2i ScreenSize { get; private set; } = Vector2i.Zero;
 		public bool IsVerticalOrientation { get; set; } = false;
 
-		public GraphicsHandler(Type machineType)
+		public GraphicsHandler(ObjectStorage metadata)
 		{
-			metadata = (Activator.CreateInstance(machineType) as IMachine).Metadata;
+			this.metadata = metadata;
 
 			ScreenSize = new Vector2i(metadata["machine/display/width"].Get<int>(), metadata["machine/display/height"].Get<int>());
 

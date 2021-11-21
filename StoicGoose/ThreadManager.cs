@@ -39,7 +39,8 @@ namespace StoicGoose
 				threadList[name].State |= ThreadState.Stopped;
 			}))
 			{ Name = name, Priority = priority, IsBackground = isBackground };
-			thread.Start(name);
+
+			var threadInfo = new ThreadInfo(thread);
 
 			if (threadList.ContainsKey(name))
 			{
@@ -48,11 +49,12 @@ namespace StoicGoose
 					threadList[name].State = ThreadState.Stopping;
 					threadList[name].Thread.Join();
 				}
-
-				threadList.Remove(name);
+				threadList[name] = threadInfo;
 			}
+			else
+				threadList.Add(name, threadInfo);
 
-			threadList.Add(name, new ThreadInfo(thread));
+			thread.Start(name);
 		}
 
 		public static ThreadState GetState(string name)

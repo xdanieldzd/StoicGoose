@@ -101,7 +101,9 @@ namespace StoicGoose
 
 		private void InitializeHandlers(Type machineType)
 		{
-			graphicsHandler = new GraphicsHandler(machineType) { IsVerticalOrientation = isVerticalOrientation };
+			emulatorHandler = new EmulatorHandler(machineType);
+
+			graphicsHandler = new GraphicsHandler(emulatorHandler.Metadata) { IsVerticalOrientation = isVerticalOrientation };
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
@@ -114,7 +116,6 @@ namespace StoicGoose
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
-			emulatorHandler = new EmulatorHandler(machineType);
 			emulatorHandler.RenderScreen += graphicsHandler.RenderScreen;
 			emulatorHandler.EnqueueSamples += soundHandler.EnqueueSamples;
 			emulatorHandler.PollInput += inputHandler.PollInput;
