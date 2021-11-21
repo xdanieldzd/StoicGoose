@@ -90,7 +90,7 @@ namespace StoicGoose
 
 			Program.SaveConfiguration();
 
-			if (soundHandler.IsRecording)
+			if (GlobalVariables.EnableLocalDebugIO && soundHandler.IsRecording)
 				soundHandler.SaveRecording(@"D:\Temp\Goose\sound.wav");
 		}
 
@@ -527,7 +527,10 @@ namespace StoicGoose
 		{
 			PauseEmulation();
 
-			File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.GetInternalRam());
+			if (GlobalVariables.EnableLocalDebugIO)
+				File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.GetInternalRam());
+			else
+				MessageBox.Show("Not implemented.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
 			UnpauseEmulation();
 		}
