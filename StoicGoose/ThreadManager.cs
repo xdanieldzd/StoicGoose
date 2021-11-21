@@ -41,6 +41,17 @@ namespace StoicGoose
 			{ Name = name, Priority = priority, IsBackground = isBackground };
 			thread.Start(name);
 
+			if (threadList.ContainsKey(name))
+			{
+				if (threadList[name].State != ThreadState.Stopped)
+				{
+					threadList[name].State = ThreadState.Stopping;
+					threadList[name].Thread.Join();
+				}
+
+				threadList.Remove(name);
+			}
+
 			threadList.Add(name, new ThreadInfo(thread));
 		}
 

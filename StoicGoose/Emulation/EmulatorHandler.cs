@@ -18,16 +18,11 @@ namespace StoicGoose.Emulation
 		readonly double interval = 0.0;
 		double lastTime = 0.0;
 
-		bool limitFps = true, isResetRequested = false;
+		bool isResetRequested = false, isFpsLimiterChangeRequested = false;
+		bool limitFps = true, newLimitFps = false;
 
 		public bool IsRunning => ThreadManager.GetState(threadName).HasFlag(ThreadState.Running);
 		public bool IsPaused => ThreadManager.GetState(threadName).HasFlag(ThreadState.Paused);
-
-		public bool LimitFps
-		{
-			get { return limitFps; }
-			set { limitFps = value; }
-		}
 
 		public event EventHandler<RenderScreenEventArgs> RenderScreen
 		{
@@ -92,6 +87,12 @@ namespace StoicGoose.Emulation
 			ThreadManager.Stop(threadName);
 		}
 
+		public void SetFpsLimiter(bool value)
+		{
+			isFpsLimiterChangeRequested = true;
+			newLimitFps = value;
+		}
+
 		public void LoadBootstrap(byte[] data) => emulator.LoadBootstrap(data);
 		public bool IsBootstrapLoaded => emulator.IsBootstrapLoaded;
 
@@ -113,6 +114,12 @@ namespace StoicGoose.Emulation
 			{
 				emulator.Reset();
 				isResetRequested = false;
+			}
+
+			if (isFpsLimiterChangeRequested)
+			{
+				limitFps = newLimitFps;
+				isFpsLimiterChangeRequested = false;
 			}
 
 			if (limitFps)

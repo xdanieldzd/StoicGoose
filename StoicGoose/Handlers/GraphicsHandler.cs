@@ -65,6 +65,7 @@ namespace StoicGoose.Handlers
 
 		ShaderProgram mainShaderProgram = default;
 		BundleManifest mainBundleManifest = default;
+		bool wasShaderChanged = false;
 
 		Vector2 displayPosition = default, displaySize = default;
 
@@ -191,18 +192,26 @@ namespace StoicGoose.Handlers
 			if (mainBundleManifest.Samplers > maxTextureSamplerCount)
 				mainBundleManifest.Samplers = maxTextureSamplerCount;
 
-			for (var i = 0; i < mainBundleManifest.Samplers; i++)
-				displayTextures[i] = new Texture(ScreenSize.X, ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+			for (var i = 0; i < maxTextureSamplerCount; i++)
+			{
+				displayTextures[i]?.Dispose();
+				GL.Uniform1(mainShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), 0);
+			}
 
 			mainShaderProgram.Bind();
 			for (var i = 0; i < mainBundleManifest.Samplers; i++)
+			{
+				displayTextures[i] = new Texture(ScreenSize.X, ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
 				GL.Uniform1(mainShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
+			}
 
 			lastTextureUpdate = 0;
 		}
 
 		public void ChangeShader(string name)
 		{
+			wasShaderChanged = true;
+
 			var lastFilterMode = mainBundleManifest?.Filter;
 			var lastWrapMode = mainBundleManifest?.Wrap;
 			var lastNumSamplers = mainBundleManifest?.Samplers;
@@ -219,7 +228,16 @@ namespace StoicGoose.Handlers
 
 		public void RenderScreen(object sender, RenderScreenEventArgs e)
 		{
-			displayTextures[lastTextureUpdate].Update(e.Framebuffer);
+			if (wasShaderChanged)
+			{
+				for (var i = 0; i < mainBundleManifest.Samplers; i++)
+					displayTextures[i].Update(e.Framebuffer);
+
+				wasShaderChanged = false;
+			}
+			else
+				displayTextures[lastTextureUpdate].Update(e.Framebuffer);
+
 			lastTextureUpdate = (lastTextureUpdate + 1) % mainBundleManifest.Samplers;
 		}
 
