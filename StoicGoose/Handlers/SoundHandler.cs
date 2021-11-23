@@ -105,7 +105,7 @@ namespace StoicGoose.Handlers
 			threadRunning = false;
 			threadPaused = false;
 
-			thread.Join();
+			thread?.Join();
 
 			foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
 				AL.DeleteBuffer(buffer);

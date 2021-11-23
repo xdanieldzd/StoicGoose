@@ -93,7 +93,7 @@ namespace StoicGoose.Emulation
 			threadRunning = false;
 			threadPaused = false;
 
-			thread.Join();
+			thread?.Join();
 		}
 
 		public void SetFpsLimiter(bool value)

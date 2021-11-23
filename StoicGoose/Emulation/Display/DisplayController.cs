@@ -169,10 +169,6 @@ namespace StoicGoose.Emulation.Display
 							interrupt |= DisplayInterrupts.VBlankTimer;
 					}
 
-					// line compare interrupt
-					if (lineCurrent == lineCompare)
-						interrupt |= DisplayInterrupts.LineCompare;
-
 					// sprite fetch
 					if (lineCurrent == VerticalDisp - 2)
 					{
@@ -190,6 +186,10 @@ namespace StoicGoose.Emulation.Display
 
 				if (cycleCount == HorizontalDisp)
 				{
+					// line compare interrupt
+					if (lineCurrent == lineCompare)
+						interrupt |= DisplayInterrupts.LineCompare;
+
 					// H-timer interrupt
 					if (hBlankTimer.Step())
 						interrupt |= DisplayInterrupts.HBlankTimer;
@@ -299,10 +299,8 @@ namespace StoicGoose.Emulation.Display
 			{
 				if (spriteData[i] == 0) continue;   //HACK: helps prevent garbage sprites in ex. pocket fighter, but prob only b/c inaccurate timing?
 
-				var spriteY = (int)((spriteData[i] >> 16) & 0xFF);
-				var spriteX = (int)((spriteData[i] >> 24) & 0xFF);
-
-				if (y >= spriteY && y < spriteY + 8 && x >= spriteX && x < spriteX + 8 && activeSpritesOnLine.Count < 32)
+				var spriteY = (spriteData[i] >> 16) & 0xFF;
+				if ((byte)(y - spriteY) <= 7 && activeSpritesOnLine.Count < 32)
 					activeSpritesOnLine.Add(spriteData[i]);
 			}
 
@@ -313,12 +311,12 @@ namespace StoicGoose.Emulation.Display
 				var windowDisplayOutside = ((activeSprite >> 12) & 0b1) == 0b1;
 				var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 
-				var spriteY = (int)((activeSprite >> 16) & 0xFF);
-				var spriteX = (int)((activeSprite >> 24) & 0xFF);
+				var spriteY = (activeSprite >> 16) & 0xFF;
+				var spriteX = (activeSprite >> 24) & 0xFF;
 
-				if (x < 0 || x >= HorizontalDisp) continue;
+				if (x < 0 || x >= HorizontalDisp || (byte)(x - spriteX) > 7) continue;
 
-				byte color = GetPixelColor(tileNum, (int)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (int)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
+				byte color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
 
 				if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
 				{

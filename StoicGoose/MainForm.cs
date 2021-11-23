@@ -102,6 +102,7 @@ namespace StoicGoose
 		private void InitializeHandlers(Type machineType)
 		{
 			emulatorHandler = new EmulatorHandler(machineType);
+			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
 
 			graphicsHandler = new GraphicsHandler(emulatorHandler.Metadata) { IsVerticalOrientation = isVerticalOrientation };
 
