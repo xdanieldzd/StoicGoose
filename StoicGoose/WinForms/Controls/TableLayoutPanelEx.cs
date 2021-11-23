@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -13,7 +12,7 @@ namespace StoicGoose.WinForms.Controls
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			if (!DesignMode && Environment.OSVersion?.Platform == PlatformID.Win32NT && Environment.OSVersion?.Version.Major >= 6)
-				Debug.Assert(SetWindowTheme(Handle, "explorer", null) == 0);
+				_ = SetWindowTheme(Handle, "explorer", null);
 
 			base.OnHandleCreated(e);
 		}

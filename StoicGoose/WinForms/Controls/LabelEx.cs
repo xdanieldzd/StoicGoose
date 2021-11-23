@@ -24,7 +24,7 @@ namespace StoicGoose.WinForms.Controls
 				case ContentAlignment.TopRight: flags |= TextFormatFlags.Top | TextFormatFlags.Right; break;
 			}
 			var rect = e.ClipRectangle;
-			rect.Offset(-4, -2);
+			rect.Offset(-2, -2);
 			TextRenderer.DrawText(e.Graphics, Text, Font, rect, ForeColor, flags);
 		}
 	}
