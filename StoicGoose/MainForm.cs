@@ -520,6 +520,8 @@ namespace StoicGoose
 				VerifyConfiguration();
 
 				foreach (var binding in uiDataBindings) binding.ReadValue();
+
+				inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 			}
 
 			UnpauseEmulation();
