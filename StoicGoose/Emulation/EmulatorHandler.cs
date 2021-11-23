@@ -12,17 +12,17 @@ namespace StoicGoose.Emulation
 	{
 		const string threadName = "StoicGooseEmulation";
 
+		Thread thread = default;
+		volatile bool threadRunning = false, threadPaused = false;
+
+		volatile bool isResetRequested = false;
+		volatile bool isPauseRequested = false, newPauseState = false;
+		volatile bool isFpsLimiterChangeRequested = false, limitFps = true, newLimitFps = false;
+
+		public bool IsRunning => threadRunning;
+		public bool IsPaused => threadPaused;
+
 		readonly IMachine machine = null;
-
-		readonly Stopwatch stopWatch = new();
-		readonly double interval = 0.0;
-		double lastTime = 0.0;
-
-		bool isResetRequested = false, isFpsLimiterChangeRequested = false;
-		bool limitFps = true, newLimitFps = false;
-
-		public bool IsRunning => ThreadManager.GetState(threadName).HasFlag(ThreadState.Running);
-		public bool IsPaused => ThreadManager.GetState(threadName).HasFlag(ThreadState.Paused);
 
 		public event EventHandler<RenderScreenEventArgs> RenderScreen
 		{
@@ -58,15 +58,17 @@ namespace StoicGoose.Emulation
 		{
 			machine = Activator.CreateInstance(machineType) as IMachine;
 			machine.Initialize();
-			interval = 1000.0 / machine.GetRefreshRate();
 		}
 
 		public void Startup()
 		{
 			machine.Reset();
-			stopWatch.Restart();
 
-			ThreadManager.Create(threadName, ThreadPriority.AboveNormal, false, ThreadMainLoop, ThreadMainPaused);
+			threadRunning = true;
+			threadPaused = false;
+
+			thread = new Thread(ThreadMainLoop) { Name = threadName, Priority = ThreadPriority.AboveNormal, IsBackground = false };
+			thread.Start();
 		}
 
 		public void Reset()
@@ -76,17 +78,22 @@ namespace StoicGoose.Emulation
 
 		public void Pause()
 		{
-			ThreadManager.Pause(threadName);
+			isPauseRequested = true;
+			newPauseState = true;
 		}
 
 		public void Unpause()
 		{
-			ThreadManager.Unpause(threadName);
+			isPauseRequested = true;
+			newPauseState = false;
 		}
 
 		public void Shutdown()
 		{
-			ThreadManager.Stop(threadName);
+			threadRunning = false;
+			threadPaused = false;
+
+			thread.Join();
 		}
 
 		public void SetFpsLimiter(bool value)
@@ -112,37 +119,52 @@ namespace StoicGoose.Emulation
 
 		private void ThreadMainLoop()
 		{
-			if (isResetRequested)
+			var stopWatch = Stopwatch.StartNew();
+			var interval = 1000.0 / machine.GetRefreshRate();
+			var lastTime = 0.0;
+
+			while (true)
 			{
-				machine.Reset();
-				stopWatch.Restart();
-				lastTime = 0.0;
+				if (!threadRunning) break;
 
-				isResetRequested = false;
+				if (isResetRequested)
+				{
+					machine.Reset();
+					stopWatch.Restart();
+					lastTime = 0.0;
+
+					isResetRequested = false;
+				}
+
+				if (isPauseRequested)
+				{
+					threadPaused = newPauseState;
+					isPauseRequested = false;
+				}
+
+				if (isFpsLimiterChangeRequested)
+				{
+					limitFps = newLimitFps;
+					isFpsLimiterChangeRequested = false;
+				}
+
+				if (!threadPaused)
+				{
+					if (limitFps)
+					{
+						while ((stopWatch.Elapsed.TotalMilliseconds - lastTime) < interval)
+							Thread.Sleep(0);
+
+						lastTime += interval;
+					}
+					else
+						lastTime = stopWatch.Elapsed.TotalMilliseconds;
+
+					machine.RunFrame();
+				}
+				else
+					lastTime = stopWatch.Elapsed.TotalMilliseconds;
 			}
-
-			if (isFpsLimiterChangeRequested)
-			{
-				limitFps = newLimitFps;
-				isFpsLimiterChangeRequested = false;
-			}
-
-			if (limitFps)
-			{
-				while ((stopWatch.Elapsed.TotalMilliseconds - lastTime) < interval)
-					Thread.Sleep(0);
-
-				lastTime += interval;
-			}
-			else
-				lastTime = stopWatch.Elapsed.TotalMilliseconds;
-
-			machine.RunFrame();
-		}
-
-		private void ThreadMainPaused()
-		{
-			lastTime = stopWatch.Elapsed.TotalMilliseconds;
 		}
 	}
 }
