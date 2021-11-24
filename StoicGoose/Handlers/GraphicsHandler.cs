@@ -10,7 +10,6 @@ using OpenTK.Mathematics;
 
 using StoicGoose.DataStorage;
 using StoicGoose.Extensions;
-using StoicGoose.Emulation.Machines;
 using StoicGoose.OpenGL;
 using StoicGoose.OpenGL.Shaders;
 using StoicGoose.OpenGL.Shaders.Bundles;
@@ -167,6 +166,9 @@ namespace StoicGoose.Handlers
 				ShaderFactory.FromSource(ShaderType.VertexShader, commonVertexShaderSource),
 				ShaderFactory.FromSource(ShaderType.FragmentShader, commonFragmentShaderBaseSource, $"const int numSamplers = {shaderBundle.Samplers};", fragmentSource));
 
+			if (shaderBundle.Samplers > maxTextureSamplerCount)
+				shaderBundle.Samplers = maxTextureSamplerCount;
+
 			return (shaderBundle, shaderProgram);
 		}
 
@@ -189,9 +191,6 @@ namespace StoicGoose.Handlers
 				case WrapMode.Border: textureWrapMode = TextureWrapMode.ClampToBorder; break;
 				case WrapMode.Mirror: textureWrapMode = TextureWrapMode.MirroredRepeat; break;
 			}
-
-			if (mainBundleManifest.Samplers > maxTextureSamplerCount)
-				mainBundleManifest.Samplers = maxTextureSamplerCount;
 
 			for (var i = 0; i < maxTextureSamplerCount; i++)
 			{

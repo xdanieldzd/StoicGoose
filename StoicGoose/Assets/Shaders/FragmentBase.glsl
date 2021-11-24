@@ -1,5 +1,8 @@
 ﻿#version 460
 
+const int renderModeDisplay = 0;
+const int renderModeIcons = 1;
+
 in vec2 texCoord;
 
 out vec4 fragColor;
@@ -15,8 +18,8 @@ uniform float displaySaturation;
 uniform vec4 outputViewport;
 uniform vec4 inputViewport;
 
-vec4 display();
-vec4 icons();
+vec4 renderDisplay();
+vec4 renderIcons();
 
 vec4 applyAdjustments(vec4 color);
 
@@ -24,14 +27,18 @@ void main()
 {
     vec4 outputColor = vec4(0.0);
 
-    if (renderMode == 1)
-        outputColor = icons();
-    else
-        outputColor = display();
+    switch (renderMode)
+    {
+        case renderModeDisplay:
+            outputColor = renderDisplay();
+            break;
 
-    outputColor = applyAdjustments(outputColor);
+        case renderModeIcons:
+            outputColor = renderIcons();
+            break;
+    }
 
-    fragColor = outputColor;
+    fragColor = applyAdjustments(outputColor);
 }
 
 // https://www.shadertoy.com/view/XdcXzn

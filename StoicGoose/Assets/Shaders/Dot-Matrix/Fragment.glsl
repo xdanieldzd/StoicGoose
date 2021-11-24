@@ -4,7 +4,7 @@ vec3 gamma(vec3 color);
 vec3 reduceAndTint(vec3 color);
 
 // Main function for display
-vec4 display()
+vec4 renderDisplay()
 {
     vec4 outputColor = vec4(accumulateTextures(), 1.0);
 
@@ -16,7 +16,7 @@ vec4 display()
 }
 
 // Main function for system icons
-vec4 icons()
+vec4 renderIcons()
 {
     vec4 outputColor = texture(textureSamplers[0], texCoord);
 
