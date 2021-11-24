@@ -9,11 +9,6 @@ namespace StoicGoose.OpenGL.Shaders.Bundles
 
 	public class BundleManifest
 	{
-		// TODO: move these strings elsewhere?
-		public static string DefaultManifestFilename { get; } = "Manifest.json";
-		public static string DefaultSourceFilename { get; } = "Fragment.glsl";
-		public static string DefaultShaderName { get; } = "Basic";
-
 		[JsonConverter(typeof(StringEnumConverter))]
 		public FilterMode Filter { get; set; } = FilterMode.Linear;
 		[JsonConverter(typeof(StringEnumConverter))]

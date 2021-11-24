@@ -32,12 +32,14 @@ namespace StoicGoose.Handlers
 
 	public class GraphicsHandler
 	{
+		public static string DefaultManifestFilename { get; } = "Manifest.json";
+		public static string DefaultSourceFilename { get; } = "Fragment.glsl";
+		public static string DefaultShaderName { get; } = "Basic";
+
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
 		readonly static int maxTextureSamplerCount = 8;
 
 		readonly ObjectStorage metadata = default;
-
-		readonly Dictionary<string, Texture> iconTextures = new();
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
@@ -55,16 +57,17 @@ namespace StoicGoose.Handlers
 		readonly FloatUniform displaySaturation = new(nameof(displaySaturation), 1.0f);
 
 		readonly Texture[] displayTextures = new Texture[maxTextureSamplerCount];
+		readonly Texture iconBackgroundTexture = new(8, 8);
+		readonly Dictionary<string, Texture> iconTextures = new();
+
 		int lastTextureUpdate = 0;
 
-		readonly Texture iconBackgroundTexture = new(8, 8);
-
-		VertexArray displayVertexArray = default, iconBackgroundVertexArray = default, iconVertexArray = default;
+		VertexArray commonVertexArray = default;
 
 		string commonVertexShaderSource = string.Empty, commonFragmentShaderBaseSource = string.Empty;
 
-		ShaderProgram mainShaderProgram = default;
-		BundleManifest mainBundleManifest = default;
+		ShaderProgram commonShaderProgram = default;
+		BundleManifest commonBundleManifest = default;
 		bool wasShaderChanged = false;
 
 		Vector2 displayPosition = default, displaySize = default;
@@ -72,20 +75,37 @@ namespace StoicGoose.Handlers
 		public Vector2i ScreenSize { get; private set; } = Vector2i.Zero;
 		public bool IsVerticalOrientation { get; set; } = false;
 
+		public List<string> AvailableShaders { get; private set; } = default;
+
 		public GraphicsHandler(ObjectStorage metadata)
 		{
 			this.metadata = metadata;
 
 			ScreenSize = new Vector2i(metadata["machine/display/width"].Get<int>(), metadata["machine/display/height"].Get<int>());
 
+			AvailableShaders = EnumerateShaders();
+
 			SetInitialOpenGLState();
 
 			ParseSystemIcons();
 
-			InitializeVertexArrays();
+			InitializeVertexArray();
 			InitializeBaseShaders();
 
 			ChangeShader(Program.Configuration.Video.Shader);
+		}
+
+		private List<string> EnumerateShaders()
+		{
+			var shaderNames = new List<string>();
+
+			if (!string.IsNullOrEmpty(GetEmbeddedShaderBundleManifest(DefaultShaderName)))
+				shaderNames.Add(DefaultShaderName);
+
+			foreach (var file in new DirectoryInfo(Program.ShaderPath).EnumerateFiles("*.json", SearchOption.AllDirectories))
+				shaderNames.Add(file.Directory.Name);
+
+			return shaderNames;
 		}
 
 		private void SetInitialOpenGLState()
@@ -110,7 +130,7 @@ namespace StoicGoose.Handlers
 			}
 		}
 
-		private void InitializeVertexArrays()
+		private void InitializeVertexArray()
 		{
 			var vertices = new Vertex[]
 			{
@@ -123,17 +143,9 @@ namespace StoicGoose.Handlers
 				new Vertex() { Position = new Vector2(1f, 0f), TexCoord = new Vector2(1f, 0f) },
 			};
 
-			var displayVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
-			displayVertexBuffer.Update(vertices);
-			displayVertexArray = new VertexArray(displayVertexBuffer);
-
-			var iconBackgroundVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
-			iconBackgroundVertexBuffer.Update(vertices);
-			iconBackgroundVertexArray = new VertexArray(iconBackgroundVertexBuffer);
-
-			var iconVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
-			iconVertexBuffer.Update(vertices);
-			iconVertexArray = new VertexArray(iconVertexBuffer);
+			var commonVertexBuffer = Buffer.CreateVertexBuffer<Vertex>(BufferUsageHint.StaticDraw);
+			commonVertexBuffer.Update(vertices);
+			commonVertexArray = new VertexArray(commonVertexBuffer);
 		}
 
 		private void InitializeBaseShaders()
@@ -150,8 +162,8 @@ namespace StoicGoose.Handlers
 				fragmentSource = GetEmbeddedShaderBundleSource(name);
 			else
 			{
-				var externalManifestFile = Path.Combine(Program.ShaderPath, name, BundleManifest.DefaultManifestFilename);
-				var externalSourceFile = Path.Combine(Program.ShaderPath, name, BundleManifest.DefaultSourceFilename);
+				var externalManifestFile = Path.Combine(Program.ShaderPath, name, DefaultManifestFilename);
+				var externalSourceFile = Path.Combine(Program.ShaderPath, name, DefaultSourceFilename);
 				if (File.Exists(externalManifestFile) && File.Exists(externalSourceFile))
 				{
 					manifestJson = File.ReadAllText(externalManifestFile);
@@ -178,13 +190,13 @@ namespace StoicGoose.Handlers
 			var textureMagFilter = TextureMagFilter.Linear;
 			var textureWrapMode = TextureWrapMode.Repeat;
 
-			switch (mainBundleManifest.Filter)
+			switch (commonBundleManifest.Filter)
 			{
 				case FilterMode.Linear: textureMinFilter = TextureMinFilter.Linear; textureMagFilter = TextureMagFilter.Linear; break;
 				case FilterMode.Nearest: textureMinFilter = TextureMinFilter.Nearest; textureMagFilter = TextureMagFilter.Nearest; break;
 			}
 
-			switch (mainBundleManifest.Wrap)
+			switch (commonBundleManifest.Wrap)
 			{
 				case WrapMode.Repeat: textureWrapMode = TextureWrapMode.Repeat; break;
 				case WrapMode.Edge: textureWrapMode = TextureWrapMode.ClampToEdge; break;
@@ -195,14 +207,14 @@ namespace StoicGoose.Handlers
 			for (var i = 0; i < maxTextureSamplerCount; i++)
 			{
 				displayTextures[i]?.Dispose();
-				GL.Uniform1(mainShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), 0);
+				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), 0);
 			}
 
-			mainShaderProgram.Bind();
-			for (var i = 0; i < mainBundleManifest.Samplers; i++)
+			commonShaderProgram.Bind();
+			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
 				displayTextures[i] = new Texture(ScreenSize.X, ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
-				GL.Uniform1(mainShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
+				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 
 			lastTextureUpdate = 0;
@@ -212,15 +224,15 @@ namespace StoicGoose.Handlers
 		{
 			wasShaderChanged = true;
 
-			var lastFilterMode = mainBundleManifest?.Filter;
-			var lastWrapMode = mainBundleManifest?.Wrap;
-			var lastNumSamplers = mainBundleManifest?.Samplers;
+			var lastFilterMode = commonBundleManifest?.Filter;
+			var lastWrapMode = commonBundleManifest?.Wrap;
+			var lastNumSamplers = commonBundleManifest?.Samplers;
 
-			(mainBundleManifest, mainShaderProgram) = LoadShaderBundle(name);
+			(commonBundleManifest, commonShaderProgram) = LoadShaderBundle(name);
 
-			if (lastFilterMode == null || lastFilterMode != mainBundleManifest.Filter ||
-				lastWrapMode == null || lastWrapMode != mainBundleManifest.Wrap ||
-				lastNumSamplers == null || lastNumSamplers != mainBundleManifest.Samplers)
+			if (lastFilterMode == null || lastFilterMode != commonBundleManifest.Filter ||
+				lastWrapMode == null || lastWrapMode != commonBundleManifest.Wrap ||
+				lastNumSamplers == null || lastNumSamplers != commonBundleManifest.Samplers)
 			{
 				GenerateDisplayTextures();
 			}
@@ -230,7 +242,7 @@ namespace StoicGoose.Handlers
 		{
 			if (wasShaderChanged)
 			{
-				for (var i = 0; i < mainBundleManifest.Samplers; i++)
+				for (var i = 0; i < commonBundleManifest.Samplers; i++)
 					displayTextures[i].Update(e.Framebuffer);
 
 				wasShaderChanged = false;
@@ -238,7 +250,7 @@ namespace StoicGoose.Handlers
 			else
 				displayTextures[lastTextureUpdate].Update(e.Framebuffer);
 
-			lastTextureUpdate = (lastTextureUpdate + 1) % mainBundleManifest.Samplers;
+			lastTextureUpdate = (lastTextureUpdate + 1) % commonBundleManifest.Samplers;
 		}
 
 		public void Resize(object sender, EventArgs e)
@@ -314,45 +326,45 @@ namespace StoicGoose.Handlers
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-			mainShaderProgram.Bind();
+			commonShaderProgram.Bind();
 
 			renderMode.Value = (int)ShaderRenderMode.Display;
-			renderMode.SubmitToProgram(mainShaderProgram);
+			renderMode.SubmitToProgram(commonShaderProgram);
 
-			projectionMatrix.SubmitToProgram(mainShaderProgram);
-			textureMatrix.SubmitToProgram(mainShaderProgram);
-			displayModelviewMatrix.SubmitToProgram(mainShaderProgram);
+			projectionMatrix.SubmitToProgram(commonShaderProgram);
+			textureMatrix.SubmitToProgram(commonShaderProgram);
+			displayModelviewMatrix.SubmitToProgram(commonShaderProgram);
 
-			outputViewport.SubmitToProgram(mainShaderProgram);
-			inputViewport.SubmitToProgram(mainShaderProgram);
+			outputViewport.SubmitToProgram(commonShaderProgram);
+			inputViewport.SubmitToProgram(commonShaderProgram);
 
 			displayBrightness.Value = Program.Configuration.Video.Brightness * 0.01f;
-			displayBrightness.SubmitToProgram(mainShaderProgram);
+			displayBrightness.SubmitToProgram(commonShaderProgram);
 			displayContrast.Value = Program.Configuration.Video.Contrast * 0.01f;
-			displayContrast.SubmitToProgram(mainShaderProgram);
+			displayContrast.SubmitToProgram(commonShaderProgram);
 			displaySaturation.Value = Program.Configuration.Video.Saturation * 0.01f;
-			displaySaturation.SubmitToProgram(mainShaderProgram);
+			displaySaturation.SubmitToProgram(commonShaderProgram);
 
-			for (var i = 0; i < mainBundleManifest.Samplers; i++)
-				displayTextures[i].Bind((lastTextureUpdate + i) % mainBundleManifest.Samplers);
-			displayVertexArray.Draw(PrimitiveType.Triangles);
+			for (var i = 0; i < commonBundleManifest.Samplers; i++)
+				displayTextures[i].Bind((lastTextureUpdate + i) % commonBundleManifest.Samplers);
+			commonVertexArray.Draw(PrimitiveType.Triangles);
 
 			renderMode.Value = (int)ShaderRenderMode.Icons;
-			renderMode.SubmitToProgram(mainShaderProgram);
+			renderMode.SubmitToProgram(commonShaderProgram);
 
-			iconBackgroundModelviewMatrix.SubmitToProgram(mainShaderProgram);
+			iconBackgroundModelviewMatrix.SubmitToProgram(commonShaderProgram);
 			iconBackgroundTexture.Bind();
-			iconBackgroundVertexArray.Draw(PrimitiveType.Triangles);
+			commonVertexArray.Draw(PrimitiveType.Triangles);
 
 			var activeIcons = metadata["machine/display/icons/active"].Value?.StringArray;
 			if (activeIcons != null)
 			{
 				foreach (var icon in activeIcons)
 				{
-					iconModelviewMatrices[icon].SubmitToProgram(mainShaderProgram);
+					iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
 
-					iconTextures[icon].Bind(0);
-					iconVertexArray.Draw(PrimitiveType.Triangles);
+					iconTextures[icon].Bind();
+					commonVertexArray.Draw(PrimitiveType.Triangles);
 				}
 			}
 		}

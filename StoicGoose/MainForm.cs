@@ -16,7 +16,6 @@ using StoicGoose.Emulation;
 using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
-using StoicGoose.OpenGL.Shaders.Bundles;
 
 namespace StoicGoose
 {
@@ -146,8 +145,8 @@ namespace StoicGoose
 			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize >= maxScreenSizeFactor)
 				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
 
-			if (Program.Configuration.Video.Shader == string.Empty || false)    // TODO: check against all available shaders
-				Program.Configuration.Video.Shader = BundleManifest.DefaultShaderName;
+			if (Program.Configuration.Video.Shader == string.Empty || !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader))
+				Program.Configuration.Video.Shader = GraphicsHandler.DefaultShaderName;
 		}
 
 		private void SizeAndPositionWindow()
@@ -290,10 +289,7 @@ namespace StoicGoose
 		{
 			shadersToolStripMenuItem.DropDownItems.Clear();
 
-			var shaders = new List<string>() { BundleManifest.DefaultShaderName };
-			shaders.AddRange(new DirectoryInfo(Program.ShaderPath).EnumerateDirectories().Select(x => x.Name));
-
-			foreach (var shaderName in shaders)
+			foreach (var shaderName in graphicsHandler.AvailableShaders)
 			{
 				var menuItem = new ToolStripMenuItem(shaderName)
 				{

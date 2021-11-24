@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
-using StoicGoose.OpenGL.Shaders.Bundles;
+using StoicGoose.Handlers;
 
 namespace StoicGoose
 {
@@ -62,12 +62,12 @@ namespace StoicGoose
 
 		public static string GetEmbeddedShaderBundleManifest(string name)
 		{
-			return GetEmbeddedText($"Assets.Shaders.{name}.{BundleManifest.DefaultManifestFilename}");
+			return GetEmbeddedText($"Assets.Shaders.{name}.{GraphicsHandler.DefaultManifestFilename}");
 		}
 
 		public static string GetEmbeddedShaderBundleSource(string name)
 		{
-			return GetEmbeddedText($"Assets.Shaders.{name}.{BundleManifest.DefaultSourceFilename}");
+			return GetEmbeddedText($"Assets.Shaders.{name}.{GraphicsHandler.DefaultSourceFilename}");
 		}
 	}
 }
