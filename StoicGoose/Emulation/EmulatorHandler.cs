@@ -17,7 +17,6 @@ namespace StoicGoose.Emulation
 
 		volatile bool isResetRequested = false;
 		volatile bool isPauseRequested = false, newPauseState = false;
-		volatile bool isShutdownRequested = false;
 		volatile bool isFpsLimiterChangeRequested = false, limitFps = true, newLimitFps = false;
 
 		public bool IsRunning => threadRunning;
@@ -91,9 +90,12 @@ namespace StoicGoose.Emulation
 
 		public void Shutdown()
 		{
-			isShutdownRequested = true;
+			threadRunning = false;
+			threadPaused = false;
 
 			thread?.Join();
+
+			machine.Shutdown();
 		}
 
 		public void SetFpsLimiter(bool value)
@@ -164,14 +166,6 @@ namespace StoicGoose.Emulation
 				}
 				else
 					lastTime = stopWatch.Elapsed.TotalMilliseconds;
-
-				if (isShutdownRequested)
-				{
-					machine.Shutdown();
-
-					threadRunning = false;
-					threadPaused = false;
-				}
 			}
 		}
 	}

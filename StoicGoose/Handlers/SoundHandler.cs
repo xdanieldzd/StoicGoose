@@ -20,7 +20,6 @@ namespace StoicGoose.Handlers
 		volatile bool threadRunning = false, threadPaused = false;
 
 		volatile bool isPauseRequested = false, newPauseState = false;
-		volatile bool isShutdownRequested = false;
 
 		public bool IsRunning => threadRunning;
 		public bool IsPaused => threadPaused;
@@ -103,9 +102,15 @@ namespace StoicGoose.Handlers
 
 		public void Shutdown()
 		{
-			isShutdownRequested = true;
+			threadRunning = false;
+			threadPaused = false;
 
 			thread?.Join();
+
+			foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
+				AL.DeleteBuffer(buffer);
+
+			sampleQueue.Clear();
 		}
 
 		public void BeginRecording()
@@ -160,17 +165,6 @@ namespace StoicGoose.Handlers
 					AL.GetSource(source, ALGetSourcei.SourceState, out int state);
 					if ((ALSourceState)state != ALSourceState.Playing)
 						AL.SourcePlay(source);
-				}
-
-				if (isShutdownRequested)
-				{
-					threadRunning = false;
-					threadPaused = false;
-
-					foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
-						AL.DeleteBuffer(buffer);
-
-					sampleQueue.Clear();
 				}
 			}
 		}

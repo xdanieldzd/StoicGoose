@@ -734,7 +734,8 @@ namespace StoicGoose.Emulation.CPU
 
 				/* IMUL Gw Ew Iw -- 80186 */
 				case 0x69:
-					WriteOpcodeGw((ushort)(Mul16(true, ReadOpcodeEw(), ReadOpcodeIw()) & 0xFFFF));
+					ReadModRM();
+					WriteOpcodeGw((ushort)Mul16(true, ReadOpcodeEw(), ReadOpcodeIw()));
 					cycles = 4;
 					break;
 
@@ -746,7 +747,8 @@ namespace StoicGoose.Emulation.CPU
 
 				/* IMUL Gb Eb Ib -- 80186 */
 				case 0x6B:
-					WriteOpcodeGb((byte)(Mul8(true, ReadOpcodeEb(), ReadOpcodeIb()) & 0xFF));
+					ReadModRM();
+					WriteOpcodeGw((ushort)Mul16(true, ReadOpcodeEb(), ReadOpcodeIb()));
 					cycles = 4;
 					break;
 

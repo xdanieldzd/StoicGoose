@@ -440,7 +440,7 @@
 
 		private ushort Mul8(bool signed, byte a, byte b)
 		{
-			int result = signed ? (sbyte)a * (sbyte)b : a * b;
+			uint result = (uint)(signed ? ((sbyte)a * (sbyte)b) : (a * b));
 
 			// CF, OF = is upper half of result non-zero?; PF, AF, ZF, SF = undefined
 			SetClearFlagConditional(Flags.Overflow, (result >> 8) != 0);
@@ -451,7 +451,7 @@
 
 		private uint Mul16(bool signed, ushort a, ushort b)
 		{
-			int result = signed ? (short)a * (short)b : a * b;
+			uint result = (uint)(signed ? ((short)a * (short)b) : (a * b));
 
 			// CF, OF = is upper half of result non-zero?; PF, AF, ZF, SF = undefined
 			SetClearFlagConditional(Flags.Overflow, (result >> 16) != 0);
