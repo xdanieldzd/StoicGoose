@@ -11,7 +11,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Sound
 {
-	public sealed partial class SoundController
+	public sealed partial class SoundController : IComponent
 	{
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
 
@@ -86,6 +86,11 @@ namespace StoicGoose.Emulation.Sound
 			speakerEnable = headphoneEnable = false;
 			headphonesConnected = true; // for stereo sound
 			speakerVolumeShift = 0;
+		}
+
+		public void Shutdown()
+		{
+			//
 		}
 
 		public void ToggleMasterVolume()

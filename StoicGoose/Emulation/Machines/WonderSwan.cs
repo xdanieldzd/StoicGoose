@@ -117,6 +117,15 @@ namespace StoicGoose.Emulation.Machines
 			serSendBufferEmpty = true;
 		}
 
+		public void Shutdown()
+		{
+			cartridge.Shutdown();
+			cpu.Shutdown();
+			display.Shutdown();
+			sound.Shutdown();
+			eeprom.Shutdown();
+		}
+
 		private void InitializeEepromToDefaults()
 		{
 			/* Not 100% verified, same caveats as ex. ares */

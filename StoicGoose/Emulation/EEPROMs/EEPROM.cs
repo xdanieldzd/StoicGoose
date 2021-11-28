@@ -6,7 +6,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.EEPROMs
 {
-	public sealed class EEPROM
+	public sealed class EEPROM : IComponent
 	{
 		readonly byte[] contents = default;
 		readonly int numAddressBits = 0;
@@ -26,6 +26,11 @@ namespace StoicGoose.Emulation.EEPROMs
 			dataLo = dataHi = 0;
 			addressLo = addressHi = 0;
 			statusCmd = 0;
+		}
+
+		public void Shutdown()
+		{
+			//
 		}
 
 		public void LoadContents(byte[] data)

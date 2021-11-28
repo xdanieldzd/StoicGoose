@@ -4,7 +4,7 @@ using StoicGoose.Emulation.EEPROMs;
 
 namespace StoicGoose.Emulation.Cartridges
 {
-	public class Cartridge
+	public class Cartridge : IComponent
 	{
 		byte[] rom, sram;
 		uint romMask, sramMask;
@@ -33,6 +33,11 @@ namespace StoicGoose.Emulation.Cartridges
 			romBank1 = 0xFF;
 
 			eeprom?.Reset();
+		}
+
+		public void Shutdown()
+		{
+			eeprom?.Shutdown();
 		}
 
 		public void LoadRom(byte[] data)

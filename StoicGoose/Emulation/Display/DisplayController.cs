@@ -11,7 +11,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Display
 {
-	public sealed class DisplayController
+	public sealed class DisplayController : IComponent
 	{
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
@@ -149,6 +149,11 @@ namespace StoicGoose.Emulation.Display
 			isDisplayFormatPacked = false;
 			hBlankTimer.Reset();
 			vBlankTimer.Reset();
+		}
+
+		public void Shutdown()
+		{
+			//
 		}
 
 		public DisplayInterrupts Step(int clockCyclesInStep)

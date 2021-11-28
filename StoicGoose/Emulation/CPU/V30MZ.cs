@@ -2,7 +2,7 @@
 
 namespace StoicGoose.Emulation.CPU
 {
-	public sealed partial class V30MZ
+	public sealed partial class V30MZ : IComponent
 	{
 		/* General registers */
 		Register16 ax, bx, cx, dx;
@@ -25,6 +25,9 @@ namespace StoicGoose.Emulation.CPU
 			registerWriteDelegate = registerWrite;
 
 			InitializeDisassembler();
+
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableKindaSlowCPULogger)
+				InitializeTraceLogger(@"D:\Temp\Goose\log.txt");
 
 			Reset();
 		}
@@ -55,6 +58,11 @@ namespace StoicGoose.Emulation.CPU
 
 			ResetPrefixes();
 			modRm.Reset();
+		}
+
+		public void Shutdown()
+		{
+			CloseTraceLogger();
 		}
 
 		public void RaiseInterrupt(int vector)
@@ -103,9 +111,9 @@ namespace StoicGoose.Emulation.CPU
 			byte opcode;
 			while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
 
-			/* If enabled, do super-slow CPU tracelogger */
+			/* If enabled, write to kinda-slow CPU trace logger */
 			// TODO: implement proper debugger w/ UI (disassembly, memory editor, etc)
-			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableSuperSlowCPULogger)
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableKindaSlowCPULogger)
 			{
 				var dbg_cs = cs;
 				var dbg_ip = ipBegin;
@@ -113,7 +121,7 @@ namespace StoicGoose.Emulation.CPU
 				var out_regs = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
 				var out_segs = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
 
-				System.IO.File.AppendAllText(@"D:\Temp\Goose\log.txt", $"{DisassembleInstruction(dbg_cs, dbg_ip),-96} | {out_regs} | {out_segs}\n");
+				WriteToTraceLog($"{DisassembleInstruction(dbg_cs, dbg_ip),-96} | {out_regs} | {out_segs}");
 			}
 
 			int cycles;

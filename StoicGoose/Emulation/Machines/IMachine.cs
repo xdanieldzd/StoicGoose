@@ -17,6 +17,8 @@ namespace StoicGoose.Emulation.Machines
 
 		void Initialize();
 		void Reset();
+		void Shutdown();
+
 		void RunFrame();
 
 		void LoadBootstrap(byte[] data);

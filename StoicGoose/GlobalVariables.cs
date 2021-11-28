@@ -17,7 +17,7 @@
 		public static readonly bool EnableAutostartLastRom = false;
 
 		public static readonly bool EnableSkipBootstrapIfFound = false;
-		public static readonly bool EnableSuperSlowCPULogger = false;
+		public static readonly bool EnableKindaSlowCPULogger = false;
 
 		public static readonly bool EnableRenderSCR1DebugColors = false;
 		public static readonly bool EnableRenderSCR2DebugColors = false;
