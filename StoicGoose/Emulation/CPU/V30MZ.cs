@@ -24,6 +24,8 @@ namespace StoicGoose.Emulation.CPU
 			registerReadDelegate = registerRead;
 			registerWriteDelegate = registerWrite;
 
+			InitializeDisassembler();
+
 			Reset();
 		}
 
@@ -101,23 +103,18 @@ namespace StoicGoose.Emulation.CPU
 			byte opcode;
 			while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
 
-
-
-			// TODO write proper disassembler etc, replace SLOWDEBUGTRACELOG
-			if (GlobalVariables.EnableSuperSlowCPULogger)
+			/* If enabled, do super-slow CPU tracelogger */
+			// TODO: implement proper debugger w/ UI (disassembly, memory editor, etc)
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableSuperSlowCPULogger)
 			{
-				// temp debug log thingy
 				var dbg_cs = cs;
 				var dbg_ip = ipBegin;
-				var dbg_op = ReadMemory8(dbg_cs, dbg_ip);
 
 				var out_regs = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
 				var out_segs = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
 
-				System.IO.File.AppendAllText(@"D:\Temp\Goose\log.txt", $"{dbg_cs:X4}:{dbg_ip:X4} | {dbg_op:X2} ... | {out_regs} | {out_segs}\n");
+				System.IO.File.AppendAllText(@"D:\Temp\Goose\log.txt", $"{DisassembleInstruction(dbg_cs, dbg_ip),-96} | {out_regs} | {out_segs}\n");
 			}
-
-
 
 			int cycles;
 			switch (opcode)
