@@ -223,11 +223,15 @@ namespace StoicGoose.Disassembly
 						break;
 
 					case 0xC4:
+						ReadModRm();
 						disasm = $"les {registerNames16[modRm.Reg]}, word ptr {GetModRmPointer(hasSegmentOverride)}";
+						IncrementAddress(2);
 						break;
 
 					case 0xC5:
+						ReadModRm();
 						disasm = $"lds {registerNames16[modRm.Reg]}, word ptr {GetModRmPointer(hasSegmentOverride)}";
+						IncrementAddress(2);
 						break;
 
 					case 0xC6:
