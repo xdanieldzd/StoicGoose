@@ -119,6 +119,11 @@ namespace StoicGoose.Emulation
 
 		public byte[] GetInternalRam() => machine.GetInternalRam();
 
+		internal byte ReadMemory(uint address) => machine.ReadMemory(address);
+		internal void WriteMemory(uint address, byte value) => machine.WriteMemory(address, value);
+		internal byte ReadRegister(ushort register) => machine.ReadRegister(register);
+		internal void WriteRegister(ushort register, byte value) => machine.WriteRegister(register, value);
+
 		private void ThreadMainLoop()
 		{
 			var stopWatch = Stopwatch.StartNew();

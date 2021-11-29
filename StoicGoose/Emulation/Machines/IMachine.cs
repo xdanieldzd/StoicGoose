@@ -5,7 +5,7 @@ using StoicGoose.WinForms;
 
 namespace StoicGoose.Emulation.Machines
 {
-	interface IMachine
+	public interface IMachine
 	{
 		ObjectStorage Metadata { get; }
 

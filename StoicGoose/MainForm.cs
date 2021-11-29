@@ -73,6 +73,12 @@ namespace StoicGoose
 
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
+
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugNewUIStuffs)
+			{
+				var form = new MemoryEditorForm(emulatorHandler.ReadMemory, emulatorHandler.WriteMemory);
+				form.Show();
+			}
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
