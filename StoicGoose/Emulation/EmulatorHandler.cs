@@ -124,6 +124,8 @@ namespace StoicGoose.Emulation
 		internal byte ReadRegister(ushort register) => machine.ReadRegister(register);
 		internal void WriteRegister(ushort register, byte value) => machine.WriteRegister(register, value);
 
+		internal (ushort cs, ushort ip) GetProcessorStatus() => machine.GetProcessorStatus();
+
 		private void ThreadMainLoop()
 		{
 			var stopWatch = Stopwatch.StartNew();

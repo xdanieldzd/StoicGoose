@@ -26,9 +26,9 @@ namespace StoicGoose.WinForms.Controls
 		[DefaultValue(0xFFFF)]
 		public uint OffsetMask { get; set; } = 0xFFFF;
 		[Browsable(false)]
-		public MemoryReadDelegate ReadByte { get; set; } = default;
+		public MemoryReadDelegate ReadMemory { get; set; } = default;
 		[Browsable(false)]
-		public MemoryWriteDelegate WriteByte { get; set; } = default;
+		public MemoryWriteDelegate WriteMemory { get; set; } = default;
 		[DefaultValue(false)]
 		public bool ReadOnly { get; set; } = false;
 		[DefaultValue(16)]
@@ -293,15 +293,11 @@ namespace StoicGoose.WinForms.Controls
 			maxLines = ClientSize.Height / fontHeight;
 			maxBytesPerLine = (int)Math.Round((decimal)((ClientSize.Width - leftMargin - asciiWidth) / e.Graphics.MeasureString("XX", Font).Width), MidpointRounding.ToEven) - 1;
 
-			SuspendLayout();
-
 			PaintRowInfo(e.Graphics);
 			PaintLineInfo(e.Graphics);
 			PaintGrid(e.Graphics);
 			PaintHex(e.Graphics);
 			PaintASCII(e.Graphics);
-
-			ResumeLayout(true);
 		}
 
 		private void PaintRowInfo(Graphics g)
@@ -378,7 +374,7 @@ namespace StoicGoose.WinForms.Controls
 					if (!showEditedByte)
 					{
 						var offset = (uint)((BaseOffset + ((y - 1) * BytesPerLine) + x) & OffsetMask);
-						g.DrawString((ReadByte != null ? ReadByte(offset) : 0x00).ToString("X2"), Font, brush, thisPos);
+						g.DrawString((ReadMemory != null ? ReadMemory(offset) : 0x00).ToString("X2"), Font, brush, thisPos);
 					}
 					else
 					{
@@ -403,7 +399,7 @@ namespace StoicGoose.WinForms.Controls
 				for (int x = 0; x < BytesPerLine; x++)
 				{
 					var offset = (uint)((BaseOffset + ((y - 1) * BytesPerLine) + x) & OffsetMask);
-					var read = (char)(ReadByte != null ? ReadByte(offset) : 0x00);
+					var read = (char)(ReadMemory != null ? ReadMemory(offset) : 0x00);
 					if (read < 0x20 || read > 126) read = '.';
 					asciiString += read.ToString();
 				}
@@ -461,7 +457,7 @@ namespace StoicGoose.WinForms.Controls
 
 			if (inBytePos != 0)
 			{
-				WriteByte((uint)SelectedOffset, byteToWrite);
+				WriteMemory((uint)SelectedOffset, byteToWrite);
 				inBytePos = 0;
 			}
 		}

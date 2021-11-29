@@ -276,6 +276,11 @@ namespace StoicGoose.Emulation.Machines
 			return DisplayController.VerticalClock;
 		}
 
+		public (ushort cs, ushort ip) GetProcessorStatus()
+		{
+			return cpu.GetStatus();
+		}
+
 		public byte ReadMemory(uint address)
 		{
 			if (!hwCartEnable && address >= (0x100000 - bootstrapRom.Length))

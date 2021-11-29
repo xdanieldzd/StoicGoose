@@ -39,5 +39,7 @@ namespace StoicGoose.Emulation.Machines
 		void WriteMemory(uint address, byte value);
 		byte ReadRegister(ushort register);
 		void WriteRegister(ushort register, byte value);
+
+		(ushort cs, ushort ip) GetProcessorStatus();
 	}
 }

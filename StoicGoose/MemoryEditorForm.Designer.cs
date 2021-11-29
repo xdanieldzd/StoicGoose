@@ -49,10 +49,10 @@ namespace StoicGoose
 			this.hexEditBox.Name = "hexEditBox";
 			this.hexEditBox.OffsetBytes = 3;
 			this.hexEditBox.OffsetMask = ((uint)(1048575u));
-			this.hexEditBox.ReadByte = null;
+			this.hexEditBox.ReadMemory = null;
 			this.hexEditBox.Size = new System.Drawing.Size(540, 308);
 			this.hexEditBox.TabIndex = 0;
-			this.hexEditBox.WriteByte = null;
+			this.hexEditBox.WriteMemory = null;
 			this.hexEditBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.hexEditBox_KeyDown);
 			// 
 			// tmrUpdate

@@ -11,8 +11,8 @@ namespace StoicGoose
 		{
 			InitializeComponent();
 
-			hexEditBox.ReadByte = new HexEditBox.MemoryReadDelegate(memoryRead);
-			hexEditBox.WriteByte = new HexEditBox.MemoryWriteDelegate(memoryWrite);
+			hexEditBox.ReadMemory = new HexEditBox.MemoryReadDelegate(memoryRead);
+			hexEditBox.WriteMemory = new HexEditBox.MemoryWriteDelegate(memoryWrite);
 		}
 
 		private void tmrUpdate_Tick(object sender, EventArgs e)

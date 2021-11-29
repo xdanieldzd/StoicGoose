@@ -76,7 +76,10 @@ namespace StoicGoose
 
 			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugNewUIStuffs)
 			{
-				var form = new MemoryEditorForm(emulatorHandler.ReadMemory, emulatorHandler.WriteMemory);
+				//var form = new MemoryEditorForm(emulatorHandler.ReadMemory, emulatorHandler.WriteMemory);
+				//form.Show();
+
+				var form = new DebuggerMainForm(emulatorHandler);
 				form.Show();
 			}
 		}

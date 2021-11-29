@@ -65,6 +65,12 @@ namespace StoicGoose.Emulation.CPU
 			CloseTraceLogger();
 		}
 
+		public (ushort, ushort) GetStatus()
+		{
+			// TODO: add more information (flags, etc)
+			return (cs, ip);
+		}
+
 		public void RaiseInterrupt(int vector)
 		{
 			pendingIntVector = vector;
