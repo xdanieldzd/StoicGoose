@@ -48,8 +48,8 @@ namespace StoicGoose.WinForms.Controls
 		{
 			if (EmulatorHandler == null) return;
 
-			disassembler.ReadDelegate = new Disassembly.MemoryReadDelegate(EmulatorHandler.ReadMemory);
-			disassembler.WriteDelegate = new Disassembly.MemoryWriteDelegate(EmulatorHandler.WriteMemory);
+			disassembler.ReadDelegate = new Disassembly.MemoryReadDelegate(EmulatorHandler.Machine.ReadMemory);
+			disassembler.WriteDelegate = new Disassembly.MemoryWriteDelegate(EmulatorHandler.Machine.WriteMemory);
 
 			base.OnLoad(e);
 		}
@@ -101,7 +101,7 @@ namespace StoicGoose.WinForms.Controls
 			e.Graphics.FillRectangle(Brushes.WhiteSmoke, 0, 0, xPos[0], Height);
 			e.Graphics.DrawLine(SystemPens.WindowText, xPos[0], 0, xPos[0], Height);
 
-			var (execSegment, execOffset) = EmulatorHandler.GetProcessorStatus();
+			var (execSegment, execOffset) = EmulatorHandler.Machine.GetProcessorStatus();
 
 			disassembler.Segment = DisasmSegment;
 			disassembler.Offset = DisasmOffset;
@@ -139,7 +139,7 @@ namespace StoicGoose.WinForms.Controls
 
 		public void UpdateToCurrentCSIP()
 		{
-			(DisasmSegment, DisasmOffset) = EmulatorHandler.GetProcessorStatus();
+			(DisasmSegment, DisasmOffset) = EmulatorHandler.Machine.GetProcessorStatus();
 		}
 	}
 }

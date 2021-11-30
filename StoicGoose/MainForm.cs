@@ -112,7 +112,7 @@ namespace StoicGoose
 			emulatorHandler = new EmulatorHandler(machineType);
 			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
 
-			graphicsHandler = new GraphicsHandler(emulatorHandler.Metadata) { IsVerticalOrientation = isVerticalOrientation };
+			graphicsHandler = new GraphicsHandler(emulatorHandler.Machine.Metadata) { IsVerticalOrientation = isVerticalOrientation };
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
@@ -125,11 +125,11 @@ namespace StoicGoose
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
-			emulatorHandler.RenderScreen += graphicsHandler.RenderScreen;
-			emulatorHandler.EnqueueSamples += soundHandler.EnqueueSamples;
-			emulatorHandler.PollInput += inputHandler.PollInput;
-			emulatorHandler.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
-			emulatorHandler.EndOfFrame += (s, e) => { /* anything to do here...? */ };
+			emulatorHandler.Machine.RenderScreen += graphicsHandler.RenderScreen;
+			emulatorHandler.Machine.EnqueueSamples += soundHandler.EnqueueSamples;
+			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
+			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
+			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 
 			renderControl.Paint += graphicsHandler.Paint;
 			renderControl.Resize += graphicsHandler.Resize;
@@ -137,7 +137,7 @@ namespace StoicGoose
 
 		private void VerifyConfiguration()
 		{
-			var metadata = emulatorHandler.Metadata;
+			var metadata = emulatorHandler.Machine.Metadata;
 
 			foreach (var button in metadata["machine/input/controls"].Value.StringArray)
 			{
@@ -180,7 +180,7 @@ namespace StoicGoose
 				return ClientSize;
 
 			var screenWidth = graphicsHandler.ScreenSize.X;
-			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Metadata["interface/icons/size"].Value.Integer;
+			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Machine.Metadata["interface/icons/size"].Value.Integer;
 
 			if (!isVerticalOrientation)
 				return new Size(
@@ -198,7 +198,7 @@ namespace StoicGoose
 
 			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
-			var metadata = emulatorHandler.Metadata;
+			var metadata = emulatorHandler.Machine.Metadata;
 			var cartridgeId = metadata["cartridge/id"].Value;
 
 			if (cartridgeId != null)
@@ -339,7 +339,7 @@ namespace StoicGoose
 			CreateDataBinding(muteSoundToolStripMenuItem.DataBindings, nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute));
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
-			ofdOpenRom.Filter = $"{emulatorHandler.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
+			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
 		}
 
 		private void LoadBootstrap(string filename)
@@ -347,12 +347,12 @@ namespace StoicGoose
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
 
 			if (!emulatorHandler.IsRunning &&
-				Program.Configuration.General.UseBootstrap && File.Exists(Program.Configuration.General.BootstrapFile) && !emulatorHandler.IsBootstrapLoaded)
+				Program.Configuration.General.UseBootstrap && File.Exists(Program.Configuration.General.BootstrapFile) && !emulatorHandler.Machine.IsBootstrapLoaded)
 			{
 				using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				var data = new byte[stream.Length];
 				stream.Read(data, 0, data.Length);
-				emulatorHandler.LoadBootstrap(data);
+				emulatorHandler.Machine.LoadBootstrap(data);
 			}
 		}
 
@@ -363,7 +363,7 @@ namespace StoicGoose
 				using var stream = new FileStream(Program.InternalEepromPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				var data = new byte[stream.Length];
 				stream.Read(data, 0, data.Length);
-				emulatorHandler.LoadInternalEeprom(data);
+				emulatorHandler.Machine.LoadInternalEeprom(data);
 			}
 		}
 
@@ -380,10 +380,10 @@ namespace StoicGoose
 			using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			var data = new byte[stream.Length];
 			stream.Read(data, 0, data.Length);
-			emulatorHandler.LoadRom(data);
+			emulatorHandler.Machine.LoadRom(data);
 
 			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				emulatorHandler.Metadata["cartridge/orientation"] == "vertical";
+				emulatorHandler.Machine.Metadata["cartridge/orientation"] == "vertical";
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();
@@ -410,12 +410,12 @@ namespace StoicGoose
 			var data = new byte[stream.Length];
 			stream.Read(data, 0, data.Length);
 			if (data.Length != 0)
-				emulatorHandler.LoadSaveData(data);
+				emulatorHandler.Machine.LoadSaveData(data);
 		}
 
 		private void SaveRam()
 		{
-			var data = emulatorHandler.GetSaveData();
+			var data = emulatorHandler.Machine.GetSaveData();
 			if (data.Length == 0) return;
 
 			var path = Path.Combine(Program.SaveDataPath, Path.ChangeExtension(Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First()), ".sav"));
@@ -426,7 +426,7 @@ namespace StoicGoose
 
 		private void SaveInternalEeprom()
 		{
-			var data = emulatorHandler.GetInternalEeprom();
+			var data = emulatorHandler.Machine.GetInternalEeprom();
 			if (data.Length == 0) return;
 
 			using var stream = new FileStream(Program.InternalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
@@ -537,7 +537,7 @@ namespace StoicGoose
 			PauseEmulation();
 
 			if (GlobalVariables.EnableLocalDebugIO)
-				File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.GetInternalRam());
+				File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.Machine.GetInternalRam());
 			else
 				MessageBox.Show("Not implemented.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 

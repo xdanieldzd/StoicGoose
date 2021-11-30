@@ -2,9 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 
-using StoicGoose.DataStorage;
 using StoicGoose.Emulation.Machines;
-using StoicGoose.WinForms;
 
 namespace StoicGoose.Emulation
 {
@@ -22,47 +20,17 @@ namespace StoicGoose.Emulation
 		public bool IsRunning => threadRunning;
 		public bool IsPaused => threadPaused;
 
-		readonly IMachine machine = null;
-
-		public event EventHandler<RenderScreenEventArgs> RenderScreen
-		{
-			add { machine.RenderScreen += value; }
-			remove { machine.RenderScreen -= value; }
-		}
-
-		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples
-		{
-			add { machine.EnqueueSamples += value; }
-			remove { machine.EnqueueSamples -= value; }
-		}
-
-		public event EventHandler<PollInputEventArgs> PollInput
-		{
-			add { machine.PollInput += value; }
-			remove { machine.PollInput -= value; }
-		}
-
-		public event EventHandler<StartOfFrameEventArgs> StartOfFrame
-		{
-			add { machine.StartOfFrame += value; }
-			remove { machine.StartOfFrame -= value; }
-		}
-
-		public event EventHandler<EventArgs> EndOfFrame
-		{
-			add { machine.EndOfFrame += value; }
-			remove { machine.EndOfFrame -= value; }
-		}
+		public IMachine Machine { get; } = default;
 
 		public EmulatorHandler(Type machineType)
 		{
-			machine = Activator.CreateInstance(machineType) as IMachine;
-			machine.Initialize();
+			Machine = Activator.CreateInstance(machineType) as IMachine;
+			Machine.Initialize();
 		}
 
 		public void Startup()
 		{
-			machine.Reset();
+			Machine.Reset();
 
 			threadRunning = true;
 			threadPaused = false;
@@ -95,7 +63,7 @@ namespace StoicGoose.Emulation
 
 			thread?.Join();
 
-			machine.Shutdown();
+			Machine.Shutdown();
 		}
 
 		public void SetFpsLimiter(bool value)
@@ -104,32 +72,10 @@ namespace StoicGoose.Emulation
 			newLimitFps = value;
 		}
 
-		public void LoadBootstrap(byte[] data) => machine.LoadBootstrap(data);
-		public bool IsBootstrapLoaded => machine.IsBootstrapLoaded;
-
-		public void LoadInternalEeprom(byte[] data) => machine.LoadInternalEeprom(data);
-
-		public void LoadRom(byte[] data) => machine.LoadRom(data);
-		public void LoadSaveData(byte[] data) => machine.LoadSaveData(data);
-
-		public byte[] GetInternalEeprom() => machine.GetInternalEeprom();
-		public byte[] GetSaveData() => machine.GetSaveData();
-
-		public ObjectStorage Metadata => machine.Metadata;
-
-		public byte[] GetInternalRam() => machine.GetInternalRam();
-
-		internal byte ReadMemory(uint address) => machine.ReadMemory(address);
-		internal void WriteMemory(uint address, byte value) => machine.WriteMemory(address, value);
-		internal byte ReadRegister(ushort register) => machine.ReadRegister(register);
-		internal void WriteRegister(ushort register, byte value) => machine.WriteRegister(register, value);
-
-		internal (ushort cs, ushort ip) GetProcessorStatus() => machine.GetProcessorStatus();
-
 		private void ThreadMainLoop()
 		{
 			var stopWatch = Stopwatch.StartNew();
-			var interval = 1000.0 / machine.GetRefreshRate();
+			var interval = 1000.0 / Machine.GetRefreshRate();
 			var lastTime = 0.0;
 
 			while (true)
@@ -138,7 +84,7 @@ namespace StoicGoose.Emulation
 
 				if (isResetRequested)
 				{
-					machine.Reset();
+					Machine.Reset();
 					stopWatch.Restart();
 					lastTime = 0.0;
 
@@ -169,7 +115,7 @@ namespace StoicGoose.Emulation
 					else
 						lastTime = stopWatch.Elapsed.TotalMilliseconds;
 
-					machine.RunFrame();
+					Machine.RunFrame();
 				}
 				else
 					lastTime = stopWatch.Elapsed.TotalMilliseconds;
