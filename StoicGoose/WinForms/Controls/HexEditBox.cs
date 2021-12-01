@@ -10,7 +10,7 @@ namespace StoicGoose.WinForms.Controls
 	{
 		// TODO: further optimize, update, etc, etc -- plenty of this is 2011/12-ish code
 
-		const int textPadding = 2;
+		const int textPadding = 1;
 
 		public delegate byte MemoryReadDelegate(uint address);
 		public delegate void MemoryWriteDelegate(uint address, byte value);
@@ -289,7 +289,7 @@ namespace StoicGoose.WinForms.Controls
 			var lineInfoTemp = string.Empty.PadRight((OffsetBytes * 2) + (ShowOffsetPrefix ? 2 : 0));
 			leftMargin = (int)e.Graphics.MeasureString(lineInfoTemp, Font, -1, stringFormat).Width;
 
-			fontHeight = (int)e.Graphics.MeasureString("X", Font).Height + (textPadding * 2);
+			fontHeight = (int)e.Graphics.MeasureString("X", Font).Height + textPadding;
 			maxLines = ClientSize.Height / fontHeight;
 			maxBytesPerLine = (int)Math.Round((decimal)((ClientSize.Width - leftMargin - asciiWidth) / e.Graphics.MeasureString("XX", Font).Width), MidpointRounding.ToEven) - 1;
 

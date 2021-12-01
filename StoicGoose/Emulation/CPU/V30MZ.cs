@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace StoicGoose.Emulation.CPU
 {
@@ -65,10 +66,28 @@ namespace StoicGoose.Emulation.CPU
 			CloseTraceLogger();
 		}
 
-		public (ushort, ushort) GetStatus()
+		public Dictionary<string, ushort> GetStatus()
 		{
-			// TODO: add more information (flags, etc)
-			return (cs, ip);
+			return new()
+			{
+				{ "ip", ip },
+				{ "flags", (ushort)flags },
+
+				{ "ax", ax.Word },
+				{ "bx", bx.Word },
+				{ "cx", cx.Word },
+				{ "dx", dx.Word },
+
+				{ "sp", sp },
+				{ "bp", bp },
+				{ "si", si },
+				{ "di", di },
+
+				{ "cs", cs },
+				{ "ds", ds },
+				{ "ss", ss },
+				{ "es", es },
+			};
 		}
 
 		public void RaiseInterrupt(int vector)

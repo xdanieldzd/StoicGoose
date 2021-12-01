@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using StoicGoose.DataStorage;
 using StoicGoose.WinForms;
@@ -20,6 +21,7 @@ namespace StoicGoose.Emulation.Machines
 		void Shutdown();
 
 		void RunFrame();
+		void RunStep();
 
 		void LoadBootstrap(byte[] data);
 		bool IsBootstrapLoaded { get; }
@@ -30,8 +32,6 @@ namespace StoicGoose.Emulation.Machines
 		byte[] GetInternalEeprom();
 		byte[] GetSaveData();
 
-		byte[] GetInternalRam();
-
 		(int w, int h) GetScreenSize();
 		double GetRefreshRate();
 
@@ -40,6 +40,6 @@ namespace StoicGoose.Emulation.Machines
 		byte ReadRegister(ushort register);
 		void WriteRegister(ushort register, byte value);
 
-		(ushort cs, ushort ip) GetProcessorStatus();
+		public Dictionary<string, ushort> GetProcessorStatus();
 	}
 }

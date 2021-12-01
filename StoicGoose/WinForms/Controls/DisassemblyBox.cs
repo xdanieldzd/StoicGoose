@@ -34,6 +34,16 @@ namespace StoicGoose.WinForms.Controls
 		readonly StringFormat stringFormat = default;
 		readonly Disassembler disassembler = new();
 
+		bool fontHasChanged = true;
+
+		float lineHeight = 0f;
+		readonly float[] xPos = new float[3];
+
+		(ushort segment, ushort offset)[] currentDisasmAddresses = Array.Empty<(ushort segment, ushort offset)>();
+
+		int centerLine = -1;
+		int currentHighlightLine = -1;
+
 		public DisassemblyBox()
 		{
 			InitializeComponent();
@@ -58,7 +68,24 @@ namespace StoicGoose.WinForms.Controls
 		{
 			VisibleDisasmOps = Height / (Font.Height + 1);
 
+			currentDisasmAddresses = new (ushort segment, ushort offset)[VisibleDisasmOps + 1];
+			for (var i = 0; i < currentDisasmAddresses.Length; i++) currentDisasmAddresses[i] = (0xDEAD, 0xBEEF);
+
+			centerLine = VisibleDisasmOps / 2;
+			currentHighlightLine = -1;
+
+			UpdateDisassemblyAddresses();
+
 			base.OnSizeChanged(e);
+		}
+
+		protected override void OnFontChanged(EventArgs e)
+		{
+			fontHasChanged = true;
+
+			OnSizeChanged(EventArgs.Empty);
+
+			base.OnFontChanged(e);
 		}
 
 		protected override void OnGotFocus(EventArgs e)
@@ -88,48 +115,57 @@ namespace StoicGoose.WinForms.Controls
 		{
 			if (EmulatorHandler == null) return;
 
+			/* Setup drawing */
 			e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 			e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
 			e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
 
-			var lineHeight = Font.Height + 1;
-			var xPos = new float[3];
-			xPos[0] = 16;
-			xPos[1] = xPos[0] + e.Graphics.MeasureString(string.Empty.PadRight(10), Font, -1, stringFormat).Width;
-			xPos[2] = xPos[1] + e.Graphics.MeasureString(string.Empty.PadRight(24), Font, -1, stringFormat).Width;
+			/* Measure things */
+			if (fontHasChanged)
+			{
+				lineHeight = Font.Height + 1f;
+				xPos[0] = 16;
+				xPos[1] = xPos[0] + e.Graphics.MeasureString(string.Empty.PadRight(10), Font, -1, stringFormat).Width;
+				xPos[2] = xPos[1] + e.Graphics.MeasureString(string.Empty.PadRight(24), Font, -1, stringFormat).Width;
 
+				fontHasChanged = false;
+			}
+
+			/* Clear control & draw divider */
 			e.Graphics.FillRectangle(Brushes.WhiteSmoke, 0, 0, xPos[0], Height);
 			e.Graphics.DrawLine(SystemPens.WindowText, xPos[0], 0, xPos[0], Height);
 
-			var (execSegment, execOffset) = EmulatorHandler.Machine.GetProcessorStatus();
+			/* Get current CS/IP for comparing */
+			var cpuStatus = EmulatorHandler.Machine.GetProcessorStatus();
+			var execCs = cpuStatus["cs"];
+			var execIp = cpuStatus["ip"];
 
-			disassembler.Segment = DisasmSegment;
-			disassembler.Offset = DisasmOffset;
-
+			/* Loop over opcodes until view is full */
 			for (var i = 0; i < VisibleDisasmOps + 1; i++)
 			{
-				var cs = disassembler.Segment;
-				var ip = disassembler.Offset;
-				var isCurrentCsIp = execSegment == cs && execOffset == ip;
-
-				var (bytes, disasm, comment) = disassembler.DisassembleInstruction();
+				var (cs, ip) = currentDisasmAddresses[i];
+				var isCurrentCsIp = execCs == cs && execIp == ip;
+				var (_, _, bytes, disasm, comment) = disassembler.DisassembleInstruction(cs, ip);
 
 				var y = i * lineHeight;
 				e.Graphics.DrawString($"{cs:X4}:{ip:X4}", Font, isCurrentCsIp ? Brushes.MediumBlue : SystemBrushes.WindowText, xPos[0], y + 2);
 				e.Graphics.DrawString($"{string.Join(" ", bytes.Select(x => ($"{x:X2}"))),-24}", Font, isCurrentCsIp ? Brushes.SteelBlue : SystemBrushes.ControlDark, xPos[1], y + 2);
 				e.Graphics.DrawString($"{disasm,-32}{(!string.IsNullOrEmpty(comment) ? $";{comment}" : "")}", Font, isCurrentCsIp ? Brushes.MediumBlue : SystemBrushes.WindowText, xPos[2], y + 2);
 
-				if (execSegment == cs && execOffset == ip)
+				/* Highlight opcode at current CS/IP */
+				if (execCs == cs && execIp == ip)
 				{
 					e.Graphics.DrawLine(SystemPens.WindowText, xPos[0], y, Width, y);
 					e.Graphics.DrawLine(SystemPens.WindowText, xPos[0], y + lineHeight, Width, y + lineHeight);
 
 					if (!EmulatorHandler.IsPaused)
 					{
+						/* Draw ▶️ symbol */
 						e.Graphics.FillPolygon(Brushes.Green, new PointF[] { new PointF(4.0f, y), new PointF(12.0f, y + (lineHeight / 2.0f)), new PointF(4.0f, y + lineHeight) });
 					}
 					else
 					{
+						/* Draw ⏸️ symbol */
 						e.Graphics.FillRectangle(Brushes.Blue, 3.0f, y + 2.0f, 4.0f, lineHeight - 2.0f);
 						e.Graphics.FillRectangle(Brushes.Blue, 9.0f, y + 2.0f, 4.0f, lineHeight - 2.0f);
 					}
@@ -139,7 +175,50 @@ namespace StoicGoose.WinForms.Controls
 
 		public void UpdateToCurrentCSIP()
 		{
-			(DisasmSegment, DisasmOffset) = EmulatorHandler.Machine.GetProcessorStatus();
+			if (EmulatorHandler == null) return;
+
+			var cpuStatus = EmulatorHandler.Machine.GetProcessorStatus();
+			DisasmSegment = cpuStatus["cs"];
+			DisasmOffset = cpuStatus["ip"];
+		}
+
+		public void UpdateDisassemblyAddresses()
+		{
+			if (EmulatorHandler == null) return;
+
+			var cpuStatus = EmulatorHandler.Machine.GetProcessorStatus();
+			var currentAddress = (seg: cpuStatus["cs"], ofs: cpuStatus["ip"]);
+
+			if (!currentDisasmAddresses.Contains(currentAddress))
+			{
+				var segment = currentAddress.seg;
+				var offset = currentAddress.ofs;
+
+				for (var i = 0; i < currentDisasmAddresses.Length; i++)
+				{
+					currentDisasmAddresses[i] = (segment, offset);
+					offset += (ushort)disassembler.EvaluateInstructionLength(segment, offset);
+				}
+			}
+
+			currentHighlightLine = Array.IndexOf(currentDisasmAddresses, currentAddress);
+
+			if (currentHighlightLine >= centerLine)
+			{
+				var difference = currentHighlightLine - centerLine;
+				var addressesToKeep = currentDisasmAddresses.Skip(difference).Take(currentDisasmAddresses.Length - difference);
+
+				var (readSegment, readOffset) = addressesToKeep.LastOrDefault();
+				var addressesToAdd = new List<(ushort, ushort)>();
+				while (addressesToAdd.Count < difference)
+				{
+					var length = disassembler.EvaluateInstructionLength(readSegment, readOffset);
+					readOffset += (ushort)length;
+					addressesToAdd.Add((readSegment, readOffset));
+				}
+
+				currentDisasmAddresses = addressesToKeep.Concat(addressesToAdd).ToArray();
+			}
 		}
 	}
 }

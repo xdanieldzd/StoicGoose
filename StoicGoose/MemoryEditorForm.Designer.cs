@@ -50,7 +50,7 @@ namespace StoicGoose
 			this.hexEditBox.OffsetBytes = 3;
 			this.hexEditBox.OffsetMask = ((uint)(1048575u));
 			this.hexEditBox.ReadMemory = null;
-			this.hexEditBox.Size = new System.Drawing.Size(540, 308);
+			this.hexEditBox.Size = new System.Drawing.Size(540, 260);
 			this.hexEditBox.TabIndex = 0;
 			this.hexEditBox.WriteMemory = null;
 			this.hexEditBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.hexEditBox_KeyDown);
@@ -64,20 +64,23 @@ namespace StoicGoose
 			// btnClose
 			// 
 			this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnClose.Location = new System.Drawing.Point(478, 326);
+			this.btnClose.Location = new System.Drawing.Point(450, 279);
 			this.btnClose.Name = "btnClose";
-			this.btnClose.Size = new System.Drawing.Size(94, 23);
+			this.btnClose.Size = new System.Drawing.Size(125, 25);
 			this.btnClose.TabIndex = 2;
 			this.btnClose.Text = "Close";
 			this.btnClose.UseVisualStyleBackColor = true;
+			this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
 			// 
 			// vsbLocation
 			// 
+			this.vsbLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.vsbLocation.LargeChange = 16;
 			this.vsbLocation.Location = new System.Drawing.Point(555, 12);
 			this.vsbLocation.Maximum = 65535;
 			this.vsbLocation.Name = "vsbLocation";
-			this.vsbLocation.Size = new System.Drawing.Size(17, 308);
+			this.vsbLocation.Size = new System.Drawing.Size(20, 260);
 			this.vsbLocation.TabIndex = 3;
 			this.vsbLocation.Scroll += new System.Windows.Forms.ScrollEventHandler(this.vsbLocation_Scroll);
 			// 
@@ -86,7 +89,7 @@ namespace StoicGoose
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.btnClose;
-			this.ClientSize = new System.Drawing.Size(584, 361);
+			this.ClientSize = new System.Drawing.Size(584, 316);
 			this.Controls.Add(this.vsbLocation);
 			this.Controls.Add(this.btnClose);
 			this.Controls.Add(this.hexEditBox);

@@ -17,13 +17,14 @@ namespace StoicGoose.Disassembly
 
 			for (var i = 0; i < 32; i++)
 			{
-				var read = ReadMemory8(Segment, Offset);
+				var read = ReadMemory8(nextSegment, nextOffset);
 				bytes.Add(read);
 
 				IncrementAddress();
 
 				if (!prefixBytes.Contains(read)) break;
 			}
+
 			return bytes;
 		}
 

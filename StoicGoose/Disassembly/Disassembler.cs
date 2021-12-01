@@ -8,8 +8,7 @@ namespace StoicGoose.Disassembly
 		public MemoryReadDelegate ReadDelegate { get; set; }
 		public MemoryWriteDelegate WriteDelegate { get; set; }
 
-		public ushort Segment { get; set; }
-		public ushort Offset { get; set; }
+		ushort nextSegment = 0, nextOffset = 0;
 
 		public void IncrementAddress()
 		{
@@ -18,16 +17,58 @@ namespace StoicGoose.Disassembly
 
 		public void IncrementAddress(ushort inc)
 		{
-			if ((Offset + inc) < Offset) Segment++;
-			Offset += inc;
+			if ((nextOffset + inc) < nextOffset) nextSegment++;
+			nextOffset += inc;
 		}
 
-		public (byte[], string, string) DisassembleInstruction()
+		public int EvaluateInstructionLength(ushort segment, ushort offset)
 		{
+			nextSegment = segment;
+			nextOffset = offset;
+
+			var bytes = ReadPrefixesAndOpcode();
+			var opcode = bytes.Last();
+			var length = bytes.Count;
+
+			if (argsEvalLength1List.Contains(opcode) || conditionalJumpOpcodeDict.ContainsKey(opcode) || registerImmediate8OpcodeDict.ContainsKey(opcode))
+				length++;
+			else if (argsEvalLength2List.Contains(opcode) || registerImmediate16OpcodeDict.ContainsKey(opcode))
+				length += 2;
+			else if (argsEvalLength3List.Contains(opcode))
+				length += 3;
+			else if (argsEvalLength4List.Contains(opcode))
+				length += 4;
+			else if (opcode == 0xF6)
+			{
+				ReadModRm();
+				if (modRm.Reg != 0x0) length++;
+				else length += 2;
+			}
+			else if (opcode == 0xF7)
+			{
+				ReadModRm();
+				if (modRm.Reg != 0x0) length++;
+				else length += 2;
+			}
+			else if (opcode == 0xFF)
+			{
+				var tempModRm = (ModRm)ReadMemory8(nextSegment, nextOffset);
+				if (tempModRm.Reg != 0x7 && !((tempModRm.Reg == 0x3 || tempModRm.Reg == 0x5) && tempModRm.Mod == ModRmModes.Register))
+					length++;
+			}
+
+			return length;
+		}
+
+		public (ushort, ushort, byte[], string, string) DisassembleInstruction(ushort segment, ushort offset)
+		{
+			nextSegment = segment;
+			nextOffset = offset;
+
 			var bytes = ReadPrefixesAndOpcode();
 			var (hasSegmentOverride, hasLockPrefix, hasRepeatPrefix, hasRepeatCmpSca, hasRepeatCmpScaNotEqual) = AnalyzePrefixes(bytes);
 			var opcode = bytes.Last();
-			var argsOffset = Offset;
+			var argsOffset = nextOffset;
 
 			var disasm = default(string);
 			var comment = default(string);
@@ -291,18 +332,18 @@ namespace StoicGoose.Disassembly
 					case 0xE2: disasm = CreateConditionalJump("loop"); IncrementAddress(); break;
 					case 0xE3: disasm = CreateConditionalJump("jcxz"); IncrementAddress(); break;
 
-					case 0xE4: disasm = $"in al, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(Segment, Offset)]; IncrementAddress(); break;
-					case 0xE5: disasm = $"in ax, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(Segment, Offset)]; IncrementAddress(); break;
-					case 0xE6: disasm = $"out {GetImmediate8(0)}, al"; comment = wonderSwanPortNamesOutput[ReadMemory8(Segment, Offset)]; IncrementAddress(); break;
-					case 0xE7: disasm = $"out {GetImmediate8(0)}, ax"; comment = wonderSwanPortNamesOutput[ReadMemory8(Segment, Offset)]; IncrementAddress(); break;
+					case 0xE4: disasm = $"in al, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
+					case 0xE5: disasm = $"in ax, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
+					case 0xE6: disasm = $"out {GetImmediate8(0)}, al"; comment = wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
+					case 0xE7: disasm = $"out {GetImmediate8(0)}, ax"; comment = wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
 
 					case 0xE8:
-						disasm = $"call 0x{Offset + 2 + (short)ReadMemory16(Segment, Offset):X4}";
+						disasm = $"call 0x{nextOffset + 2 + (short)ReadMemory16(nextSegment, nextOffset):X4}";
 						IncrementAddress(2);
 						break;
 
 					case 0xE9:
-						disasm = $"jmp 0x{Offset + 2 + (short)ReadMemory16(Segment, Offset):X4}";
+						disasm = $"jmp 0x{nextOffset + 2 + (short)ReadMemory16(nextSegment, nextOffset):X4}";
 						IncrementAddress(2);
 						break;
 
@@ -336,7 +377,7 @@ namespace StoicGoose.Disassembly
 
 					case 0xFF:
 						// TODO: verify validity checks?
-						var tempModRm = (ModRm)ReadMemory8(Segment, Offset);
+						var tempModRm = (ModRm)ReadMemory8(nextSegment, nextOffset);
 						if (tempModRm.Reg != 0x7 && !((tempModRm.Reg == 0x3 || tempModRm.Reg == 0x5) && tempModRm.Mod == ModRmModes.Register))
 						{
 							ReadModRm();
@@ -373,15 +414,15 @@ namespace StoicGoose.Disassembly
 			}
 
 			var argsBytes = new List<byte>();
-			for (var i = argsOffset; i < Offset; i++) argsBytes.Add(ReadMemory8(Segment, i));
+			for (var i = argsOffset; i < nextOffset; i++) argsBytes.Add(ReadMemory8(nextSegment, i));
 
-			return (bytes.Concat(argsBytes).ToArray(), disasm, comment);
+			return (nextSegment, nextOffset, bytes.Concat(argsBytes).ToArray(), disasm, comment);
 		}
 
-		private string GetImmediate8(int offset2) => $"0x{ReadMemory8(Segment, (ushort)(Offset + offset2)):X2}";
-		private string GetImmediate16(int offset2) => $"0x{ReadMemory16(Segment, (ushort)(Offset + offset2)):X4}";
+		private string GetImmediate8(int offset2) => $"0x{ReadMemory8(nextSegment, (ushort)(nextOffset + offset2)):X2}";
+		private string GetImmediate16(int offset2) => $"0x{ReadMemory16(nextSegment, (ushort)(nextOffset + offset2)):X4}";
 
-		private string CreateConditionalJump(string jump) => $"{jump} 0x{Offset + 1 + (sbyte)ReadMemory8(Segment, Offset):X4}";
+		private string CreateConditionalJump(string jump) => $"{jump} 0x{nextOffset + 1 + (sbyte)ReadMemory8(nextSegment, nextOffset):X4}";
 		private string CreateOpRegImm8(string op, string arg1) => $"{op} {arg1}, {GetImmediate8(0)}";
 		private string CreateOpRegImm16(string op, string arg1) => $"{op} {arg1}, {GetImmediate16(0)}";
 

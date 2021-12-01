@@ -15,6 +15,17 @@ namespace StoicGoose
 			hexEditBox.WriteMemory = new HexEditBox.MemoryWriteDelegate(memoryWrite);
 		}
 
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			if (e.CloseReason == CloseReason.UserClosing)
+			{
+				Hide();
+				e.Cancel = true;
+			}
+
+			base.OnFormClosing(e);
+		}
+
 		private void tmrUpdate_Tick(object sender, EventArgs e)
 		{
 			hexEditBox.Invalidate();
@@ -29,6 +40,11 @@ namespace StoicGoose
 		private void hexEditBox_KeyDown(object sender, KeyEventArgs e)
 		{
 			vsbLocation.Value = (hexEditBox.BaseOffset & 0xFFFF0) >> 4;
+		}
+
+		private void btnClose_Click(object sender, EventArgs e)
+		{
+			Hide();
 		}
 	}
 }

@@ -36,6 +36,9 @@ namespace StoicGoose
 		InputHandler inputHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
+		/* Debugger stuff */
+		DebuggerMainForm debuggerMainForm = default;
+
 		/* Misc. runtime variables */
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
@@ -71,16 +74,16 @@ namespace StoicGoose
 
 			InitializeUIMiscellanea();
 
+			InitializeDebugger();
+
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
 			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugNewUIStuffs)
 			{
-				//var form = new MemoryEditorForm(emulatorHandler.ReadMemory, emulatorHandler.WriteMemory);
-				//form.Show();
-
-				var form = new DebuggerMainForm(emulatorHandler);
-				form.Show();
+				openDebuggerToolStripMenuItem_Click(openDebuggerToolStripMenuItem, EventArgs.Empty);
+				PauseEmulation();
+				ResetEmulation();
 			}
 		}
 
@@ -342,6 +345,11 @@ namespace StoicGoose
 			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
 		}
 
+		private void InitializeDebugger()
+		{
+			debuggerMainForm = new DebuggerMainForm(emulatorHandler, PauseEmulation, UnpauseEmulation, ResetEmulation);
+		}
+
 		private void LoadBootstrap(string filename)
 		{
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
@@ -453,6 +461,16 @@ namespace StoicGoose
 			SetWindowTitleAndStatus();
 		}
 
+		private void ResetEmulation()
+		{
+			SaveInternalEeprom();
+			SaveRam();
+
+			emulatorHandler.Reset();
+
+			Program.SaveConfiguration();
+		}
+
 		private void loadROMToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			PauseEmulation();
@@ -479,12 +497,7 @@ namespace StoicGoose
 
 		private void resetToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			SaveInternalEeprom();
-			SaveRam();
-
-			emulatorHandler.Reset();
-
-			Program.SaveConfiguration();
+			ResetEmulation();
 		}
 
 		private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -532,16 +545,9 @@ namespace StoicGoose
 			UnpauseEmulation();
 		}
 
-		private void dumpRAMToolStripMenuItem_Click(object sender, EventArgs e)
+		private void openDebuggerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			PauseEmulation();
-
-			if (GlobalVariables.EnableLocalDebugIO)
-				File.WriteAllBytes(@"D:\Temp\Goose\iram.bin", emulatorHandler?.Machine.GetInternalRam());
-			else
-				MessageBox.Show("Not implemented.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-			UnpauseEmulation();
+			debuggerMainForm.Show();
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)

@@ -14,7 +14,7 @@
 
 		private void ReadModRm()
 		{
-			modRm = ReadMemory8(Segment, Offset);
+			modRm = ReadMemory8(nextSegment, nextOffset);
 
 			IncrementAddress();
 		}
@@ -34,14 +34,14 @@
 						case 0b011: pointer = $"{GetOverrideSegmentName(segOverride)}[bp+di]"; break;
 						case 0b100: pointer = $"{GetOverrideSegmentName(segOverride)}[si]"; break;
 						case 0b101: pointer = $"{GetOverrideSegmentName(segOverride)}[di]"; break;
-						case 0b110: pointer = $"{GetOverrideSegmentName(segOverride)}[{ReadMemory16(Segment, Offset):X4}]"; IncrementAddress(2); break;
+						case 0b110: pointer = $"{GetOverrideSegmentName(segOverride)}[{ReadMemory16(nextSegment, nextOffset):X4}]"; IncrementAddress(2); break;
 						case 0b111: pointer = $"{GetOverrideSegmentName(segOverride)}[bx]"; break;
 					}
 					break;
 
 				case ModRmModes.OneByteDisplacement:
 					{
-						var dispValue = ReadMemory8(Segment, Offset);
+						var dispValue = ReadMemory8(nextSegment, nextOffset);
 						IncrementAddress();
 
 						var displacement = dispValue == 0x80 ? $"-0x{dispValue:X2}" : dispValue >= 0x80 ? $"-0x{(0x80 - dispValue) & 0x7F:X2}" : $"+0x{dispValue & 0x7F:X2}";
@@ -62,7 +62,7 @@
 
 				case ModRmModes.TwoByteDisplacement:
 					{
-						var dispValue = ReadMemory16(Segment, Offset);
+						var dispValue = ReadMemory16(nextSegment, nextOffset);
 						IncrementAddress(2);
 
 						var displacement = dispValue == 0x8000 ? $"-0x{dispValue:X4}" : dispValue >= 0x8000 ? $"-0x{(0x8000 - dispValue) & 0x7FFF:X4}" : $"+0x{dispValue & 0x7FFF:X4}";

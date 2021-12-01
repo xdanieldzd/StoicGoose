@@ -190,7 +190,7 @@ namespace StoicGoose.Emulation.Machines
 			OnEndOfFrame(EventArgs.Empty);
 		}
 
-		private void RunStep()
+		public void RunStep()
 		{
 			var currentCpuClockCycles = cpu.Step();
 
@@ -261,11 +261,6 @@ namespace StoicGoose.Emulation.Machines
 			return Array.Empty<byte>();
 		}
 
-		public byte[] GetInternalRam()
-		{
-			return internalRam.Clone() as byte[];
-		}
-
 		public (int w, int h) GetScreenSize()
 		{
 			return (DisplayController.ScreenWidth, DisplayController.ScreenHeight);
@@ -276,7 +271,7 @@ namespace StoicGoose.Emulation.Machines
 			return DisplayController.VerticalClock;
 		}
 
-		public (ushort cs, ushort ip) GetProcessorStatus()
+		public Dictionary<string, ushort> GetProcessorStatus()
 		{
 			return cpu.GetStatus();
 		}
