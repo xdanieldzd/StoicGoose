@@ -28,6 +28,8 @@ namespace StoicGoose
 
 		private void tmrUpdate_Tick(object sender, EventArgs e)
 		{
+			if (!Visible) return;
+
 			hexEditBox.Invalidate();
 		}
 

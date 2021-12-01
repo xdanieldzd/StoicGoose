@@ -23,6 +23,6 @@
 		public static readonly bool EnableRenderSCR2DebugColors = false;
 		public static readonly bool EnableRenderSPRDebugColors = false;
 
-		public static readonly bool EnableDebugNewUIStuffs = true;
+		public static readonly bool EnableDebugNewUIStuffs = false;
 	}
 }
