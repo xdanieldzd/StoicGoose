@@ -27,9 +27,6 @@ namespace StoicGoose.Emulation.CPU
 
 			InitializeDisassembler();
 
-			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableKindaSlowCPULogger)
-				InitializeTraceLogger(@"D:\Temp\Goose\log.txt");
-
 			Reset();
 		}
 
@@ -124,6 +121,7 @@ namespace StoicGoose.Emulation.CPU
 
 		public int Step()
 		{
+			var csBegin = cs;
 			var ipBegin = ip;
 
 			/* Do interrupt handling & service interrupt if needed */
@@ -136,17 +134,13 @@ namespace StoicGoose.Emulation.CPU
 			byte opcode;
 			while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
 
-			/* If enabled, write to kinda-slow CPU trace logger */
-			// TODO: implement proper debugger w/ UI (disassembly, memory editor, etc)
-			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableKindaSlowCPULogger)
+			/* If enabled, write to CPU trace logger */
+			if (isTraceLogOpen)
 			{
-				var dbg_cs = cs;
-				var dbg_ip = ipBegin;
+				var registerStates = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
+				var segmentStates = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
 
-				var out_regs = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
-				var out_segs = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
-
-				WriteToTraceLog($"{DisassembleInstruction(dbg_cs, dbg_ip),-96} | {out_regs} | {out_segs}");
+				WriteToTraceLog($"{DisassembleInstruction(csBegin, ipBegin),-96} | {registerStates} | {segmentStates}");
 			}
 
 			int cycles;

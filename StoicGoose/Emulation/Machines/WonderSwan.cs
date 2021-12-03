@@ -276,6 +276,16 @@ namespace StoicGoose.Emulation.Machines
 			return cpu.GetStatus();
 		}
 
+		public void BeginTraceLog(string filename)
+		{
+			cpu.InitializeTraceLogger(filename);
+		}
+
+		public void EndTraceLog()
+		{
+			cpu.CloseTraceLogger();
+		}
+
 		public byte ReadMemory(uint address)
 		{
 			if (!hwCartEnable && address >= (0x100000 - bootstrapRom.Length))

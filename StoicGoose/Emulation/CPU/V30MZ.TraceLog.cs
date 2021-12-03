@@ -7,20 +7,26 @@ namespace StoicGoose.Emulation.CPU
 	{
 		StreamWriter logWriter = default;
 
-		private void InitializeTraceLogger(string filename)
+		bool isTraceLogOpen => logWriter?.BaseStream != null && logWriter.BaseStream.CanWrite;
+
+		public void InitializeTraceLogger(string filename)
 		{
 			logWriter = new StreamWriter(filename, false, Encoding.ASCII, 1024 * 64);
 		}
 
 		private void WriteToTraceLog(string line)
 		{
-			logWriter?.WriteLine(line);
+			if (isTraceLogOpen)
+				logWriter?.WriteLine(line);
 		}
 
-		private void CloseTraceLogger()
+		public void CloseTraceLogger()
 		{
-			logWriter?.Flush();
-			logWriter?.Close();
+			if (isTraceLogOpen)
+			{
+				logWriter?.Flush();
+				logWriter?.Close();
+			}
 		}
 	}
 }

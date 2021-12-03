@@ -15,6 +15,7 @@ namespace StoicGoose
 
 		const string internalEepromFileName = "Internal.eep";
 		const string saveDataDirectoryName = "Saves";
+		const string debuggingDataDirectoryName = "Debugging";
 
 		const string assetsDirectoryName = "Assets";
 		const string shaderDirectoryName = "Shaders";
@@ -26,6 +27,7 @@ namespace StoicGoose
 
 		public static string InternalEepromPath { get; } = Path.Combine(programDataDirectory, internalEepromFileName);
 		public static string SaveDataPath { get; } = string.Empty;
+		public static string DebuggingDataPath { get; } = string.Empty;
 
 		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
 		readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
@@ -35,6 +37,7 @@ namespace StoicGoose
 		static Program()
 		{
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 
 			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
 				throw new DirectoryNotFoundException("Shader directory missing");

@@ -14,10 +14,9 @@
 		public static readonly bool EnableOpenGLDebug = false;
 
 		public static readonly bool EnableDebugSoundRecording = false;
-		public static readonly bool EnableAutostartLastRom = true;
+		public static readonly bool EnableAutostartLastRom = false;
 
 		public static readonly bool EnableSkipBootstrapIfFound = false;
-		public static readonly bool EnableKindaSlowCPULogger = false;
 
 		public static readonly bool EnableRenderSCR1DebugColors = false;
 		public static readonly bool EnableRenderSCR2DebugColors = false;

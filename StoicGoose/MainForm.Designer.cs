@@ -58,6 +58,7 @@
 			this.tsslEmulationStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.ofdOpenRom = new System.Windows.Forms.OpenFileDialog();
 			this.renderControl = new StoicGoose.OpenGL.RenderControl();
+			this.traceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
 			this.SuspendLayout();
@@ -135,7 +136,7 @@
 			// 
 			this.pauseToolStripMenuItem.Name = "pauseToolStripMenuItem";
 			this.pauseToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
-			this.pauseToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+			this.pauseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.pauseToolStripMenuItem.Text = "&Pause";
 			this.pauseToolStripMenuItem.Click += new System.EventHandler(this.pauseToolStripMenuItem_Click);
 			// 
@@ -143,7 +144,7 @@
 			// 
 			this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
 			this.resetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
-			this.resetToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+			this.resetToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.resetToolStripMenuItem.Text = "&Reset";
 			this.resetToolStripMenuItem.Click += new System.EventHandler(this.resetToolStripMenuItem_Click);
 			// 
@@ -167,62 +168,63 @@
 			// screenSizeToolStripMenuItem
 			// 
 			this.screenSizeToolStripMenuItem.Name = "screenSizeToolStripMenuItem";
-			this.screenSizeToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.screenSizeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.screenSizeToolStripMenuItem.Text = "S&creen Size";
 			// 
 			// shadersToolStripMenuItem
 			// 
 			this.shadersToolStripMenuItem.Name = "shadersToolStripMenuItem";
-			this.shadersToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.shadersToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.shadersToolStripMenuItem.Text = "&Shaders";
 			// 
 			// toolStripMenuItem3
 			// 
 			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-			this.toolStripMenuItem3.Size = new System.Drawing.Size(143, 6);
+			this.toolStripMenuItem3.Size = new System.Drawing.Size(177, 6);
 			// 
 			// muteSoundToolStripMenuItem
 			// 
 			this.muteSoundToolStripMenuItem.CheckOnClick = true;
 			this.muteSoundToolStripMenuItem.Name = "muteSoundToolStripMenuItem";
-			this.muteSoundToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.muteSoundToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.muteSoundToolStripMenuItem.Text = "&Mute Sound";
 			// 
 			// toolStripMenuItem4
 			// 
 			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(143, 6);
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(177, 6);
 			// 
 			// limitFPSToolStripMenuItem
 			// 
 			this.limitFPSToolStripMenuItem.CheckOnClick = true;
 			this.limitFPSToolStripMenuItem.Name = "limitFPSToolStripMenuItem";
-			this.limitFPSToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.limitFPSToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.limitFPSToolStripMenuItem.Text = "&Limit FPS";
 			// 
 			// rotateScreenToolStripMenuItem
 			// 
 			this.rotateScreenToolStripMenuItem.Name = "rotateScreenToolStripMenuItem";
-			this.rotateScreenToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.rotateScreenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.rotateScreenToolStripMenuItem.Text = "&Rotate Screen";
 			this.rotateScreenToolStripMenuItem.Click += new System.EventHandler(this.rotateScreenToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem5
 			// 
 			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-			this.toolStripMenuItem5.Size = new System.Drawing.Size(143, 6);
+			this.toolStripMenuItem5.Size = new System.Drawing.Size(177, 6);
 			// 
 			// settingsToolStripMenuItem
 			// 
 			this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-			this.settingsToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+			this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.settingsToolStripMenuItem.Text = "Se&ttings";
 			this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
 			this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openDebuggerToolStripMenuItem});
+            this.openDebuggerToolStripMenuItem,
+            this.traceLogToolStripMenuItem});
 			this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
 			this.debugToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
@@ -247,7 +249,7 @@
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
 			this.aboutToolStripMenuItem.Text = "&About...";
 			this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
@@ -290,6 +292,13 @@
 			this.renderControl.Profile = OpenTK.Windowing.Common.ContextProfile.Core;
 			this.renderControl.Size = new System.Drawing.Size(448, 255);
 			this.renderControl.TabIndex = 4;
+			// 
+			// traceLogToolStripMenuItem
+			// 
+			this.traceLogToolStripMenuItem.Name = "traceLogToolStripMenuItem";
+			this.traceLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.traceLogToolStripMenuItem.Text = "&Trace Log";
+			this.traceLogToolStripMenuItem.Click += new System.EventHandler(this.traceLogToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
@@ -347,6 +356,7 @@
 		private StoicGoose.WinForms.BindableToolStripMenuItem muteSoundToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
+		private System.Windows.Forms.ToolStripMenuItem traceLogToolStripMenuItem;
 	}
 }
 

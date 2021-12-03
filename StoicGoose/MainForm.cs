@@ -550,6 +550,32 @@ namespace StoicGoose
 			debuggerMainForm.Show();
 		}
 
+		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (!emulatorHandler.IsRunning) return;
+
+			if (sender is ToolStripMenuItem traceLogMenuItem)
+			{
+				if (!traceLogMenuItem.Checked)
+				{
+					PauseEmulation();
+
+					if (MessageBox.Show("Trace logs are highly verbose and can consume a lot of storage space, even during short sessions.\n\nDo you still want to continue and enable logging?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+					{
+						emulatorHandler.Machine.BeginTraceLog(Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
+						traceLogMenuItem.Checked = true;
+					}
+
+					UnpauseEmulation();
+				}
+				else
+				{
+					emulatorHandler.Machine.EndTraceLog();
+					traceLogMenuItem.Checked = false;
+				}
+			}
+		}
+
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			PauseEmulation();
