@@ -411,7 +411,7 @@ namespace StoicGoose
 
 		private void LoadRam()
 		{
-			var path = Path.Combine(Program.SaveDataPath, Path.ChangeExtension(Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First()), ".sav"));
+			var path = Path.Combine(Program.SaveDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.sav");
 			if (!File.Exists(path)) return;
 
 			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -426,7 +426,7 @@ namespace StoicGoose
 			var data = emulatorHandler.Machine.GetSaveData();
 			if (data.Length == 0) return;
 
-			var path = Path.Combine(Program.SaveDataPath, Path.ChangeExtension(Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First()), ".sav"));
+			var path = Path.Combine(Program.SaveDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.sav");
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
