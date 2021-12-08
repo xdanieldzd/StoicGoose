@@ -733,8 +733,8 @@ namespace StoicGoose.Emulation.CPU
 					}
 					break;
 
-				/* BOUND Gw E -- 80186 */
 				case 0x62:
+					/* BOUND Gw E -- 80186 */
 					ReadModRM();
 					var lo = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 0));
 					var hi = ReadMemory16(modRm.Segment, (ushort)(modRm.Offset + 2));
@@ -751,8 +751,8 @@ namespace StoicGoose.Emulation.CPU
 					cycles = 1;
 					break;
 
-				/* IMUL Gw Ew Iw -- 80186 */
 				case 0x69:
+					/* IMUL Gw Ew Iw -- 80186 */
 					ReadModRM();
 					WriteOpcodeGw((ushort)Mul16(true, ReadOpcodeEw(), ReadOpcodeIw()));
 					cycles = 4;
@@ -764,8 +764,8 @@ namespace StoicGoose.Emulation.CPU
 					cycles = 1;
 					break;
 
-				/* IMUL Gb Eb Ib -- 80186 */
 				case 0x6B:
+					/* IMUL Gb Eb Ib -- 80186 */
 					ReadModRM();
 					WriteOpcodeGw((ushort)Mul16(true, ReadOpcodeEb(), ReadOpcodeIb()));
 					cycles = 4;
@@ -1665,15 +1665,26 @@ namespace StoicGoose.Emulation.CPU
 					}
 					break;
 
+				/* NOTE: AAM/AAD: NEC CPUs ignore immediate & always use base 10 -- https://www.vcfed.org/forum/forum/technical-support/vintage-computer-programming/36551/ */
+
 				case 0xD4:
 					/* AAM */
 					{
 						var value = ReadOpcodeIb();
-						ax.High = (byte)(ax.Low / value);
-						ax.Low = (byte)(ax.Low % value);
-						SetClearFlagConditional(Flags.Parity, CalculateParity(ax.Low));
-						SetClearFlagConditional(Flags.Zero, (ax.Word & 0xFFFF) == 0);
-						SetClearFlagConditional(Flags.Sign, (ax.Word & 0x8000) != 0);
+						if (value == 0)
+						{
+							/* Division-by-zero exception */
+							RaiseInterrupt(0);
+						}
+						else
+						{
+							value = 10;
+							ax.High = (byte)(ax.Low / value);
+							ax.Low = (byte)(ax.Low % value);
+							SetClearFlagConditional(Flags.Parity, CalculateParity(ax.Low));
+							SetClearFlagConditional(Flags.Zero, (ax.Word & 0xFFFF) == 0);
+							SetClearFlagConditional(Flags.Sign, (ax.Word & 0x8000) != 0);
+						}
 						cycles = 16;
 					}
 					break;
@@ -1681,7 +1692,8 @@ namespace StoicGoose.Emulation.CPU
 				case 0xD5:
 					/* AAD */
 					{
-						var value = ReadOpcodeIb();
+						ReadOpcodeIb();
+						var value = 10;
 						ax.Low = (byte)(ax.High * value + ax.Low);
 						ax.High = 0;
 						SetClearFlagConditional(Flags.Parity, CalculateParity(ax.Low));
