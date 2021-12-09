@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Forms;
 
 using StoicGoose.Emulation.Machines;
 
@@ -8,7 +9,7 @@ namespace StoicGoose.Emulation
 {
 	public class EmulatorHandler
 	{
-		const string threadName = "StoicGooseEmulation";
+		readonly static string threadName = $"{Application.ProductName}Emulation";
 
 		Thread thread = default;
 		volatile bool threadRunning = false, threadPaused = false;

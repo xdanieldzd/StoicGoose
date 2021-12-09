@@ -1,8 +1,8 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Text;
 
 using StoicGoose.Extensions;
 using StoicGoose.Interface;
@@ -20,6 +20,8 @@ namespace StoicGoose
 		const string assetsDirectoryName = "Assets";
 		const string shaderDirectoryName = "Shaders";
 
+		readonly static string mutexName = $"{Application.ProductName}/{GetVersionDetails()}";
+
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
@@ -36,6 +38,8 @@ namespace StoicGoose
 
 		static Program()
 		{
+			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 
@@ -46,7 +50,12 @@ namespace StoicGoose
 		[STAThread]
 		static void Main()
 		{
-			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+			using var mutex = new Mutex(true, mutexName, out bool newInstance);
+			if (!newInstance)
+			{
+				MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.", $"{Application.ProductName} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Environment.Exit(-1);
+			}
 
 			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.EnableVisualStyles();
@@ -80,12 +89,17 @@ namespace StoicGoose
 				Configuration.SerializeToFile(programConfigPath);
 		}
 
+		private static string GetVersionDetails()
+		{
+			return $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : string.Empty)}{(GlobalVariables.IsDebugBuild ? "+debug" : string.Empty)}";
+		}
+
 		public static string GetVersionString(bool detailed)
 		{
 			var version = new Version(Application.ProductVersion);
 			var stringBuilder = new StringBuilder();
 			stringBuilder.Append($"v{version.Major:D3}{(version.Minor != 0 ? $".{version.Minor}" : string.Empty)}");
-			if (detailed) stringBuilder.Append($" ({ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : string.Empty)}{(GlobalVariables.IsDebugBuild ? "+debug" : string.Empty)})");
+			if (detailed) stringBuilder.Append($" ({GetVersionDetails()})");
 			return stringBuilder.ToString();
 		}
 	}

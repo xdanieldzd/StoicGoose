@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
@@ -14,7 +15,7 @@ namespace StoicGoose.Handlers
 {
 	public class SoundHandler
 	{
-		const string threadName = "StoicGooseAudio";
+		readonly static string threadName = $"{Application.ProductName}Audio";
 
 		Thread thread = default;
 		volatile bool threadRunning = false, threadPaused = false;
