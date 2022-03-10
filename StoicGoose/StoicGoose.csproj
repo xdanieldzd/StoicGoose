@@ -20,7 +20,7 @@
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenTK" Version="4.6.7" />
+    <PackageReference Include="OpenTK" Version="4.7.1" />
     <PackageReference Include="OpenTK.WinForms.Radegast" Version="0.1.0" />
   </ItemGroup>
 
