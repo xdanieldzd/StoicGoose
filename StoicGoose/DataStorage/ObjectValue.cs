@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 
+using OpenTK.Mathematics;
+
 using static StoicGoose.Utilities;
 
 namespace StoicGoose.DataStorage
@@ -27,6 +29,7 @@ namespace StoicGoose.DataStorage
 		public float Float => GetFloat(value);
 		public double Double => GetDouble(value);
 		public Point Point => GetPoint(value);
+		public Vector2i Vector2i => GetVector2i(value);
 
 		public string[] StringArray => stringEnumerable.Select(x => GetString(x)).ToArray();
 		public bool[] BooleanArray => stringEnumerable.Select(x => GetBool(x)).ToArray();
@@ -41,6 +44,7 @@ namespace StoicGoose.DataStorage
 		public float[] FloatArray => stringEnumerable.Select(x => GetFloat(x)).ToArray();
 		public double[] DoubleArray => stringEnumerable.Select(x => GetDouble(x)).ToArray();
 		public Point[] PointArray => stringEnumerable.Select(x => GetPoint(x)).ToArray();
+		public Vector2i[] Vector2iArray => stringEnumerable.Select(x => GetVector2i(x)).ToArray();
 
 		public ObjectValue(string value) => this.value = value;
 		public ObjectValue(bool value) => this.value = value.ToString(CultureInfo.InvariantCulture);
@@ -55,6 +59,7 @@ namespace StoicGoose.DataStorage
 		public ObjectValue(float value) => this.value = value.ToString(CultureInfo.InvariantCulture);
 		public ObjectValue(double value) => this.value = value.ToString(CultureInfo.InvariantCulture);
 		public ObjectValue(Point value) => this.value = $"{value.X},{value.Y}";
+		public ObjectValue(Vector2i value) => this.value = $"{value.X},{value.Y}";
 
 		public static implicit operator string(ObjectValue value) => value?.value;
 
@@ -71,6 +76,7 @@ namespace StoicGoose.DataStorage
 		public static implicit operator ObjectValue(float value) => new(value);
 		public static implicit operator ObjectValue(double value) => new(value);
 		public static implicit operator ObjectValue(Point value) => new(value);
+		public static implicit operator ObjectValue(Vector2i value) => new(value);
 
 		private static string GetString(string value) => value;
 		private static bool GetBool(string value) => value == true.ToString();
@@ -85,6 +91,7 @@ namespace StoicGoose.DataStorage
 		private static float GetFloat(string value) => Convert.ToSingle(value);
 		private static double GetDouble(string value) => Convert.ToDouble(value);
 		private static Point GetPoint(string value) => new(int.Parse(value.Split(',')[0]), int.Parse(value.Split(',')[1]));
+		private static Vector2i GetVector2i(string value) => new(int.Parse(value.Split(',')[0]), int.Parse(value.Split(',')[1]));
 
 		public override string ToString() => value;
 	}

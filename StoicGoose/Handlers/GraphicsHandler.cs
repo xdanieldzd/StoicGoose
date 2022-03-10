@@ -39,7 +39,7 @@ namespace StoicGoose.Handlers
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
 		readonly static int maxTextureSamplerCount = 8;
 
-		readonly ObjectStorage metadata = default;
+		readonly Dictionary<string, ObjectValue> metadata = default;
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
@@ -77,11 +77,11 @@ namespace StoicGoose.Handlers
 
 		public List<string> AvailableShaders { get; private set; } = default;
 
-		public GraphicsHandler(ObjectStorage metadata)
+		public GraphicsHandler(Dictionary<string, ObjectValue> metadata)
 		{
 			this.metadata = metadata;
 
-			ScreenSize = new Vector2i(metadata["machine/display/width"].Get<int>(), metadata["machine/display/height"].Get<int>());
+			ScreenSize = new Vector2i(metadata["machine/display/width"].Integer, metadata["machine/display/height"].Integer);
 
 			AvailableShaders = EnumerateShaders();
 
@@ -120,13 +120,10 @@ namespace StoicGoose.Handlers
 
 		private void ParseSystemIcons()
 		{
-			foreach (var (name, data) in metadata["interface/icons"].GetStorage().Select(x => (x.Key, (x.Value as ObjectStorage).GetStorage())))
+			foreach (var name in metadata.KeyMatchesWildcard("interface/icons/*/resource").Select(x => x.Key.Split('/')[2]).Distinct())
 			{
-				if (data.ContainsKey("resource") && data["resource"] is ObjectStorage resource)
-				{
-					iconTextures.Add(name, new Texture(GetEmbeddedSystemIcon(resource.Get<string>()), TextureMinFilter.Linear, TextureMagFilter.Linear));
-					iconModelviewMatrices.Add(name, new Matrix4Uniform(defaultModelviewMatrixName));
-				}
+				iconTextures.Add(name, new Texture(GetEmbeddedSystemIcon(metadata[$"interface/icons/{name}/resource"]), TextureMinFilter.Linear, TextureMagFilter.Linear));
+				iconModelviewMatrices.Add(name, new Matrix4Uniform(defaultModelviewMatrixName));
 			}
 		}
 
@@ -256,7 +253,7 @@ namespace StoicGoose.Handlers
 		public void Resize(object sender, EventArgs e)
 		{
 			var clientRect = (sender as Control).ClientRectangle;
-			var screenIconSize = metadata["interface/icons/size"].Value.Integer;
+			var screenIconSize = metadata["interface/icons/size"].Integer;
 
 			GL.Viewport(clientRect);
 
@@ -279,7 +276,7 @@ namespace StoicGoose.Handlers
 
 			foreach (var (icon, _) in iconTextures)
 			{
-				var iconLocation = metadata[$"interface/icons/{icon}/location"].Value.Point;
+				var iconLocation = metadata[$"interface/icons/{icon}/location"].Point;
 
 				float x, y;
 
@@ -356,7 +353,7 @@ namespace StoicGoose.Handlers
 			iconBackgroundTexture.Bind();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
-			var activeIcons = metadata["machine/display/icons/active"].Value?.StringArray;
+			var activeIcons = metadata.GetValueOrDefault("machine/display/icons/active")?.StringArray;
 			if (activeIcons != null)
 			{
 				foreach (var icon in activeIcons)

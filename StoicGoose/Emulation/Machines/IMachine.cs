@@ -8,7 +8,7 @@ namespace StoicGoose.Emulation.Machines
 {
 	public interface IMachine
 	{
-		ObjectStorage Metadata { get; }
+		Dictionary<string, ObjectValue> Metadata { get; }
 
 		event EventHandler<RenderScreenEventArgs> RenderScreen;
 		event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;

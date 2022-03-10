@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
@@ -232,17 +229,17 @@ namespace StoicGoose.Emulation.Machines
 		{
 			cartridge.LoadRom(data);
 
-			Metadata["cartridge/id"].Value = cartridge.Metadata.GameIdString;
-			Metadata["cartridge/publisher"].Value = cartridge.Metadata.PublisherName;
-			Metadata["cartridge/orientation"].Value = cartridge.Metadata.Orientation.ToString().ToLowerInvariant();
-			Metadata["cartridge/savetype"].Value = cartridge.Metadata.IsSramSave ? "sram" : (cartridge.Metadata.IsEepromSave ? "eeprom" : "none");
+			Metadata["cartridge/id"] = cartridge.Metadata.GameIdString;
+			Metadata["cartridge/publisher"] = cartridge.Metadata.PublisherName;
+			Metadata["cartridge/orientation"] = cartridge.Metadata.Orientation.ToString().ToLowerInvariant();
+			Metadata["cartridge/savetype"] = cartridge.Metadata.IsSramSave ? "sram" : (cartridge.Metadata.IsEepromSave ? "eeprom" : "none");
 		}
 
 		public void LoadSaveData(byte[] data)
 		{
-			if (Metadata["cartridge/savetype"] == "sram")
+			if (Metadata.GetValueOrDefault("cartridge/savetype") == "sram")
 				cartridge.LoadSram(data);
-			else if (Metadata["cartridge/savetype"] == "eeprom")
+			else if (Metadata.GetValueOrDefault("cartridge/savetype") == "eeprom")
 				cartridge.LoadEeprom(data);
 		}
 
@@ -253,9 +250,9 @@ namespace StoicGoose.Emulation.Machines
 
 		public byte[] GetSaveData()
 		{
-			if (Metadata["cartridge/savetype"] == "sram")
+			if (Metadata.GetValueOrDefault("cartridge/savetype") == "sram")
 				return cartridge.GetSram();
-			else if (Metadata["cartridge/savetype"] == "eeprom")
+			else if (Metadata.GetValueOrDefault("cartridge/savetype") == "eeprom")
 				return cartridge.GetEeprom();
 
 			return Array.Empty<byte>();

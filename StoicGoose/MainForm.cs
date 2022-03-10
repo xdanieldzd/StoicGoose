@@ -142,13 +142,13 @@ namespace StoicGoose
 		{
 			var metadata = emulatorHandler.Machine.Metadata;
 
-			foreach (var button in metadata["machine/input/controls"].Value.StringArray)
+			foreach (var button in metadata["machine/input/controls"].StringArray)
 			{
 				if (!Program.Configuration.Input.GameControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.GameControls[button]))
 					Program.Configuration.Input.GameControls[button] = string.Empty;
 			}
 
-			foreach (var button in metadata["machine/input/hardware"].Value.StringArray)
+			foreach (var button in metadata["machine/input/hardware"].StringArray)
 			{
 				if (!Program.Configuration.Input.SystemControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.SystemControls[button]))
 					Program.Configuration.Input.SystemControls[button] = string.Empty;
@@ -183,7 +183,7 @@ namespace StoicGoose
 				return ClientSize;
 
 			var screenWidth = graphicsHandler.ScreenSize.X;
-			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Machine.Metadata["interface/icons/size"].Value.Integer;
+			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Machine.Metadata["interface/icons/size"].Integer;
 
 			if (!isVerticalOrientation)
 				return new Size(
@@ -202,14 +202,14 @@ namespace StoicGoose
 			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
 			var metadata = emulatorHandler.Machine.Metadata;
-			var cartridgeId = metadata["cartridge/id"].Value;
+			var cartridgeId = metadata.GetValueOrDefault("cartridge/id");
 
 			if (cartridgeId != null)
 			{
 				titleStringBuilder.Append($" - [{Path.GetFileName(Program.Configuration.General.RecentFiles.First())}]");
 
 				var statusStringBuilder = new StringBuilder();
-				statusStringBuilder.Append($"Emulating {metadata["machine/description/manufacturer"].Value} {metadata["machine/description/model"].Value}, ");
+				statusStringBuilder.Append($"Emulating {metadata["machine/description/manufacturer"]} {metadata["machine/description/model"]}, ");
 				statusStringBuilder.Append($"playing {cartridgeId}");
 
 				tsslStatus.Text = statusStringBuilder.ToString();
@@ -391,7 +391,7 @@ namespace StoicGoose
 			emulatorHandler.Machine.LoadRom(data);
 
 			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				emulatorHandler.Machine.Metadata["cartridge/orientation"] == "vertical";
+				emulatorHandler.Machine.Metadata.GetValueOrDefault("cartridge/orientation") == "vertical";
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();

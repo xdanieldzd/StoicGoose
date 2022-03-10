@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
+using StoicGoose.Handlers;
+
 namespace StoicGoose.Interface
 {
 	public sealed class Configuration : ConfigurationBase<Configuration>
@@ -43,7 +45,7 @@ namespace StoicGoose.Interface
 		public int ScreenSize { get; set; } = 3;
 		[DisplayName("Shader")]
 		[Description("Currently selected shader.")]
-		public string Shader { get; set; } = string.Empty;
+		public string Shader { get; set; } = GraphicsHandler.DefaultShaderName;
 		[DisplayName("Brightness")]
 		[Description("Adjust the brightness of the emulated screen, in percent.")]
 		[Range(-100, 100)]
