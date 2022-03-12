@@ -26,6 +26,13 @@ namespace StoicGoose.OpenGL
 			FromBitmap(bitmap, textureMinFilter, textureMagFilter, textureWrapMode);
 		}
 
+		public Texture(IntPtr data, int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
+		{
+			Size = new Vector2i(width, height);
+
+			Generate(data, textureMinFilter, textureMagFilter, textureWrapMode);
+		}
+
 		public Texture(int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
 		{
 			Size = new Vector2i(width, height);

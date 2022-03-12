@@ -66,5 +66,24 @@ namespace StoicGoose.OpenGL
 				}
 			}
 		}
+
+		public void Update<T>(IntPtr data, int size) where T : struct
+		{
+			if (dataType != typeof(T))
+				throw new Exception("Type mismatch on buffer update");
+
+			if (data != IntPtr.Zero)
+			{
+				Bind();
+
+				if (size == count)
+					GL.BufferSubData(bufferTarget, IntPtr.Zero, new IntPtr(count * sizeInBytes), data);
+				else
+				{
+					count = size;
+					GL.BufferData(bufferTarget, new IntPtr(count * sizeInBytes), data, bufferUsageHint);
+				}
+			}
+		}
 	}
 }

@@ -323,6 +323,20 @@ namespace StoicGoose.Handlers
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
+			if (GlobalVariables.IsAuthorsMachine)
+			{
+				// TODO: remove testing/sample code, implement debugger etc using ImGui
+
+				ImGuiNET.ImGui.SetNextWindowBgAlpha(0.5f);
+				//ImGuiNET.ImGui.ShowDemoWindow();
+				ImGuiNET.ImGui.Begin("Hello World");
+				{
+					ImGuiNET.ImGui.Text("This is a test! Still a bit buggy, but hey, it kinda sorta works already! :D");
+					ImGuiNET.ImGui.Button("Ooh, shiny!");
+				}
+				ImGuiNET.ImGui.End();
+			}
+
 			commonShaderProgram.Bind();
 
 			renderMode.Value = (int)ShaderRenderMode.Display;

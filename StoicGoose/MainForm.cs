@@ -34,6 +34,7 @@ namespace StoicGoose
 		GraphicsHandler graphicsHandler = default;
 		SoundHandler soundHandler = default;
 		InputHandler inputHandler = default;
+		ImGuiHandler imGuiHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
 		/* Debugger stuff */
@@ -128,6 +129,8 @@ namespace StoicGoose
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
+			imGuiHandler = new ImGuiHandler(renderControl);
+
 			emulatorHandler.Machine.RenderScreen += graphicsHandler.RenderScreen;
 			emulatorHandler.Machine.EnqueueSamples += soundHandler.EnqueueSamples;
 			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
@@ -135,7 +138,9 @@ namespace StoicGoose
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 
 			renderControl.Paint += graphicsHandler.Paint;
+			renderControl.Paint += imGuiHandler.Paint;
 			renderControl.Resize += graphicsHandler.Resize;
+			renderControl.Resize += imGuiHandler.Resize;
 		}
 
 		private void VerifyConfiguration()
