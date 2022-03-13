@@ -25,11 +25,14 @@ namespace StoicGoose.Interface
 	public sealed class GeneralConfiguration : ConfigurationBase<GeneralConfiguration>
 	{
 		[DisplayName("Use Bootstrap ROM")]
-		[Description("Toggle using a WonderSwan bootstrap ROM image.")]
+		[Description("Toggle using WonderSwan bootstrap ROM images.")]
 		public bool UseBootstrap { get; set; } = false;
-		[DisplayName("Bootstrap ROM Path")]
+		[DisplayName("WS Bootstrap ROM Path")]
 		[Description("Path to the WonderSwan bootstrap ROM image to use.")]
 		public string BootstrapFile { get; set; } = string.Empty;
+		[DisplayName("WSC Bootstrap ROM Path")]
+		[Description("Path to the WonderSwan Color bootstrap ROM image to use.")]
+		public string BootstrapFileWSC { get; set; } = string.Empty;
 		[DisplayName("Limit FPS")]
 		[Description("Toggle limiting the framerate to the system's native ~75.47 Hz.")]
 		public bool LimitFps { get; set; } = true;

@@ -13,14 +13,14 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Machines
 {
-	public partial class WonderSwan : IMachine
+	public partial class WonderSwanColor : IMachine
 	{
 		// http://daifukkat.su/docs/wsman/
 
 		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
 		public const double CpuClock = MasterClock / 4.0; /* /4 = 3.072 MHz */
 
-		const int internalRamSize = 16 * 1024;
+		const int internalRamSize = 64 * 1024;
 		const uint internalRamMask = internalRamSize - 1;
 
 		public event EventHandler<RenderScreenEventArgs> RenderScreen
@@ -48,7 +48,7 @@ namespace StoicGoose.Emulation.Machines
 
 		readonly Cartridge cartridge = new();
 		V30MZ cpu = default;
-		DisplayControllerAswan display = default;
+		DisplayControllerSphinx display = default;
 		SoundController sound = default;
 		EEPROM eeprom = default;
 
@@ -68,14 +68,14 @@ namespace StoicGoose.Emulation.Machines
 
 		public bool IsBootstrapLoaded => bootstrapRom != null;
 
-		public WonderSwan() => FillMetadata();
+		public WonderSwanColor() => FillMetadata();
 
 		public void Initialize()
 		{
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
-			display = new DisplayControllerAswan(ReadMemory);
+			display = new DisplayControllerSphinx(ReadMemory);
 			sound = new SoundController(ReadMemory, 44100, 2);
-			eeprom = new EEPROM(64 * 2, 6);
+			eeprom = new EEPROM(1024 * 2, 10);
 
 			InitializeEepromToDefaults();
 		}
@@ -91,7 +91,7 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Reset();
 
 			currentClockCyclesInFrame = 0;
-			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerAswan.VerticalClock);
+			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerSphinx.VerticalClock);
 
 			ResetRegisters();
 		}
@@ -127,14 +127,14 @@ namespace StoicGoose.Emulation.Machines
 		{
 			/* Not 100% verified, same caveats as ex. ares */
 
-			var data = ConvertUsernameForEeprom("WONDERSWAN");
+			var data = ConvertUsernameForEeprom("WONDERSWANCOLOR");
 
 			for (var i = 0; i < data.Length; i++) eeprom.Program(0x60 + i, data[i]); // Username (0x60-0x6F, max 16 characters)
 
-			eeprom.Program(0x70, 0x19); // Year of birth [just for fun, here set to original WS release date; new systems probably had no date set?]
-			eeprom.Program(0x71, 0x99); // ""
-			eeprom.Program(0x72, 0x03); // Month of birth [again, WS release for fun]
-			eeprom.Program(0x73, 0x04); // Day of birth [and again]
+			eeprom.Program(0x70, 0x20); // Year of birth [just for fun, here set to WSC release date; new systems probably had no date set?]
+			eeprom.Program(0x71, 0x00); // ""
+			eeprom.Program(0x72, 0x12); // Month of birth [again, WSC release for fun]
+			eeprom.Program(0x73, 0x09); // Day of birth [and again]
 			eeprom.Program(0x74, 0x00); // Sex [set to ?]
 			eeprom.Program(0x75, 0x00); // Blood type [set to ?]
 
@@ -148,6 +148,8 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Program(0x7D, 0x00); // Number of times settings were changed [set to presumably none]
 			eeprom.Program(0x7E, 0x00); // Number of times powered on [set to presumably none]
 			eeprom.Program(0x7F, 0x00); // ""
+
+			eeprom.Program(0x83, 0x03); // Options (b0-1: default volume, b6: LCD contrast)
 		}
 
 		private byte[] ConvertUsernameForEeprom(string name)
@@ -192,10 +194,10 @@ namespace StoicGoose.Emulation.Machines
 			var currentCpuClockCycles = cpu.Step();
 
 			var displayInterrupt = display.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
+			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
+			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
+			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
+			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
@@ -260,12 +262,12 @@ namespace StoicGoose.Emulation.Machines
 
 		public (int w, int h) GetScreenSize()
 		{
-			return (DisplayControllerAswan.ScreenWidth, DisplayControllerAswan.ScreenHeight);
+			return (DisplayControllerSphinx.ScreenWidth, DisplayControllerSphinx.ScreenHeight);
 		}
 
 		public double GetRefreshRate()
 		{
-			return DisplayControllerAswan.VerticalClock;
+			return DisplayControllerSphinx.VerticalClock;
 		}
 
 		public Dictionary<string, ushort> GetProcessorStatus()
@@ -350,7 +352,7 @@ namespace StoicGoose.Emulation.Machines
 				case 0xA0:
 					/* REG_HW_FLAGS */
 					ChangeBit(ref retVal, 0, hwCartEnable);
-					ChangeBit(ref retVal, 1, false);
+					ChangeBit(ref retVal, 1, true);
 					ChangeBit(ref retVal, 2, hw16BitExtBus);
 					ChangeBit(ref retVal, 3, hwCartRom1CycleSpeed);
 					ChangeBit(ref retVal, 7, hwSelfTestOk);
@@ -359,7 +361,6 @@ namespace StoicGoose.Emulation.Machines
 				case 0xB0:
 					/* REG_INT_BASE */
 					retVal = intBase;
-					retVal |= 0b11;
 					break;
 
 				case 0xB1:
@@ -493,7 +494,7 @@ namespace StoicGoose.Emulation.Machines
 
 				case 0xB0:
 					/* REG_INT_BASE */
-					intBase = (byte)(value & 0b11111000);
+					intBase = (byte)(value & 0b11111110);
 					break;
 
 				case 0xB1:

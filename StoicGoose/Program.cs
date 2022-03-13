@@ -13,7 +13,7 @@ namespace StoicGoose
 	{
 		const string jsonConfigFileName = "Config.json";
 
-		const string internalEepromFileName = "Internal.eep";
+		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
 		const string debuggingDataDirectoryName = "Debugging";
 
@@ -27,7 +27,7 @@ namespace StoicGoose
 
 		public static Configuration Configuration { get; private set; } = LoadConfiguration(programConfigPath);
 
-		public static string InternalEepromPath { get; } = Path.Combine(programDataDirectory, internalEepromFileName);
+		public static string InternalDataPath { get; } = string.Empty;
 		public static string SaveDataPath { get; } = string.Empty;
 		public static string DebuggingDataPath { get; } = string.Empty;
 
@@ -40,6 +40,7 @@ namespace StoicGoose
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
+			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 

@@ -43,6 +43,7 @@ namespace StoicGoose
 		/* Misc. runtime variables */
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
+		string internalEepromPath = string.Empty;
 
 		public MainForm()
 		{
@@ -63,7 +64,7 @@ namespace StoicGoose
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			InitializeHandlers(typeof(WonderSwan));
+			InitializeHandlers(typeof(WonderSwanColor));
 			VerifyConfiguration();
 
 			SizeAndPositionWindow();
@@ -141,6 +142,8 @@ namespace StoicGoose
 			renderControl.Paint += imGuiHandler.Paint;
 			renderControl.Resize += graphicsHandler.Resize;
 			renderControl.Resize += imGuiHandler.Resize;
+
+			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata["machine/eeprom/filename"]);
 		}
 
 		private void VerifyConfiguration()
@@ -360,7 +363,7 @@ namespace StoicGoose
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
 
 			if (!emulatorHandler.IsRunning &&
-				Program.Configuration.General.UseBootstrap && File.Exists(Program.Configuration.General.BootstrapFile) && !emulatorHandler.Machine.IsBootstrapLoaded)
+				Program.Configuration.General.UseBootstrap && File.Exists(filename) && !emulatorHandler.Machine.IsBootstrapLoaded)
 			{
 				using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				var data = new byte[stream.Length];
@@ -371,9 +374,9 @@ namespace StoicGoose
 
 		private void LoadInternalEeprom()
 		{
-			if (!emulatorHandler.IsRunning && File.Exists(Program.InternalEepromPath))
+			if (!emulatorHandler.IsRunning && File.Exists(internalEepromPath))
 			{
-				using var stream = new FileStream(Program.InternalEepromPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				using var stream = new FileStream(internalEepromPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				var data = new byte[stream.Length];
 				stream.Read(data, 0, data.Length);
 				emulatorHandler.Machine.LoadInternalEeprom(data);
@@ -403,7 +406,7 @@ namespace StoicGoose
 
 			LoadRam();
 
-			LoadBootstrap(Program.Configuration.General.BootstrapFile);
+			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
 
 			emulatorHandler.Startup();
@@ -442,7 +445,7 @@ namespace StoicGoose
 			var data = emulatorHandler.Machine.GetInternalEeprom();
 			if (data.Length == 0) return;
 
-			using var stream = new FileStream(Program.InternalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+			using var stream = new FileStream(internalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
 		}
 

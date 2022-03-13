@@ -323,7 +323,7 @@ namespace StoicGoose.Handlers
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-			if (GlobalVariables.IsAuthorsMachine)
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugDearImGuiStuffs)
 			{
 				// TODO: remove testing/sample code, implement debugger etc using ImGui
 

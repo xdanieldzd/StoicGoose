@@ -5,25 +5,25 @@ using StoicGoose.DataStorage;
 
 namespace StoicGoose.Emulation.Machines
 {
-	public partial class WonderSwan
+	public partial class WonderSwanColor
 	{
 		public Dictionary<string, ObjectValue> Metadata { get; } = new Dictionary<string, ObjectValue>();
 
 		private void FillMetadata()
 		{
 			Metadata["machine/description/manufacturer"] = "Bandai";
-			Metadata["machine/description/model"] = "WonderSwan";
+			Metadata["machine/description/model"] = "WonderSwan Color";
 
-			Metadata["machine/display/width"] = DisplayControllerAswan.ScreenWidth;
-			Metadata["machine/display/height"] = DisplayControllerAswan.ScreenHeight;
-			Metadata["machine/display/refresh"] = DisplayControllerAswan.VerticalClock;
+			Metadata["machine/display/width"] = DisplayControllerSphinx.ScreenWidth;
+			Metadata["machine/display/height"] = DisplayControllerSphinx.ScreenHeight;
+			Metadata["machine/display/refresh"] = DisplayControllerSphinx.VerticalClock;
 
 			Metadata["machine/input/controls"] = "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
 			Metadata["machine/input/hardware"] = "volume";
 
-			Metadata["machine/eeprom/filename"] = "WonderSwan.eep";
+			Metadata["machine/eeprom/filename"] = "WonderSwanColor.eep";
 
-			Metadata["interface/files/romfilter"] = "WonderSwan ROMs (*.ws)|*.ws";
+			Metadata["interface/files/romfilter"] = "WonderSwan Color ROMs (*.wsc;*.ws)|*.wsc;*.ws";
 
 			Metadata["interface/icons/size"] = 12;
 			Metadata["interface/icons/power/resource"] = "Power.png";

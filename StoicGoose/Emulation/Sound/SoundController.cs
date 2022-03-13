@@ -42,6 +42,12 @@ namespace StoicGoose.Emulation.Sound
 		bool speakerEnable, headphoneEnable;
 		bool headphonesConnected; // read-only
 		byte speakerVolumeShift;
+		/* REG_SND_9697 */
+		ushort unknown9697;
+		/* REG_SND_9899 */
+		ushort unknown9899;
+		/* REG_SND_9E */
+		byte unknown9E;
 
 		public SoundController(MemoryReadDelegate memoryRead, int rate, int outChannels)
 		{
@@ -58,7 +64,7 @@ namespace StoicGoose.Emulation.Sound
 			mixedSampleBuffer = new List<short>();
 
 			clockRate = WonderSwan.CpuClock;
-			refreshRate = Display.DisplayController.VerticalClock;
+			refreshRate = Display.DisplayControllerAswan.VerticalClock;
 
 			samplesPerFrame = (int)(sampleRate / refreshRate);
 			cyclesPerFrame = (int)(clockRate / refreshRate);
@@ -86,6 +92,9 @@ namespace StoicGoose.Emulation.Sound
 			speakerEnable = headphoneEnable = false;
 			headphonesConnected = true; // for stereo sound
 			speakerVolumeShift = 0;
+
+			unknown9697 = 0;
+			unknown9899 = 0;
 		}
 
 		public void Shutdown()
@@ -250,6 +259,43 @@ namespace StoicGoose.Emulation.Sound
 					ChangeBit(ref retVal, 3, (channels[1] as Voice).PcmLeftHalf);
 					break;
 
+				case 0x96:
+				case 0x97:
+					/* REG_SND_9697 */
+					retVal |= (byte)((unknown9697 >> ((register & 0b1) * 8)) & 0xFF);
+					break;
+
+				case 0x98:
+				case 0x99:
+					/* REG_SND_9899 */
+					retVal |= (byte)((unknown9899 >> ((register & 0b1) * 8)) & 0xFF);
+					break;
+
+				case 0x9A:
+					/* REG_SND_9A */
+					retVal |= 0b111;
+					break;
+
+				case 0x9B:
+					/* REG_SND_9B */
+					retVal |= 0b11111110;
+					break;
+
+				case 0x9C:
+					/* REG_SND_9C */
+					retVal |= 0b11111111;
+					break;
+
+				case 0x9D:
+					/* REG_SND_9D */
+					retVal |= 0b11111111;
+					break;
+
+				case 0x9E:
+					/* REG_SND_9E */
+					retVal |= (byte)(unknown9E & 0b11);
+					break;
+
 				default:
 					throw new NotImplementedException($"Unimplemented sound register read {register:X2}");
 			}
@@ -331,6 +377,13 @@ namespace StoicGoose.Emulation.Sound
 					(channels[1] as Voice).PcmRightHalf = IsBitSet(value, 1);
 					(channels[1] as Voice).PcmLeftFull = IsBitSet(value, 2);
 					(channels[1] as Voice).PcmLeftHalf = IsBitSet(value, 3);
+					break;
+
+				//
+
+				case 0x9E:
+					/* REG_SND_9E */
+					unknown9E = (byte)(value & 0b11);
 					break;
 
 				default:

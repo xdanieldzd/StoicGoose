@@ -23,5 +23,6 @@
 		public static readonly bool EnableRenderSPRDebugColors = false;
 
 		public static readonly bool EnableDebugNewUIStuffs = false;
+		public static readonly bool EnableDebugDearImGuiStuffs = false;
 	}
 }

@@ -91,6 +91,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\Shaders\Dot-Matrix Color\Fragment.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix Color\Manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Shaders\Dot-Matrix\Fragment.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

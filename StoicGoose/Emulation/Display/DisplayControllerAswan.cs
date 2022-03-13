@@ -11,7 +11,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Display
 {
-	public sealed class DisplayController : IComponent
+	public sealed class DisplayControllerAswan : IComponent
 	{
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
@@ -89,7 +89,7 @@ namespace StoicGoose.Emulation.Display
 		/* REG_xTMR_xxx */
 		readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
 
-		public DisplayController(MemoryReadDelegate memoryRead)
+		public DisplayControllerAswan(MemoryReadDelegate memoryRead)
 		{
 			memoryReadDelegate = memoryRead;
 
@@ -321,7 +321,7 @@ namespace StoicGoose.Emulation.Display
 
 				if (x < 0 || x >= HorizontalDisp || (byte)(x - spriteX) > 7) continue;
 
-				byte color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
+				var color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
 
 				if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
 				{
