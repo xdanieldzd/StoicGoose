@@ -5,6 +5,7 @@ using System.Linq;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
+using StoicGoose.Emulation.DMA;
 using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.WinForms;
@@ -48,9 +49,10 @@ namespace StoicGoose.Emulation.Machines
 
 		readonly Cartridge cartridge = new();
 		V30MZ cpu = default;
-		DisplayControllerSphinx display = default;
+		SphinxDisplayController display = default;
 		SoundController sound = default;
 		EEPROM eeprom = default;
+		SphinxDMAController dma = default;
 
 		byte[] bootstrapRom = default;
 
@@ -73,9 +75,10 @@ namespace StoicGoose.Emulation.Machines
 		public void Initialize()
 		{
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
-			display = new DisplayControllerSphinx(ReadMemory);
+			display = new SphinxDisplayController(ReadMemory);
 			sound = new SoundController(ReadMemory, 44100, 2);
 			eeprom = new EEPROM(1024 * 2, 10);
+			dma = new SphinxDMAController(ReadMemory, WriteMemory);
 
 			InitializeEepromToDefaults();
 		}
@@ -89,9 +92,10 @@ namespace StoicGoose.Emulation.Machines
 			display.Reset();
 			sound.Reset();
 			eeprom.Reset();
+			dma.Reset();
 
 			currentClockCyclesInFrame = 0;
-			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerSphinx.VerticalClock);
+			totalClockCyclesInFrame = (int)Math.Round(CpuClock / SphinxDisplayController.VerticalClock);
 
 			ResetRegisters();
 		}
@@ -121,6 +125,7 @@ namespace StoicGoose.Emulation.Machines
 			display.Shutdown();
 			sound.Shutdown();
 			eeprom.Shutdown();
+			dma.Shutdown();
 		}
 
 		private void InitializeEepromToDefaults()
@@ -191,13 +196,13 @@ namespace StoicGoose.Emulation.Machines
 
 		public void RunStep()
 		{
-			var currentCpuClockCycles = cpu.Step();
+			var currentCpuClockCycles = dma.IsActive ? dma.Step() : cpu.Step();
 
 			var displayInterrupt = display.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
-			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
-			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
-			if (displayInterrupt.HasFlag(DisplayControllerSphinx.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
+			if (displayInterrupt.HasFlag(SphinxDisplayController.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
+			if (displayInterrupt.HasFlag(SphinxDisplayController.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
+			if (displayInterrupt.HasFlag(SphinxDisplayController.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
+			if (displayInterrupt.HasFlag(SphinxDisplayController.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
@@ -262,12 +267,12 @@ namespace StoicGoose.Emulation.Machines
 
 		public (int w, int h) GetScreenSize()
 		{
-			return (DisplayControllerSphinx.ScreenWidth, DisplayControllerSphinx.ScreenHeight);
+			return (SphinxDisplayController.ScreenWidth, SphinxDisplayController.ScreenHeight);
 		}
 
 		public double GetRefreshRate()
 		{
-			return DisplayControllerSphinx.VerticalClock;
+			return SphinxDisplayController.VerticalClock;
 		}
 
 		public Dictionary<string, ushort> GetProcessorStatus()
@@ -336,6 +341,11 @@ namespace StoicGoose.Emulation.Machines
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
 					retVal = display.ReadRegister(register);
+					break;
+
+				/* DMA controller */
+				case var n when n >= 0x40 && n < 0x4A:
+					retVal = dma.ReadRegister(register);
 					break;
 
 				/* Misc system registers */
@@ -471,6 +481,11 @@ namespace StoicGoose.Emulation.Machines
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
 					display.WriteRegister(register, value);
+					break;
+
+				/* DMA controller */
+				case var n when n >= 0x40 && n < 0x4A:
+					dma.WriteRegister(register, value);
 					break;
 
 				/* Misc system registers */

@@ -48,7 +48,7 @@ namespace StoicGoose.Emulation.Machines
 
 		readonly Cartridge cartridge = new();
 		V30MZ cpu = default;
-		DisplayControllerAswan display = default;
+		AswanDisplayController display = default;
 		SoundController sound = default;
 		EEPROM eeprom = default;
 
@@ -73,7 +73,7 @@ namespace StoicGoose.Emulation.Machines
 		public void Initialize()
 		{
 			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
-			display = new DisplayControllerAswan(ReadMemory);
+			display = new AswanDisplayController(ReadMemory);
 			sound = new SoundController(ReadMemory, 44100, 2);
 			eeprom = new EEPROM(64 * 2, 6);
 
@@ -91,7 +91,7 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Reset();
 
 			currentClockCyclesInFrame = 0;
-			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerAswan.VerticalClock);
+			totalClockCyclesInFrame = (int)Math.Round(CpuClock / AswanDisplayController.VerticalClock);
 
 			ResetRegisters();
 		}
@@ -192,10 +192,10 @@ namespace StoicGoose.Emulation.Machines
 			var currentCpuClockCycles = cpu.Step();
 
 			var displayInterrupt = display.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
-			if (displayInterrupt.HasFlag(DisplayControllerAswan.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
+			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
+			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
+			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
+			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
@@ -260,12 +260,12 @@ namespace StoicGoose.Emulation.Machines
 
 		public (int w, int h) GetScreenSize()
 		{
-			return (DisplayControllerAswan.ScreenWidth, DisplayControllerAswan.ScreenHeight);
+			return (AswanDisplayController.ScreenWidth, AswanDisplayController.ScreenHeight);
 		}
 
 		public double GetRefreshRate()
 		{
-			return DisplayControllerAswan.VerticalClock;
+			return AswanDisplayController.VerticalClock;
 		}
 
 		public Dictionary<string, ushort> GetProcessorStatus()

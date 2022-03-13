@@ -14,9 +14,9 @@ namespace StoicGoose.Emulation.Machines
 			Metadata["machine/description/manufacturer"] = "Bandai";
 			Metadata["machine/description/model"] = "WonderSwan";
 
-			Metadata["machine/display/width"] = DisplayControllerAswan.ScreenWidth;
-			Metadata["machine/display/height"] = DisplayControllerAswan.ScreenHeight;
-			Metadata["machine/display/refresh"] = DisplayControllerAswan.VerticalClock;
+			Metadata["machine/display/width"] = AswanDisplayController.ScreenWidth;
+			Metadata["machine/display/height"] = AswanDisplayController.ScreenHeight;
+			Metadata["machine/display/refresh"] = AswanDisplayController.VerticalClock;
 
 			Metadata["machine/input/controls"] = "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
 			Metadata["machine/input/hardware"] = "volume";

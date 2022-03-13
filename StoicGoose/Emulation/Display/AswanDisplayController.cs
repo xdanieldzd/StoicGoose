@@ -11,7 +11,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Display
 {
-	public sealed class DisplayControllerAswan : IComponent
+	public sealed class AswanDisplayController : IComponent
 	{
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
@@ -89,7 +89,7 @@ namespace StoicGoose.Emulation.Display
 		/* REG_xTMR_xxx */
 		readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
 
-		public DisplayControllerAswan(MemoryReadDelegate memoryRead)
+		public AswanDisplayController(MemoryReadDelegate memoryRead)
 		{
 			memoryReadDelegate = memoryRead;
 

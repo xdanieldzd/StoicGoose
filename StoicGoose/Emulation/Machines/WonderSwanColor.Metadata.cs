@@ -14,9 +14,9 @@ namespace StoicGoose.Emulation.Machines
 			Metadata["machine/description/manufacturer"] = "Bandai";
 			Metadata["machine/description/model"] = "WonderSwan Color";
 
-			Metadata["machine/display/width"] = DisplayControllerSphinx.ScreenWidth;
-			Metadata["machine/display/height"] = DisplayControllerSphinx.ScreenHeight;
-			Metadata["machine/display/refresh"] = DisplayControllerSphinx.VerticalClock;
+			Metadata["machine/display/width"] = SphinxDisplayController.ScreenWidth;
+			Metadata["machine/display/height"] = SphinxDisplayController.ScreenHeight;
+			Metadata["machine/display/refresh"] = SphinxDisplayController.VerticalClock;
 
 			Metadata["machine/input/controls"] = "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
 			Metadata["machine/input/hardware"] = "volume";

@@ -64,7 +64,7 @@ namespace StoicGoose.Emulation.Sound
 			mixedSampleBuffer = new List<short>();
 
 			clockRate = WonderSwan.CpuClock;
-			refreshRate = Display.DisplayControllerAswan.VerticalClock;
+			refreshRate = Display.AswanDisplayController.VerticalClock;
 
 			samplesPerFrame = (int)(sampleRate / refreshRate);
 			cyclesPerFrame = (int)(clockRate / refreshRate);

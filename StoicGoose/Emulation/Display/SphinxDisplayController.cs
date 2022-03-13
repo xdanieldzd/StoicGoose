@@ -11,7 +11,7 @@ using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Display
 {
-	public class DisplayControllerSphinx : IComponent
+	public class SphinxDisplayController : IComponent
 	{
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
@@ -98,7 +98,7 @@ namespace StoicGoose.Emulation.Display
 		bool is4bppDepth => displayColorFlagSet && display4bppFlagSet;
 		bool is2bppDepth => !is4bppDepth;
 
-		public DisplayControllerSphinx(MemoryReadDelegate memoryRead)
+		public SphinxDisplayController(MemoryReadDelegate memoryRead)
 		{
 			memoryReadDelegate = memoryRead;
 
