@@ -24,10 +24,10 @@ namespace StoicGoose.Emulation.Machines
 		const int internalRamSize = 64 * 1024;
 		const uint internalRamMask = internalRamSize - 1;
 
-		public event EventHandler<RenderScreenEventArgs> RenderScreen
+		public event EventHandler<UpdateScreenEventArgs> UpdateScreen
 		{
-			add { display.RenderScreen += value; }
-			remove { display.RenderScreen -= value; }
+			add { display.UpdateScreen += value; }
+			remove { display.UpdateScreen -= value; }
 		}
 
 		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples

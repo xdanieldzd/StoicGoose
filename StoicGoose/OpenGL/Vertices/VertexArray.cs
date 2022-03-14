@@ -201,5 +201,13 @@ namespace StoicGoose.OpenGL.Vertices
 			else
 				GL.DrawArrays(primitiveType, 0, vertexBuffer.count);
 		}
+
+		public void DrawIndices(PrimitiveType primitiveType, int offset, int count)
+		{
+			if (indexBuffer == null) throw new NotImplementedException("Cannot use DrawIndices without an indexbuffer");
+
+			GL.BindVertexArray(handle);
+			GL.DrawElements(primitiveType, count, GetDrawElementsType(indexBuffer.dataType), offset * indexBuffer.sizeInBytes);
+		}
 	}
 }

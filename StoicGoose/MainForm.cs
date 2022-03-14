@@ -132,16 +132,15 @@ namespace StoicGoose
 
 			imGuiHandler = new ImGuiHandler(renderControl);
 
-			emulatorHandler.Machine.RenderScreen += graphicsHandler.RenderScreen;
+			emulatorHandler.Machine.UpdateScreen += graphicsHandler.UpdateScreen;
 			emulatorHandler.Machine.EnqueueSamples += soundHandler.EnqueueSamples;
 			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
 			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 
-			renderControl.Paint += graphicsHandler.Paint;
-			renderControl.Paint += imGuiHandler.Paint;
-			renderControl.Resize += graphicsHandler.Resize;
-			renderControl.Resize += imGuiHandler.Resize;
+			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
+			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
+			renderControl.Paint += (s, e) => { imGuiHandler.BeginFrame(); graphicsHandler.DrawFrame(); imGuiHandler.EndFrame(); };
 
 			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata["machine/eeprom/filename"]);
 		}

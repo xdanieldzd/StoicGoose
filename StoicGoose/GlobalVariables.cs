@@ -19,6 +19,6 @@
 		public static readonly bool EnableSkipBootstrapIfFound = false;
 
 		public static readonly bool EnableDebugNewUIStuffs = false;
-		public static readonly bool EnableDebugDearImGuiStuffs = false;
+		public static readonly bool EnableDebugDearImGuiStuffs = true;
 	}
 }

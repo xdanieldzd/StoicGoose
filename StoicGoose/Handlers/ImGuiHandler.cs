@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -23,7 +22,10 @@ using ShaderProgram = StoicGoose.OpenGL.Shaders.Program;
 
 namespace StoicGoose.Handlers
 {
-	/* Derived/adapted from https://github.com/NogginBops/ImGui.NET_OpenTK_Sample */
+	/* Derived/adapted from...
+	 * - https://github.com/NogginBops/ImGui.NET_OpenTK_Sample
+	 * - https://github.com/mellinoe/ImGui.NET/blob/eb195f622b40d2f44cb1021f304aac47de21eb1b/src/ImGui.NET.SampleProgram/SampleWindow.cs
+	 */
 
 	public class ImGuiHandler : IDisposable
 	{
@@ -58,6 +60,8 @@ namespace StoicGoose.Handlers
 		readonly INativeInput nativeInput = default;
 		readonly List<char> pressedChars = new();
 
+		readonly IntPtr imguiContext = default;
+
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 
 		readonly Buffer vertexBuffer = default;
@@ -67,15 +71,18 @@ namespace StoicGoose.Handlers
 		readonly ShaderProgram shaderProgram = default;
 		readonly Texture texture = default;
 
-		int clientWidth = 0, clientHeight = 0;
+		bool wasFrameBegun = false;
+
+		Vector2 lastMouseWheelOffset = default;
 
 		public ImGuiHandler(GLControl glControl)
 		{
 			nativeInput = glControl.EnableNativeInput();
 			nativeInput.TextInput += (e) => pressedChars.Add((char)e.Unicode);
 
-			var context = ImGui.CreateContext();
-			ImGui.SetCurrentContext(context);
+			imguiContext = ImGui.CreateContext();
+			ImGui.SetCurrentContext(imguiContext);
+			ImGui.StyleColorsDark();
 
 			vertexBuffer = Buffer.CreateVertexBuffer<ColorVertex>(BufferUsageHint.StaticDraw);
 			indexBuffer = Buffer.CreateIndexBuffer<ushort>(BufferUsageHint.StaticDraw);
@@ -112,8 +119,6 @@ namespace StoicGoose.Handlers
 			io.KeyMap[(int)ImGuiKey.X] = (int)Keys.X;
 			io.KeyMap[(int)ImGuiKey.Y] = (int)Keys.Y;
 			io.KeyMap[(int)ImGuiKey.Z] = (int)Keys.Z;
-
-			ImGui.NewFrame();
 		}
 
 		~ImGuiHandler()
@@ -123,6 +128,8 @@ namespace StoicGoose.Handlers
 
 		public void Dispose()
 		{
+			ImGui.DestroyContext(imguiContext);
+
 			vertexBuffer?.Dispose();
 			indexBuffer?.Dispose();
 			vertexArray?.Dispose();
@@ -133,27 +140,12 @@ namespace StoicGoose.Handlers
 			GC.SuppressFinalize(this);
 		}
 
-		public void Resize(object sender, EventArgs e)
+		public void Resize(int width, int height)
 		{
-			if (sender is Control control)
-			{
-				(clientWidth, clientHeight) = (control.ClientSize.Width, control.ClientSize.Height);
+			var io = ImGui.GetIO();
+			io.DisplaySize = new NumericsVector2(width, height);
 
-				var io = ImGui.GetIO();
-				io.DisplaySize = new NumericsVector2(clientWidth, clientHeight);
-
-				projectionMatrix.Value = Matrix4.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
-			}
-		}
-
-		public void Paint(object sender, EventArgs e)
-		{
-			UpdateInputState();
-
-			ImGui.Render();
-			RenderImGui(ImGui.GetDrawData());
-
-			ImGui.NewFrame();
+			projectionMatrix.Value = Matrix4.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
 		}
 
 		private void UpdateInputState()
@@ -169,7 +161,10 @@ namespace StoicGoose.Handlers
 			io.MouseDown[1] = mouseState[MouseButton.Right];
 			io.MouseDown[2] = mouseState[MouseButton.Middle];
 			io.MousePos = new NumericsVector2(mousePos.X, mousePos.Y);
-			// TODO: mousewheel doesn't work??
+
+			io.AddMouseWheelEvent(
+				mouseState.Scroll.X - lastMouseWheelOffset.X,
+				mouseState.Scroll.Y - lastMouseWheelOffset.Y);
 
 			foreach (var key in Enum.GetValues(typeof(Keys)).Cast<Keys>().Where(x => x != Keys.Unknown))
 				io.KeysDown[(int)key] = keyboardState.IsKeyDown(key);
@@ -182,9 +177,32 @@ namespace StoicGoose.Handlers
 			io.KeyAlt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 			io.KeyShift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
 			io.KeySuper = keyboardState.IsKeyDown(Keys.LeftSuper) || keyboardState.IsKeyDown(Keys.RightSuper);
+
+			lastMouseWheelOffset = mouseState.Scroll;
 		}
 
-		private void RenderImGui(ImDrawDataPtr drawData)
+		public void BeginFrame()
+		{
+			if (wasFrameBegun) throw new Exception("Cannot begin new ImGui frame, last frame still in progress");
+
+			UpdateInputState();
+
+			ImGui.NewFrame();
+
+			wasFrameBegun = true;
+		}
+
+		public void EndFrame()
+		{
+			if (!wasFrameBegun) throw new Exception("Cannot end ImGui frame, frame has not begun");
+
+			ImGui.Render();
+			RenderDrawData(ImGui.GetDrawData());
+
+			wasFrameBegun = false;
+		}
+
+		private void RenderDrawData(ImDrawDataPtr drawData)
 		{
 			if (drawData.CmdListsCount == 0) return;
 
@@ -195,31 +213,38 @@ namespace StoicGoose.Handlers
 			var io = ImGui.GetIO();
 			drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
+			shaderProgram.Bind();
+			projectionMatrix.SubmitToProgram(shaderProgram);
+
 			for (var i = 0; i < drawData.CmdListsCount; i++)
 			{
 				var commandList = drawData.CmdListsRange[i];
+
+				vertexBuffer.Update<ColorVertex>(commandList.VtxBuffer.Data, commandList.VtxBuffer.Size);
+				indexBuffer.Update<ushort>(commandList.IdxBuffer.Data, commandList.IdxBuffer.Size);
+
 				for (var j = 0; j < commandList.CmdBuffer.Size; j++)
 				{
 					var cmdBuffer = commandList.CmdBuffer[j];
 
 					if (cmdBuffer.UserCallback != IntPtr.Zero)
 					{
-						// unimplemented
-						continue;
+						throw new NotImplementedException();
 					}
 					else
 					{
 						var clip = cmdBuffer.ClipRect;
-						GL.Scissor((int)clip.X, clientHeight - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+						GL.Scissor((int)clip.X, (int)drawData.DisplaySize.Y - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
 
-						shaderProgram.Bind();
-						projectionMatrix.SubmitToProgram(shaderProgram);
+						if (cmdBuffer.TextureId != IntPtr.Zero)
+						{
+							if ((int)cmdBuffer.TextureId == texture.Handle)
+								texture.Bind();
+							else
+								GL.BindTexture(TextureTarget.Texture2D, (int)cmdBuffer.TextureId);
+						}
 
-						vertexBuffer.Update<ColorVertex>(commandList.VtxBuffer.Data, commandList.VtxBuffer.Size);
-						indexBuffer.Update<ushort>(commandList.IdxBuffer.Data, commandList.IdxBuffer.Size);
-
-						texture.Bind();
-						vertexArray.Draw(PrimitiveType.Triangles);
+						vertexArray.DrawIndices(PrimitiveType.Triangles, (int)cmdBuffer.IdxOffset, (int)cmdBuffer.ElemCount);
 					}
 				}
 			}

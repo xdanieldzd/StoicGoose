@@ -10,7 +10,7 @@ namespace StoicGoose.Emulation.Machines
 	{
 		Dictionary<string, ObjectValue> Metadata { get; }
 
-		event EventHandler<RenderScreenEventArgs> RenderScreen;
+		event EventHandler<UpdateScreenEventArgs> UpdateScreen;
 		event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;
 		event EventHandler<PollInputEventArgs> PollInput;
 		event EventHandler<StartOfFrameEventArgs> StartOfFrame;

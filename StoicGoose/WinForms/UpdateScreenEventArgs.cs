@@ -2,11 +2,11 @@
 
 namespace StoicGoose.WinForms
 {
-	public class RenderScreenEventArgs : EventArgs
+	public class UpdateScreenEventArgs : EventArgs
 	{
 		public byte[] Framebuffer { get; set; } = default;
 
-		public RenderScreenEventArgs(byte[] buffer)
+		public UpdateScreenEventArgs(byte[] buffer)
 		{
 			Framebuffer = buffer;
 		}

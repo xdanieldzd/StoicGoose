@@ -24,8 +24,8 @@ namespace StoicGoose.Emulation.Display
 
 		protected const int maxSpriteCount = 128;
 
-		public event EventHandler<RenderScreenEventArgs> RenderScreen;
-		public void OnRenderScreen(RenderScreenEventArgs e) { RenderScreen?.Invoke(this, e); }
+		public event EventHandler<UpdateScreenEventArgs> UpdateScreen;
+		public void OnUpdateScreen(UpdateScreenEventArgs e) { UpdateScreen?.Invoke(this, e); }
 
 		[Flags]
 		public enum DisplayInterrupts
@@ -215,7 +215,7 @@ namespace StoicGoose.Emulation.Display
 						for (var j = 0; j < maxSpriteCount; j++)
 							spriteData[j] = spriteDataNextFrame[j];
 
-						OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
+						OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
 						ResetScreenUsageMap();
 					}
 

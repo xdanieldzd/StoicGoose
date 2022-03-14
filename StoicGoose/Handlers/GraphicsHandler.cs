@@ -235,7 +235,7 @@ namespace StoicGoose.Handlers
 			}
 		}
 
-		public void RenderScreen(object sender, RenderScreenEventArgs e)
+		public void UpdateScreen(object sender, UpdateScreenEventArgs e)
 		{
 			if (wasShaderChanged)
 			{
@@ -250,9 +250,8 @@ namespace StoicGoose.Handlers
 			lastTextureUpdate = (lastTextureUpdate + 1) % commonBundleManifest.Samplers;
 		}
 
-		public void Resize(object sender, EventArgs e)
+		public void Resize(Rectangle clientRect)
 		{
-			var clientRect = (sender as Control).ClientRectangle;
 			var screenIconSize = metadata["interface/icons/size"].Integer;
 
 			GL.Viewport(clientRect);
@@ -319,7 +318,7 @@ namespace StoicGoose.Handlers
 			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? ScreenSize.Y : ScreenSize.X, IsVerticalOrientation ? ScreenSize.X : ScreenSize.Y);
 		}
 
-		public void Paint(object sender, EventArgs e)
+		public void DrawFrame()
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
@@ -327,12 +326,13 @@ namespace StoicGoose.Handlers
 			{
 				// TODO: remove testing/sample code, implement debugger etc using ImGui
 
-				ImGuiNET.ImGui.SetNextWindowBgAlpha(0.5f);
-				//ImGuiNET.ImGui.ShowDemoWindow();
+				//ImGuiNET.ImGui.SetNextWindowBgAlpha(0.5f);
+				ImGuiNET.ImGui.ShowDemoWindow();
 				ImGuiNET.ImGui.Begin("Hello World");
 				{
-					ImGuiNET.ImGui.Text("This is a test! Still a bit buggy, but hey, it kinda sorta works already! :D");
+					ImGuiNET.ImGui.Text($"Hello! This is...\n- Dear ImGui {ImGuiNET.ImGui.GetVersion()}...\n- through {nameof(ImGuiNET)}...\n- in {Application.ProductName} {Program.GetVersionString(true)}!");
 					ImGuiNET.ImGui.Button("Ooh, shiny!");
+					ImGuiNET.ImGui.Text("Here's a bunch of text and linebreaks and stuff! (because I had mousewheel issues)\n...\n...\n...\n...\n...still going...\n...\n...\n...lalala~...\n...\n...\n...there!");
 				}
 				ImGuiNET.ImGui.End();
 			}
