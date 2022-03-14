@@ -1,300 +1,66 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using StoicGoose.Emulation.Machines;
-using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Display
 {
-	public sealed class AswanDisplayController : IComponent
+	public sealed class AswanDisplayController : DisplayControllerCommon
 	{
-		public const int HorizontalDisp = 224;
-		public const int HorizontalBlank = 32;
-		public const int HorizontalTotal = HorizontalDisp + HorizontalBlank;
-		public const double HorizontalClock = WonderSwan.CpuClock / HorizontalTotal;
+		public override double HorizontalClock => WonderSwan.CpuClock / HorizontalTotal;
 
-		public const int VerticalDisp = 144;
-		public const int VerticalBlank = 15;
-		public const int VerticalTotal = VerticalDisp + VerticalBlank;
-		public const double VerticalClock = 12000 / (double)VerticalTotal;
+		public AswanDisplayController(MemoryReadDelegate memoryRead) : base(memoryRead) { }
 
-		public const int ScreenWidth = HorizontalDisp;
-		public const int ScreenHeight = VerticalDisp;
-
-		const int maxSpriteCount = 128;
-
-		public event EventHandler<RenderScreenEventArgs> RenderScreen;
-		public void OnRenderScreen(RenderScreenEventArgs e) { RenderScreen?.Invoke(this, e); }
-
-		[Flags]
-		public enum DisplayInterrupts
+		protected override void RenderBackColor(int y, int x)
 		{
-			None = 0,
-			LineCompare = 1 << 0,
-			VBlankTimer = 1 << 1,
-			VBlank = 1 << 2,
-			HBlankTimer = 1 << 3
+			WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColorIndex & 0b0111]));
 		}
 
-		readonly uint[] spriteData = new uint[maxSpriteCount];
-		readonly uint[] spriteDataNextFrame = new uint[maxSpriteCount];
-		readonly List<uint> activeSpritesOnLine = new();
-
-		const byte screenUsageEmpty = 0;
-		const byte screenUsageSCR1 = 1 << 0;
-		const byte screenUsageSCR2 = 1 << 1;
-		const byte screenUsageSPR = 1 << 2;
-		readonly byte[] screenUsage;
-
-		int cycleCount;
-		readonly int clockCyclesPerLine;
-		readonly byte[] outputFramebuffer;
-
-		public delegate byte MemoryReadDelegate(uint address);
-		readonly MemoryReadDelegate memoryReadDelegate;
-
-		/* REG_DISP_CTRL */
-		bool scr1Enable, scr2Enable, sprEnable, sprWindowEnable, scr2WindowDisplayOutside, scr2WindowEnable;
-		/* REG_BACK_COLOR */
-		byte backColor;
-		/* REG_LINE_xxx */
-		int lineCurrent, lineCompare;
-		/* REG_SPR_xxx */
-		int sprBase, sprFirst, sprCount;
-		/* REG_MAP_BASE */
-		int scr1Base, scr2Base;
-		/* REG_SCR2_WIN_xx */
-		int scr2WinX0, scr2WinY0, scr2WinX1, scr2WinY1;
-		/* REG_SPR_WIN_xx */
-		int sprWinX0, sprWinY0, sprWinX1, sprWinY1;
-		/* REG_SCR1_xx */
-		int scr1ScrollX, scr1ScrollY;
-		/* REG_SCR2_xx */
-		int scr2ScrollX, scr2ScrollY;
-		/* REG_LCD_xxx */
-		bool lcdActive;
-		bool iconSleep, iconVertical, iconHorizontal, iconAux1, iconAux2, iconAux3;
-		int vtotal, vsync;
-		/* REG_PALMONO_POOL_x */
-		readonly byte[] palMonoPools = new byte[8];
-		/* REG_PALMONO_x */
-		readonly byte[,] palMonoData = new byte[16, 4];
-		/* REG_DISP_MODE */
-		bool isDisplayFormatPacked;
-		/* REG_xTMR_xxx */
-		readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
-
-		public AswanDisplayController(MemoryReadDelegate memoryRead)
-		{
-			memoryReadDelegate = memoryRead;
-
-			screenUsage = new byte[HorizontalDisp * VerticalDisp];
-
-			clockCyclesPerLine = HorizontalTotal;
-			outputFramebuffer = new byte[ScreenWidth * ScreenHeight * 4];
-		}
-
-		public void Reset()
-		{
-			cycleCount = 0;
-
-			ResetScreenUsageMap();
-			ResetFramebuffer();
-
-			for (var i = 0; i < maxSpriteCount; i++)
-				spriteData[i] = spriteDataNextFrame[i] = 0;
-
-			ResetRegisters();
-		}
-
-		private void ResetScreenUsageMap()
-		{
-			for (var i = 0; i < screenUsage.Length; i++)
-				screenUsage[i] = screenUsageEmpty;
-		}
-
-		private void ResetFramebuffer()
-		{
-			for (var i = 0; i < outputFramebuffer.Length; i += 4)
-			{
-				outputFramebuffer[i + 0] = 255; //B
-				outputFramebuffer[i + 1] = 255; //G
-				outputFramebuffer[i + 2] = 255; //R
-				outputFramebuffer[i + 3] = 255; //A
-			}
-		}
-
-		private void ResetRegisters()
-		{
-			scr1Enable = scr2Enable = sprEnable = sprWindowEnable = scr2WindowDisplayOutside = scr2WindowEnable = false;
-			backColor = 0;
-			lineCurrent = lineCompare = 0;
-			sprBase = sprFirst = sprCount = 0;
-			scr1Base = scr2Base = 0;
-			scr2WinX0 = scr2WinY0 = scr2WinX1 = scr2WinY1 = 0;
-			sprWinX0 = sprWinY0 = sprWinX1 = sprWinY1 = 0;
-			scr1ScrollX = scr1ScrollY = 0;
-			scr2ScrollX = scr2ScrollY = 0;
-			lcdActive = true;   //Final Lap 2000 depends on bootstrap doing this, otherwise LCD stays off?
-			iconSleep = iconVertical = iconHorizontal = iconAux1 = iconAux2 = iconAux3 = false;
-			vtotal = VerticalTotal - 1;
-			vsync = VerticalTotal - 4; //Full usage/meaning unknown, so we're ignoring it for now
-			for (var i = 0; i < palMonoPools.Length; i++) palMonoPools[i] = 0;
-			for (var i = 0; i < palMonoData.GetLength(0); i++) for (var j = 0; j < palMonoData.GetLength(1); j++) palMonoData[i, j] = 0;
-			isDisplayFormatPacked = false;
-			hBlankTimer.Reset();
-			vBlankTimer.Reset();
-		}
-
-		public void Shutdown()
-		{
-			//
-		}
-
-		public DisplayInterrupts Step(int clockCyclesInStep)
-		{
-			var interrupt = DisplayInterrupts.None;
-
-			for (var i = 0; i < clockCyclesInStep; i++)
-			{
-				if (cycleCount == 0)
-				{
-					// V-blank interrupt
-					if (lineCurrent == VerticalDisp)
-					{
-						interrupt |= DisplayInterrupts.VBlank;
-
-						// V-timer interrupt
-						if (vBlankTimer.Step())
-							interrupt |= DisplayInterrupts.VBlankTimer;
-					}
-
-					// sprite fetch
-					if (lineCurrent == VerticalDisp - 2)
-					{
-						for (var j = 0; j < spriteDataNextFrame.Length; j++) spriteDataNextFrame[j] = 0;
-						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
-						{
-							var k = (uint)((sprBase << 9) + (j << 2));
-							spriteDataNextFrame[j] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
-						}
-					}
-				}
-
-				// render pixel
-				RenderPixel(lineCurrent, cycleCount++);
-
-				if (cycleCount == HorizontalDisp)
-				{
-					// line compare interrupt
-					if (lineCurrent == lineCompare)
-						interrupt |= DisplayInterrupts.LineCompare;
-
-					// H-timer interrupt
-					if (hBlankTimer.Step())
-						interrupt |= DisplayInterrupts.HBlankTimer;
-				}
-
-				if (cycleCount == clockCyclesPerLine)
-				{
-					// go to next scanline
-					lineCurrent++;
-
-					// is frame finished
-					if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
-					{
-						lineCurrent = 0;
-
-						// copy sprite data for next frame
-						for (var j = 0; j < maxSpriteCount; j++)
-							spriteData[j] = spriteDataNextFrame[j];
-
-						OnRenderScreen(new RenderScreenEventArgs(outputFramebuffer.Clone() as byte[]));
-						ResetScreenUsageMap();
-					}
-
-					// end of scanline
-					cycleCount = 0;
-				}
-			}
-
-			return interrupt;
-		}
-
-		private void RenderPixel(int y, int x)
-		{
-			if (y < 0 || y >= VerticalDisp || x < 0 || x >= HorizontalDisp) return;
-
-			if (lcdActive)
-			{
-				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColor & 0b0111]));
-
-				RenderSCR1(y, x);
-				RenderSCR2(y, x);
-				RenderSprites(y, x);
-			}
-			else
-			{
-				// LCD sleeping
-				WriteToFramebuffer(y, x, 255, 255, 255);
-			}
-		}
-
-		private void RenderSCR1(int y, int x)
+		protected override void RenderSCR1(int y, int x)
 		{
 			if (!scr1Enable) return;
 
 			var scrollX = (x + scr1ScrollX) & 0xFF;
 			var scrollY = (y + scr1ScrollY) & 0xFF;
 
-			var mapOffset = GetMapOffset(scr1Base, scrollY, scrollX);
-			var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
-			var tileNum = (ushort)(attribs & 0x01FF);
-			var tilePal = (attribs >> 9) & 0b1111;
+			var attribs = GetTileAttribs(scr1Base, scrollY, scrollX);
+			var tileNum = GetTileNumber(attribs);
+			var tilePal = GetTilePalette(attribs);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
+			var color = GetPixelColor(tileNum, scrollY ^ (GetTileVerticalFlip(attribs) * 7), scrollX ^ (GetTileHorizontalFlip(attribs) * 7));
 
-			if (IsColorOpaque((byte)tilePal, color))
+			if (IsColorOpaque(tilePal, color))
 			{
 				SetScreenUsageFlag(y, x, screenUsageSCR1);
 				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
-
-				if (GlobalVariables.EnableRenderSCR1DebugColors) WriteToFramebuffer(y, x, (byte)((tileNum & 0xf) << 4), 0, 0);
 			}
 		}
 
-		private void RenderSCR2(int y, int x)
+		protected override void RenderSCR2(int y, int x)
 		{
 			if (!scr2Enable) return;
 
 			var scrollX = (x + scr2ScrollX) & 0xFF;
 			var scrollY = (y + scr2ScrollY) & 0xFF;
 
-			var mapOffset = GetMapOffset(scr2Base, scrollY, scrollX);
-			var attribs = (ushort)(memoryReadDelegate(mapOffset + 1) << 8 | memoryReadDelegate(mapOffset));
-			var tileNum = (ushort)(attribs & 0x01FF);
-			var tilePal = (attribs >> 9) & 0b1111;
+			var attribs = GetTileAttribs(scr2Base, scrollY, scrollX);
+			var tileNum = GetTileNumber(attribs);
+			var tilePal = GetTilePalette(attribs);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
+			var color = GetPixelColor(tileNum, scrollY ^ (GetTileVerticalFlip(attribs) * 7), scrollX ^ (GetTileHorizontalFlip(attribs) * 7));
 
-			if (IsColorOpaque((byte)tilePal, color))
+			if (IsColorOpaque(tilePal, color))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
 					SetScreenUsageFlag(y, x, screenUsageSCR2);
 					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
-
-					if (GlobalVariables.EnableRenderSCR2DebugColors) WriteToFramebuffer(y, x, 0, (byte)((tileNum & 0xf) << 4), 0);
 				}
 			}
 		}
 
-		private void RenderSprites(int y, int x)
+		protected override void RenderSprites(int y, int x)
 		{
 			if (!sprEnable) return;
 
@@ -312,7 +78,7 @@ namespace StoicGoose.Emulation.Display
 			foreach (var activeSprite in activeSpritesOnLine)
 			{
 				var tileNum = (ushort)(activeSprite & 0x01FF);
-				var tilePal = ((activeSprite >> 9) & 0b111) + 8;
+				var tilePal = (byte)(((activeSprite >> 9) & 0b111) + 8);
 				var windowDisplayOutside = ((activeSprite >> 12) & 0b1) == 0b1;
 				var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 
@@ -325,33 +91,30 @@ namespace StoicGoose.Emulation.Display
 
 				if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
 				{
-					if (IsColorOpaque((byte)tilePal, color) && (!IsScreenUsageFlagSet(y, x, screenUsageSCR2) || priorityAboveSCR2))
+					if (IsColorOpaque(tilePal, color) && (!IsScreenUsageFlagSet(y, x, screenUsageSCR2) || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 						{
 							SetScreenUsageFlag(y, x, screenUsageSPR);
 							WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal, color & 0b11]]));
-
-							if (GlobalVariables.EnableRenderSPRDebugColors) WriteToFramebuffer(y, x, 0, 0, (byte)((tileNum & 0xf) << 4));
 						}
 					}
 				}
 			}
 		}
 
-		private uint GetMapOffset(int scrBase, int y, int x)
+		protected override ushort GetTileNumber(ushort attribs)
 		{
-			var mapOffset = (ushort)(scrBase << 11);
-			mapOffset |= (ushort)((y >> 3) << 6);
-			mapOffset |= (ushort)((x >> 3) << 1);
-			return mapOffset;
+			return (ushort)(attribs & 0x01FF);
 		}
 
-		private byte GetPixelColor(ushort tile, int y, int x)
+		protected override byte GetPixelColor(ushort tile, int y, int x)
 		{
-			byte color;
+			byte color = 0;
 
-			if (!isDisplayFormatPacked)
+			tile &= 0x01FF;
+
+			if (isPlanarMode)
 			{
 				var address = (uint)(0x2000 + (tile << 4) + ((y % 8) << 1));
 				var data = (ushort)(memoryReadDelegate(address + 1) << 8 | memoryReadDelegate(address));
@@ -359,111 +122,21 @@ namespace StoicGoose.Emulation.Display
 				var color1 = (data >> 15 - (x % 8)) & 0b1;
 				color = (byte)(color1 << 1 | color0);
 			}
-			else
+			else if (isPackedMode)
 			{
 				var data = memoryReadDelegate((ushort)(0x2000 + (tile << 4) + ((y % 8) << 1) + ((x % 8) >> 2)));
-				color = (byte)(data >> 6 - (((x % 8) & 0b11) << 1));
+				color = (byte)((data >> 6 - (((x % 8) & 0b11) << 1)) & 0b11);
 			}
 
 			return color;
 		}
 
-		private bool IsColorOpaque(byte palette, byte color)
+		protected override bool IsColorOpaque(byte palette, byte color)
 		{
 			return color != 0 || (color == 0 && !IsBitSet(palette, 2));
 		}
 
-		private void ValidateWindowCoordinates(ref int x0, ref int x1, ref int y0, ref int y1)
-		{
-			// Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
-			// https://forum.fobby.net/index.php?t=msg&goto=6085
-
-			if (x0 > x1) Swap(ref x0, ref x1);
-			if (y0 > y1) Swap(ref y0, ref y1);
-		}
-
-		private bool IsInsideSCR2Window(int y, int x)
-		{
-			var x0 = scr2WinX0;
-			var x1 = scr2WinX1;
-			var y0 = scr2WinY0;
-			var y1 = scr2WinY1;
-
-			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
-
-			return ((x >= x0 && x <= x1) || (x >= x1 && x <= x0)) &&
-				((y >= y0 && y <= y1) || (y >= y1 && y <= y0));
-		}
-
-		private bool IsOutsideSCR2Window(int y, int x)
-		{
-			var x0 = scr2WinX0;
-			var x1 = scr2WinX1;
-			var y0 = scr2WinY0;
-			var y1 = scr2WinY1;
-
-			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
-
-			return x < x0 || x > x1 || y < y0 || y > y1;
-		}
-
-		private bool IsInsideSPRWindow(int y, int x)
-		{
-			var x0 = sprWinX0;
-			var x1 = sprWinX1;
-			var y0 = sprWinY0;
-			var y1 = sprWinY1;
-
-			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
-
-			return ((x >= x0 && x <= x1) || (x >= x1 && x <= x0)) &&
-				((y >= y0 && y <= y1) || (y >= y1 && y <= y0));
-		}
-
-		private byte GetScreenUsageFlag(int y, int x)
-		{
-			return screenUsage[(y * HorizontalDisp) + (x % HorizontalDisp)];
-		}
-
-		private bool IsScreenUsageFlagSet(int y, int x, byte flag)
-		{
-			return (GetScreenUsageFlag(y, x) & flag) == flag;
-		}
-
-		private void SetScreenUsageFlag(int y, int x, byte flag)
-		{
-			screenUsage[(y * HorizontalDisp) + (x % HorizontalDisp)] |= flag;
-		}
-
-		private void WriteToFramebuffer(int y, int x, byte pixel)
-		{
-			byte r, g, b;
-			r = g = b = (byte)((pixel << 4) | pixel);
-			WriteToFramebuffer(y, x, r, g, b);
-		}
-
-		private void WriteToFramebuffer(int y, int x, byte r, byte g, byte b)
-		{
-			var outputAddress = ((y * HorizontalDisp) + x) * 4;
-			outputFramebuffer[outputAddress + 0] = b;
-			outputFramebuffer[outputAddress + 1] = g;
-			outputFramebuffer[outputAddress + 2] = r;
-			outputFramebuffer[outputAddress + 3] = 255;
-		}
-
-		public List<string> GetActiveIcons()
-		{
-			var list = new List<string>();
-			if (iconSleep) list.Add("sleep");
-			if (iconVertical) list.Add("vertical");
-			if (iconHorizontal) list.Add("horizontal");
-			if (iconAux1) list.Add("aux1");
-			if (iconAux2) list.Add("aux2");
-			if (iconAux3) list.Add("aux3");
-			return list;
-		}
-
-		public byte ReadRegister(ushort register)
+		public override byte ReadRegister(ushort register)
 		{
 			var retVal = (byte)0;
 
@@ -481,7 +154,7 @@ namespace StoicGoose.Emulation.Display
 
 				case 0x01:
 					/* REG_BACK_COLOR */
-					retVal |= (byte)(backColor & 0b111);
+					retVal |= (byte)(backColorIndex & 0b111);
 					break;
 
 				case 0x02:
@@ -617,7 +290,7 @@ namespace StoicGoose.Emulation.Display
 
 				case 0x60:
 					/* REG_DISP_MODE */
-					ChangeBit(ref retVal, 5, isDisplayFormatPacked);
+					ChangeBit(ref retVal, 5, displayPackedFormatSet);
 					break;
 
 				case 0xA2:
@@ -658,7 +331,7 @@ namespace StoicGoose.Emulation.Display
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public override void WriteRegister(ushort register, byte value)
 		{
 			switch (register)
 			{
@@ -674,7 +347,7 @@ namespace StoicGoose.Emulation.Display
 
 				case 0x01:
 					/* REG_BACK_COLOR */
-					backColor = (byte)(value & 0b111);
+					backColorIndex = (byte)(value & 0b111);
 					break;
 
 				case 0x03:
@@ -805,7 +478,7 @@ namespace StoicGoose.Emulation.Display
 
 				case 0x60:
 					/* REG_DISP_MODE */
-					isDisplayFormatPacked = IsBitSet(value, 5);
+					displayPackedFormatSet = IsBitSet(value, 5);
 					break;
 
 				case 0xA2:

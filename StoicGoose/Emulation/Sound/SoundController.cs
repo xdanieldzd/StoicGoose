@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using StoicGoose.Emulation.Machines;
 using StoicGoose.WinForms;
@@ -14,6 +11,8 @@ namespace StoicGoose.Emulation.Sound
 	public sealed partial class SoundController : IComponent
 	{
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
+
+		// TODO: split like ASWAN/SPHINX display controllers, then add SPHINX-specific stuff
 
 		const int numChannels = 4, maxMasterVolume = 2;
 
@@ -64,7 +63,7 @@ namespace StoicGoose.Emulation.Sound
 			mixedSampleBuffer = new List<short>();
 
 			clockRate = WonderSwan.CpuClock;
-			refreshRate = Display.AswanDisplayController.VerticalClock;
+			refreshRate = Display.DisplayControllerCommon.VerticalClock;
 
 			samplesPerFrame = (int)(sampleRate / refreshRate);
 			cyclesPerFrame = (int)(clockRate / refreshRate);
@@ -369,7 +368,10 @@ namespace StoicGoose.Emulation.Sound
 					headphoneEnable = IsBitSet(value, 3);
 					break;
 
-				//
+				case 0x92:
+				case 0x93:
+					/* REG_SND_RANDOM */
+					break;
 
 				case 0x94:
 					/* REG_SND_VOICE_CTRL */
@@ -379,7 +381,32 @@ namespace StoicGoose.Emulation.Sound
 					(channels[1] as Voice).PcmLeftHalf = IsBitSet(value, 3);
 					break;
 
-				//
+				case 0x96:
+					/* REG_SND_9697 (low) */
+					unknown9697 = (ushort)((unknown9697 & 0xFF00) | (value << 0));
+					break;
+
+				case 0x97:
+					/* REG_SND_9697 (high) */
+					unknown9697 = (ushort)((unknown9697 & 0x00FF) | (value << 8));
+					break;
+
+				case 0x98:
+					/* REG_SND_9899 (low) */
+					unknown9899 = (ushort)((unknown9899 & 0xFF00) | (value << 0));
+					break;
+
+				case 0x99:
+					/* REG_SND_9899 (high) */
+					unknown9899 = (ushort)((unknown9899 & 0x00FF) | (value << 8));
+					break;
+
+				case 0x9A:
+				case 0x9B:
+				case 0x9C:
+				case 0x9D:
+					/* REG_SND_9x */
+					break;
 
 				case 0x9E:
 					/* REG_SND_9E */

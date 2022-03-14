@@ -18,10 +18,6 @@
 
 		public static readonly bool EnableSkipBootstrapIfFound = false;
 
-		public static readonly bool EnableRenderSCR1DebugColors = false;
-		public static readonly bool EnableRenderSCR2DebugColors = false;
-		public static readonly bool EnableRenderSPRDebugColors = false;
-
 		public static readonly bool EnableDebugNewUIStuffs = false;
 		public static readonly bool EnableDebugDearImGuiStuffs = false;
 	}
