@@ -1,22 +1,19 @@
 ﻿using System.Collections.Generic;
 
 using StoicGoose.Emulation.Display;
-using StoicGoose.DataStorage;
 
 namespace StoicGoose.Emulation.Machines
 {
 	public partial class WonderSwanColor
 	{
-		public Dictionary<string, ObjectValue> Metadata { get; } = new Dictionary<string, ObjectValue>();
-
-		private void FillMetadata()
+		protected override void FillMetadata()
 		{
 			Metadata["machine/description/manufacturer"] = "Bandai";
 			Metadata["machine/description/model"] = "WonderSwan Color";
 
-			Metadata["machine/display/width"] = SphinxDisplayController.ScreenWidth;
-			Metadata["machine/display/height"] = SphinxDisplayController.ScreenHeight;
-			Metadata["machine/display/refresh"] = SphinxDisplayController.VerticalClock;
+			Metadata["machine/display/width"] = DisplayControllerCommon.ScreenWidth;
+			Metadata["machine/display/height"] = DisplayControllerCommon.ScreenHeight;
+			Metadata["machine/display/refresh"] = DisplayControllerCommon.VerticalClock;
 
 			Metadata["machine/input/controls"] = "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
 			Metadata["machine/input/hardware"] = "volume";
@@ -54,7 +51,7 @@ namespace StoicGoose.Emulation.Machines
 			Metadata["interface/icons/aux3/location"] = "205, 144";
 		}
 
-		public void UpdateMetadata()
+		public override void UpdateMetadata()
 		{
 			// icons
 			var icons = new List<string>();

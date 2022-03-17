@@ -24,6 +24,9 @@ namespace StoicGoose.Interface
 
 	public sealed class GeneralConfiguration : ConfigurationBase<GeneralConfiguration>
 	{
+		[DisplayName("Prefer Original WS")]
+		[Description("Prefer emulation of the original non-Color system.")]
+		public bool PreferOriginalWS { get; set; } = false;
 		[DisplayName("Use Bootstrap ROM")]
 		[Description("Toggle using WonderSwan bootstrap ROM images.")]
 		public bool UseBootstrap { get; set; } = false;

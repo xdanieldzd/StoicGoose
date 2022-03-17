@@ -33,6 +33,7 @@ namespace StoicGoose
 		private void InitializePages()
 		{
 			var pageGeneral = new SettingsPage(Configuration, nameof(Configuration.General));
+			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.PreferOriginalWS)));
 			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.UseBootstrap)));
 			pageGeneral.Append(CreatePathSelector(Configuration.General, nameof(Configuration.General.BootstrapFile)));
 			pageGeneral.Append(CreatePathSelector(Configuration.General, nameof(Configuration.General.BootstrapFileWSC)));

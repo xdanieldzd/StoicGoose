@@ -41,6 +41,7 @@ namespace StoicGoose
 		DebuggerMainForm debuggerMainForm = default;
 
 		/* Misc. runtime variables */
+		Type machineType = default;
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
 		string internalEepromPath = string.Empty;
@@ -64,7 +65,9 @@ namespace StoicGoose
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			InitializeHandlers(typeof(WonderSwanColor));
+			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
+
+			InitializeHandlers();
 			VerifyConfiguration();
 
 			SizeAndPositionWindow();
@@ -112,7 +115,7 @@ namespace StoicGoose
 			MinimumSize = CalculateRequiredClientSize(2) + (Size - ClientSize);
 		}
 
-		private void InitializeHandlers(Type machineType)
+		private void InitializeHandlers()
 		{
 			emulatorHandler = new EmulatorHandler(machineType);
 			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
@@ -541,10 +544,21 @@ namespace StoicGoose
 			using var dialog = new SettingsForm(Program.Configuration.Clone());
 			if (dialog.ShowDialog() == DialogResult.OK)
 			{
+				var requiresRestart = dialog.Configuration.General.PreferOriginalWS != Program.Configuration.General.PreferOriginalWS;
+
 				Program.ReplaceConfiguration(dialog.Configuration);
 				VerifyConfiguration();
 
 				foreach (var binding in uiDataBindings) binding.ReadValue();
+
+				if (requiresRestart)
+				{
+					if (MessageBox.Show("Changing the system preference setting requires a restart of the emulator to take effect.\n\nDo you want to restart the emulator now?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+					{
+						Application.Restart();
+						Environment.Exit(0);
+					}
+				}
 
 				inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 			}
