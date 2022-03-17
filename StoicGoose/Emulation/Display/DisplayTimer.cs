@@ -29,7 +29,7 @@
 			if (Enable && Counter != 0)
 			{
 				Counter--;
-				if (Counter <= 0)
+				if (Counter == 0)
 				{
 					if (Repeating) Reload();
 					return true;

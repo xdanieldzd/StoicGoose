@@ -24,9 +24,9 @@ namespace StoicGoose.Emulation.DMA
 		/* REG_DMA_CTRL */
 		byte dmaControl;
 
-		public bool IsActive => ((dmaControl >> 7) & 0b1) == 0b1;
+		public bool IsActive => Utilities.IsBitSet(dmaControl, 7);
 
-		bool isDecrementMode => ((dmaControl >> 6) & 0b1) == 0b1;
+		bool isDecrementMode => Utilities.IsBitSet(dmaControl, 6);
 
 		public SphinxDMAController(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite)
 		{
@@ -53,25 +53,24 @@ namespace StoicGoose.Emulation.DMA
 
 		public int Step()
 		{
-			// TODO: failure modes
-
-			if (dmaLength == 0)
+			if (dmaLength == 0 || ((dmaSource >> 16) & 0x0F) == 0x01)
 			{
-				dmaControl = (byte)(dmaControl & 0b01111111);
+				/* Disable DMA if length is zero OR source is SRAM */
+				Utilities.ChangeBit(ref dmaControl, 7, false);
 				return 5;
 			}
 			else
 			{
-				memoryWriteDelegate((uint)(dmaDestination + 0), memoryReadDelegate(dmaSource + 0));
-				memoryWriteDelegate((uint)(dmaDestination + 1), memoryReadDelegate(dmaSource + 1));
+				if (((dmaSource >> 16) & 0x0F) != 0x01)
+				{
+					/* Perform DMA if source is not SRAM */
+					memoryWriteDelegate((uint)(dmaDestination + 0), memoryReadDelegate(dmaSource + 0));
+					memoryWriteDelegate((uint)(dmaDestination + 1), memoryReadDelegate(dmaSource + 1));
+				}
 
 				dmaSource += (uint)(isDecrementMode ? -2 : 2);
 				dmaDestination += (ushort)(isDecrementMode ? -2 : 2);
 				dmaLength -= 2;
-
-				dmaSource &= 0xFFFFE;
-				dmaDestination &= 0xFFFE;
-				dmaLength &= 0xFFFE;
 
 				return 2;
 			}

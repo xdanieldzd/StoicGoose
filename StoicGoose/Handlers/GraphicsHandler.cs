@@ -322,21 +322,6 @@ namespace StoicGoose.Handlers
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugDearImGuiStuffs)
-			{
-				// TODO: remove testing/sample code, implement debugger etc using ImGui
-
-				//ImGuiNET.ImGui.SetNextWindowBgAlpha(0.5f);
-				ImGuiNET.ImGui.ShowDemoWindow();
-				ImGuiNET.ImGui.Begin("Hello World");
-				{
-					ImGuiNET.ImGui.Text($"Hello! This is...\n- Dear ImGui {ImGuiNET.ImGui.GetVersion()}...\n- through {nameof(ImGuiNET)}...\n- in {Application.ProductName} {Program.GetVersionString(true)}!");
-					ImGuiNET.ImGui.Button("Ooh, shiny!");
-					ImGuiNET.ImGui.Text("Here's a bunch of text and linebreaks and stuff! (because I had mousewheel issues)\n...\n...\n...\n...\n...still going...\n...\n...\n...lalala~...\n...\n...\n...there!");
-				}
-				ImGuiNET.ImGui.End();
-			}
-
 			commonShaderProgram.Bind();
 
 			renderMode.Value = (int)ShaderRenderMode.Display;

@@ -40,7 +40,7 @@ namespace StoicGoose.Emulation.Display
 		protected enum TileAttribScreens { SCR1, SCR2 }
 
 		protected readonly uint[] spriteData = new uint[maxSpriteCount];
-		protected readonly uint[] spriteDataNextFrame = new uint[maxSpriteCount];
+		protected readonly List<uint> spriteDataNextFrame = new();
 		protected readonly List<uint> activeSpritesOnLine = new();
 
 		protected const byte screenUsageEmpty = 0;
@@ -48,6 +48,8 @@ namespace StoicGoose.Emulation.Display
 		protected const byte screenUsageSCR2 = 1 << 1;
 		protected const byte screenUsageSPR = 1 << 2;
 		protected readonly byte[] screenUsage;
+
+		protected int spriteCountNextFrame;
 
 		protected int cycleCount;
 		protected readonly int clockCyclesPerLine;
@@ -107,8 +109,10 @@ namespace StoicGoose.Emulation.Display
 			ResetScreenUsageMap();
 			ResetFramebuffer();
 
-			for (var i = 0; i < maxSpriteCount; i++)
-				spriteData[i] = spriteDataNextFrame[i] = 0;
+			for (var i = 0; i < maxSpriteCount; i++) spriteData[i] = 0;
+
+			spriteDataNextFrame.Clear();
+			spriteCountNextFrame = 0;
 
 			ResetRegisters();
 		}
@@ -178,11 +182,10 @@ namespace StoicGoose.Emulation.Display
 					// sprite fetch
 					if (lineCurrent == VerticalDisp - 2)
 					{
-						for (var j = 0; j < spriteDataNextFrame.Length; j++) spriteDataNextFrame[j] = 0;
 						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
 						{
 							var k = (uint)((sprBase << 9) + (j << 2));
-							spriteDataNextFrame[j] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
+							spriteDataNextFrame.Add((uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0)));
 						}
 					}
 				}
@@ -212,8 +215,9 @@ namespace StoicGoose.Emulation.Display
 						lineCurrent = 0;
 
 						// copy sprite data for next frame
-						for (var j = 0; j < maxSpriteCount; j++)
-							spriteData[j] = spriteDataNextFrame[j];
+						spriteCountNextFrame = spriteDataNextFrame.Count;
+						for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
+						spriteDataNextFrame.Clear();
 
 						OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
 						ResetScreenUsageMap();

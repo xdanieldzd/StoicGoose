@@ -15,6 +15,18 @@
 			return value;
 		}
 
+		private int Loop()
+		{
+			if (--cx.Word != 0) { ip = ReadOpcodeJb(); return 4; }
+			else { ip++; return 1; }
+		}
+
+		private int LoopWhile(bool condition)
+		{
+			if (--cx.Word != 0 && condition) { ip = ReadOpcodeJb(); return 5; }
+			else { ip++; return 2; }
+		}
+
 		private int JumpConditional(bool condition)
 		{
 			if (condition) { ip = ReadOpcodeJb(); return 4; }

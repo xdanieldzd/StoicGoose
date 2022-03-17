@@ -90,9 +90,10 @@ namespace StoicGoose.Emulation.CPU
 		public void RaiseInterrupt(int vector)
 		{
 			pendingIntVector = vector;
+			halted = false;
 		}
 
-		private void CheckAndServiceInterrupt()
+		private int CheckAndServiceInterrupt()
 		{
 			/* Interrupts enabled AND interrupt pending? */
 			if (IsFlagSet(Flags.InterruptEnable) && pendingIntVector != -1)
@@ -113,10 +114,12 @@ namespace StoicGoose.Emulation.CPU
 
 				ClearFlags(Flags.InterruptEnable);
 
-				halted = false;
+				return 32;
 			}
 
 			pendingIntVector = -1;
+
+			return 0;
 		}
 
 		public int Step()
@@ -125,7 +128,7 @@ namespace StoicGoose.Emulation.CPU
 			var ipBegin = ip;
 
 			/* Do interrupt handling & service interrupt if needed */
-			CheckAndServiceInterrupt();
+			var intCycles = CheckAndServiceInterrupt();
 
 			/* Is CPU halted? */
 			if (halted) return 1;
@@ -714,7 +717,7 @@ namespace StoicGoose.Emulation.CPU
 						Push(bp);
 						Push(si);
 						Push(di);
-						cycles = 8;
+						cycles = 1;
 					}
 					break;
 
@@ -729,7 +732,7 @@ namespace StoicGoose.Emulation.CPU
 						dx.Word = Pop();
 						cx.Word = Pop();
 						ax.Word = Pop();
-						cycles = 8;
+						cycles = 1;
 					}
 					break;
 
@@ -889,14 +892,12 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0x7C:
 					/* JL */
-					//cycles = JumpConditional(!IsFlagSet(Flags.Zero) && IsFlagSet(Flags.Sign) != IsFlagSet(Flags.Overflow));		//???
-					cycles = JumpConditional(IsFlagSet(Flags.Sign) != IsFlagSet(Flags.Overflow));
+					cycles = JumpConditional(!IsFlagSet(Flags.Zero) && IsFlagSet(Flags.Sign) != IsFlagSet(Flags.Overflow));
 					break;
 
 				case 0x7D:
 					/* JGE */
-					//cycles = JumpConditional(IsFlagSet(Flags.Zero) || IsFlagSet(Flags.Sign) == IsFlagSet(Flags.Overflow));		//???
-					cycles = JumpConditional(IsFlagSet(Flags.Sign) == IsFlagSet(Flags.Overflow));
+					cycles = JumpConditional(IsFlagSet(Flags.Zero) || IsFlagSet(Flags.Sign) == IsFlagSet(Flags.Overflow));
 					break;
 
 				case 0x7E:
@@ -1715,17 +1716,17 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xE0:
 					/* LOOPNZ Jb */
-					cycles = JumpConditional(--cx.Word != 0 && !IsFlagSet(Flags.Zero));
+					cycles = LoopWhile(!IsFlagSet(Flags.Zero));
 					break;
 
 				case 0xE1:
 					/* LOOPZ Jb */
-					cycles = JumpConditional(--cx.Word != 0 && IsFlagSet(Flags.Zero));
+					cycles = LoopWhile(IsFlagSet(Flags.Zero));
 					break;
 
 				case 0xE2:
 					/* LOOP Jb */
-					cycles = JumpConditional(--cx.Word != 0);
+					cycles = Loop();
 					break;
 
 				case 0xE3:
@@ -1736,25 +1737,25 @@ namespace StoicGoose.Emulation.CPU
 				case 0xE4:
 					/* IN Ib AL */
 					ax.Low = ReadRegister8(ReadOpcodeIb());
-					cycles = 4;
+					cycles = 6;
 					break;
 
 				case 0xE5:
 					/* IN Ib AX */
 					ax.Word = ReadRegister16(ReadOpcodeIb());
-					cycles = 4;
+					cycles = 6;
 					break;
 
 				case 0xE6:
 					/* OUT Ib AL */
 					WriteRegister8(ReadOpcodeIb(), ax.Low);
-					cycles = 4;
+					cycles = 6;
 					break;
 
 				case 0xE7:
 					/* OUT Ib AX */
 					WriteRegister16(ReadOpcodeIb(), ax.Word);
-					cycles = 4;
+					cycles = 6;
 					break;
 
 				case 0xE8:
@@ -1792,7 +1793,7 @@ namespace StoicGoose.Emulation.CPU
 				case 0xEB:
 					/* JMP Jb */
 					ip = ReadOpcodeJb();
-					cycles = 4;
+					cycles = 3;
 					break;
 
 				case 0xEC:
@@ -1980,7 +1981,7 @@ namespace StoicGoose.Emulation.CPU
 			if (cycles == 0)
 				throw new Exception($"Cycle count for opcode 0x{opcode:X2} is zero");
 
-			return cycles;
+			return cycles + intCycles;
 		}
 	}
 }

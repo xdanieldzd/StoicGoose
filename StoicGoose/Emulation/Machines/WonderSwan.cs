@@ -91,7 +91,7 @@ namespace StoicGoose.Emulation.Machines
 			eeprom.Reset();
 
 			currentClockCyclesInFrame = 0;
-			totalClockCyclesInFrame = (int)Math.Round(CpuClock / AswanDisplayController.VerticalClock);
+			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
 
 			ResetRegisters();
 		}
@@ -192,10 +192,10 @@ namespace StoicGoose.Emulation.Machines
 			var currentCpuClockCycles = cpu.Step();
 
 			var displayInterrupt = display.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
-			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
-			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
-			if (displayInterrupt.HasFlag(AswanDisplayController.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
@@ -260,12 +260,12 @@ namespace StoicGoose.Emulation.Machines
 
 		public (int w, int h) GetScreenSize()
 		{
-			return (AswanDisplayController.ScreenWidth, AswanDisplayController.ScreenHeight);
+			return (DisplayControllerCommon.ScreenWidth, DisplayControllerCommon.ScreenHeight);
 		}
 
 		public double GetRefreshRate()
 		{
-			return AswanDisplayController.VerticalClock;
+			return DisplayControllerCommon.VerticalClock;
 		}
 
 		public Dictionary<string, ushort> GetProcessorStatus()

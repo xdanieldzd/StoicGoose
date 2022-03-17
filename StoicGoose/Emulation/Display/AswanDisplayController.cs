@@ -66,10 +66,8 @@ namespace StoicGoose.Emulation.Display
 
 			activeSpritesOnLine.Clear();
 
-			for (var i = sprFirst + Math.Min(maxSpriteCount, sprCount) - 1; i >= sprFirst; i--)
+			for (var i = 0; i < spriteCountNextFrame; i++)
 			{
-				if (spriteData[i] == 0) continue;   //HACK: helps prevent garbage sprites in ex. pocket fighter, but prob only b/c inaccurate timing?
-
 				var spriteY = (spriteData[i] >> 16) & 0xFF;
 				if ((byte)(y - spriteY) <= 7 && activeSpritesOnLine.Count < 32)
 					activeSpritesOnLine.Add(spriteData[i]);
