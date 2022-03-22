@@ -143,7 +143,13 @@ namespace StoicGoose
 
 			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
-			renderControl.Paint += (s, e) => { imGuiHandler.BeginFrame(); graphicsHandler.DrawFrame(); imGuiHandler.EndFrame(); };
+			renderControl.Paint += (s, e) =>
+			{
+				imGuiHandler.BeginFrame();
+				graphicsHandler.DrawFrame();
+				foreach (var draw in emulatorHandler.Machine.ImGuiDrawFunctions) draw();
+				imGuiHandler.EndFrame();
+			};
 
 			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata["machine/eeprom/filename"]);
 		}

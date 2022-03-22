@@ -27,7 +27,7 @@ namespace StoicGoose.Handlers
 	 * - https://github.com/mellinoe/ImGui.NET/blob/eb195f622b40d2f44cb1021f304aac47de21eb1b/src/ImGui.NET.SampleProgram/SampleWindow.cs
 	 */
 
-	public class ImGuiHandler : IDisposable
+	public sealed class ImGuiHandler : IDisposable
 	{
 		readonly static string[] vertexShaderSource =
 		{
@@ -204,7 +204,7 @@ namespace StoicGoose.Handlers
 
 		private void RenderDrawData(ImDrawDataPtr drawData)
 		{
-			if (drawData.CmdListsCount == 0) return;
+			if (drawData.Equals(default(ImDrawDataPtr)) || drawData.CmdListsCount == 0) return;
 
 			GL.Disable(EnableCap.CullFace);
 			GL.Disable(EnableCap.DepthTest);
@@ -241,7 +241,7 @@ namespace StoicGoose.Handlers
 							if ((int)cmdBuffer.TextureId == texture.Handle)
 								texture.Bind();
 							else
-								GL.BindTexture(TextureTarget.Texture2D, (int)cmdBuffer.TextureId);
+								throw new NotImplementedException();
 						}
 
 						vertexArray.DrawIndices(PrimitiveType.Triangles, (int)cmdBuffer.IdxOffset, (int)cmdBuffer.ElemCount);
