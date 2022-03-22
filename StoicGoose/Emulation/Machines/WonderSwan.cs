@@ -66,6 +66,9 @@ namespace StoicGoose.Emulation.Machines
 
 			sound.Step(currentCpuClockCycles);
 
+			if (cartridge.Step(currentCpuClockCycles))
+				ChangeBit(ref intStatus, 2, true);
+
 			currentClockCyclesInFrame += currentCpuClockCycles;
 		}
 

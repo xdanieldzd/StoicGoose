@@ -17,6 +17,9 @@ namespace StoicGoose.Emulation.Cartridges
 		/* REG_EEP_xxx -> EEPROM class */
 		EEPROM eeprom = default;
 
+		/* REG_RTC_xxx -> RTC class */
+		RTC rtc = default;
+
 		public Metadata Metadata => metadata;
 
 		public Cartridge()
@@ -33,11 +36,16 @@ namespace StoicGoose.Emulation.Cartridges
 			romBank1 = 0xFF;
 
 			eeprom?.Reset();
+			rtc?.Reset();
+
+			// HACK: set RTC to current date/time on boot for testing
+			rtc?.Program(DateTime.Now);
 		}
 
 		public void Shutdown()
 		{
 			eeprom?.Shutdown();
+			rtc?.Shutdown();
 		}
 
 		public void LoadRom(byte[] data)
@@ -65,6 +73,12 @@ namespace StoicGoose.Emulation.Cartridges
 					}
 				}
 			}
+
+			if (metadata.RtcPresent != 0)
+			{
+				// NOTE: "RTC present" flag is not entirely consistent; ex. Digimon Tamers Battle Spirit has the flag, but does not have an RTC
+				rtc = new RTC();
+			}
 		}
 
 		public void LoadSram(byte[] data)
@@ -86,6 +100,11 @@ namespace StoicGoose.Emulation.Cartridges
 		public byte[] GetEeprom()
 		{
 			return eeprom?.GetContents().Clone() as byte[];
+		}
+
+		public bool Step(int clockCyclesInStep)
+		{
+			return rtc != null && rtc.Step(clockCyclesInStep);
 		}
 
 		public byte ReadMemory(uint address)
@@ -134,6 +153,10 @@ namespace StoicGoose.Emulation.Cartridges
 				0xC7 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
 				/* REG_EEP_STATUS (read) */
 				0xC8 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				/* REG_RTC_STATUS (read) */
+				0xCA => rtc != null ? rtc.ReadRegister((byte)(register - 0xCA)) : (byte)0x90,
+				/* REG_RTC_DATA */
+				0xCB => rtc != null ? rtc.ReadRegister((byte)(register - 0xCA)) : (byte)0x90,
 				/* Unmapped */
 				_ => 0x90,
 			};
@@ -174,6 +197,13 @@ namespace StoicGoose.Emulation.Cartridges
 					/* REG_EEP_ADDR (high) */
 					/* REG_EEP_CMD (write) */
 					eeprom?.WriteRegister((byte)(register - 0xC4), value);
+					break;
+
+				case 0xCA:
+				case 0xCB:
+					/* REG_RTC_CMD (write) */
+					/* REG_RTC_DATA */
+					rtc?.WriteRegister((byte)(register - 0xCA), value);
 					break;
 			}
 		}

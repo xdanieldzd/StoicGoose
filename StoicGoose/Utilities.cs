@@ -69,5 +69,15 @@ namespace StoicGoose
 		{
 			return GetEmbeddedText($"Assets.Shaders.{name}.{GraphicsHandler.DefaultSourceFilename}");
 		}
+
+		public static int DecimalToBcd(int value)
+		{
+			return ((value / 10) << 4) + (value % 10);
+		}
+
+		public static int BcdToDecimal(int value)
+		{
+			return ((value >> 4) * 10) + value % 16;
+		}
 	}
 }
