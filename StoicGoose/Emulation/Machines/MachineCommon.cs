@@ -71,16 +71,20 @@ namespace StoicGoose.Emulation.Machines
 
 		protected Cheat[] cheats = new Cheat[512];
 
+		protected ImGuiCpuWindow cpuWindow = new();
 		protected ImGuiCheatWindow cheatsWindow = new();
 
 		public MachineCommon()
 		{
 			FillMetadata();
 
-			cheatsWindow.IsWindowOpen = true;
+
+			// TODO: remove these
+
+			cpuWindow.IsWindowOpen = true;
 
 			// cheat system test (Mr. Driller)
-			// TODO: remove me
+			cheatsWindow.IsWindowOpen = true;
 			cheats[0] = new() { Description = "Infinite lives", Address = 0xC983, Value = 5 };
 			cheats[1] = new() { Description = "Infinite air", Address = 0xC986, Value = 100 };
 		}
@@ -273,6 +277,7 @@ namespace StoicGoose.Emulation.Machines
 
 		public void DrawImGuiWindows()
 		{
+			cpuWindow.Draw(new object[] { cpu });
 			cheatsWindow.Draw(new object[] { cheats });
 		}
 

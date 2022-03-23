@@ -115,7 +115,7 @@ namespace StoicGoose.Emulation.CPU
 		}
 
 		[StructLayout(LayoutKind.Explicit)]
-		struct Register16
+		public struct Register16
 		{
 			[FieldOffset(0)]
 			public byte Low;

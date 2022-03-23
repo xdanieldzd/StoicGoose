@@ -5,7 +5,7 @@ namespace StoicGoose.Emulation.CPU
 	public sealed partial class V30MZ
 	{
 		[Flags]
-		enum Flags : ushort
+		public enum Flags : ushort
 		{
 			Carry = 1 << 0, /* CF */
 			/* (reserved) */
@@ -35,7 +35,7 @@ namespace StoicGoose.Emulation.CPU
 			this.flags &= ~flags;
 		}
 
-		private bool IsFlagSet(Flags flags)
+		public bool IsFlagSet(Flags flags)
 		{
 			return (this.flags & flags) == flags;
 		}

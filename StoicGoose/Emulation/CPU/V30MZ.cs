@@ -18,6 +18,12 @@ namespace StoicGoose.Emulation.CPU
 
 		int pendingIntVector;
 
+		public (Register16 AX, Register16 BX, Register16 CX, Register16 DX,
+			ushort SP, ushort BP, ushort SI, ushort DI,
+			ushort CS, ushort DS, ushort SS, ushort ES,
+			ushort IP) Registers =>
+			(ax, bx, cx, dx, sp, bp, si, di, cs, ds, ss, es, ip);
+
 		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, RegisterReadDelegate registerRead, RegisterWriteDelegate registerWrite)
 		{
 			memoryReadDelegate = memoryRead;

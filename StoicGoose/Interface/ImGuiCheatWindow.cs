@@ -12,7 +12,7 @@ namespace StoicGoose.Interface
 		Cheat newCheatToAdd = default;
 		int cheatToEditIdx = -1, cheatToDeleteIdx = -1;
 
-		public ImGuiCheatWindow() : base("Cheats", new NumericsVector2(500, 300), ImGuiCond.FirstUseEver) { }
+		public ImGuiCheatWindow() : base("Cheats", new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
 
 		protected override void DrawWindow(params object[] args)
 		{
