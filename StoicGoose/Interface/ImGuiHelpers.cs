@@ -5,9 +5,7 @@ using System.Reflection;
 
 using ImGuiNET;
 
-using NumericsVector2 = System.Numerics.Vector2;
-
-namespace StoicGoose
+namespace StoicGoose.Interface
 {
 	public static class ImGuiHelpers
 	{
@@ -32,21 +30,6 @@ namespace StoicGoose
 				var method = type.GetMethod("Parse", new[] { typeof(string), typeof(NumberStyles) });
 				if (method != null) typeParseMethodDict.Add(type, method);
 			}
-		}
-
-		public static (bool, T) InputHex<T>(string label, T value, int digits, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None, ImGuiInputTextCallback callback = null) where T : unmanaged, IComparable, IEquatable<T>
-		{
-			var type = typeof(T);
-			if (!typeParseMethodDict.ContainsKey(type)) throw new ArgumentException("Invalid type for input", nameof(T));
-
-			var textFlags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.CharsUppercase | ImGuiInputTextFlags.EnterReturnsTrue | flags;
-
-			var stringValue = string.Format($"{{0:X{digits}}}", value);
-			ImGui.SetNextItemWidth(ImGui.CalcTextSize(stringValue).X + ImGui.GetStyle().ItemSpacing.X);
-
-			var result = ImGui.InputText(label, ref stringValue, (uint)digits, textFlags, callback);
-			if (!string.IsNullOrEmpty(stringValue)) value = (T)typeParseMethodDict[type].Invoke(null, new object[] { stringValue, NumberStyles.HexNumber });
-			return (result, value);
 		}
 
 		public static bool InputHex<T>(string label, ref T value, int digits, bool autoSize = true) where T : unmanaged, IComparable, IEquatable<T>
