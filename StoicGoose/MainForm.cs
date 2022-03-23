@@ -147,7 +147,7 @@ namespace StoicGoose
 			{
 				imGuiHandler.BeginFrame();
 				graphicsHandler.DrawFrame();
-				foreach (var draw in emulatorHandler.Machine.ImGuiDrawFunctions) draw();
+				emulatorHandler.Machine.DrawImGuiWindows();
 				imGuiHandler.EndFrame();
 			};
 

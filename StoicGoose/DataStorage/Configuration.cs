@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 using StoicGoose.Handlers;
 
-namespace StoicGoose.Interface
+namespace StoicGoose.DataStorage
 {
 	public sealed class Configuration : ConfigurationBase<Configuration>
 	{

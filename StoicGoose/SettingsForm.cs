@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-using StoicGoose.Interface;
+using StoicGoose.DataStorage;
 
 using static StoicGoose.WinForms.ControlHelpers;
 

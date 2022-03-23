@@ -16,8 +16,6 @@ namespace StoicGoose.Emulation.Machines
 		event EventHandler<StartOfFrameEventArgs> StartOfFrame;
 		event EventHandler<EventArgs> EndOfFrame;
 
-		List<Action> ImGuiDrawFunctions { get; }
-
 		void Initialize();
 		void Reset();
 		void Shutdown();
@@ -46,5 +44,7 @@ namespace StoicGoose.Emulation.Machines
 
 		void BeginTraceLog(string filename);
 		void EndTraceLog();
+
+		void DrawImGuiWindows();
 	}
 }
