@@ -231,7 +231,6 @@ namespace StoicGoose.Emulation.Display
 		public DisplayControllerCommon(MemoryReadDelegate memoryRead)
 		{
 			memoryReadDelegate = memoryRead;
-
 		}
 
 		public void Reset()
@@ -303,9 +302,45 @@ namespace StoicGoose.Emulation.Display
 		{
 			var interrupt = DisplayInterrupts.None;
 
-			for (var i = 0; i < clockCyclesInStep; i++)
+			cycleCount += clockCyclesInStep;
+
+			if (cycleCount >= clockCyclesPerLine)
 			{
-				if (cycleCount == 0)
+				// sprite fetch
+				if (LineCurrent == VerticalDisp - 2)
+				{
+					spriteCountNextFrame = 0;
+					for (var j = SprFirst; j < SprFirst + Math.Min(maxSpriteCount, SprCount); j++)
+					{
+						var k = (uint)((SprBase << 9) + (j << 2));
+						spriteDataNextFrame[spriteCountNextFrame++] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
+					}
+				}
+
+				// render pixels
+				for (var x = 0; x < HorizontalDisp; x++)
+					RenderPixel(LineCurrent, x);
+
+				// line compare interrupt
+				if (LineCurrent == LineCompare)
+					interrupt |= DisplayInterrupts.LineCompare;
+
+				// go to next scanline
+				LineCurrent++;
+
+				// is frame finished
+				if (LineCurrent >= Math.Max(VerticalDisp, VTotal) + 1)
+				{
+					LineCurrent = 0;
+
+					// copy sprite data for next frame
+					for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
+					for (int j = 0; j < maxSpriteCount; j++) spriteDataNextFrame[j] = 0;
+
+					OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
+					ResetScreenUsageMap();
+				}
+				else
 				{
 					// V-blank interrupt
 					if (LineCurrent == VerticalDisp)
@@ -317,53 +352,13 @@ namespace StoicGoose.Emulation.Display
 							interrupt |= DisplayInterrupts.VBlankTimer;
 					}
 
-					// sprite fetch
-					if (LineCurrent == VerticalDisp - 2)
-					{
-						spriteCountNextFrame = 0;
-						for (var j = SprFirst; j < SprFirst + Math.Min(maxSpriteCount, SprCount); j++)
-						{
-							var k = (uint)((SprBase << 9) + (j << 2));
-							spriteDataNextFrame[spriteCountNextFrame++] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
-						}
-					}
-				}
-
-				// render pixel
-				RenderPixel(LineCurrent, cycleCount++);
-
-				if (cycleCount == HorizontalDisp)
-				{
-					// line compare interrupt
-					if (LineCurrent == LineCompare)
-						interrupt |= DisplayInterrupts.LineCompare;
-
 					// H-timer interrupt
 					if (HBlankTimer.Step())
 						interrupt |= DisplayInterrupts.HBlankTimer;
 				}
 
-				if (cycleCount == clockCyclesPerLine)
-				{
-					// go to next scanline
-					LineCurrent++;
-
-					// is frame finished
-					if (LineCurrent >= Math.Max(VerticalDisp, VTotal) + 1)
-					{
-						LineCurrent = 0;
-
-						// copy sprite data for next frame
-						for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
-						for (int j = 0; j < maxSpriteCount; j++) spriteDataNextFrame[j] = 0;
-
-						OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
-						ResetScreenUsageMap();
-					}
-
-					// end of scanline
-					cycleCount = 0;
-				}
+				// end of scanline
+				cycleCount = 0;
 			}
 
 			return interrupt;
@@ -383,10 +378,11 @@ namespace StoicGoose.Emulation.Display
 			else
 			{
 				// LCD sleeping
-				WriteToFramebuffer(y, x, 255, 255, 255);
+				RenderSleep(y, x);
 			}
 		}
 
+		protected abstract void RenderSleep(int y, int x);
 		protected abstract void RenderBackColor(int y, int x);
 		protected abstract void RenderSCR1(int y, int x);
 		protected abstract void RenderSCR2(int y, int x);

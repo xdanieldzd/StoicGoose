@@ -61,6 +61,11 @@ namespace StoicGoose.Emulation.Display
 			DisplayColorFlagSet = Display4bppFlagSet = false;
 		}
 
+		protected override void RenderSleep(int y, int x)
+		{
+			WriteToFramebuffer(y, x, 0, 0, 0);
+		}
+
 		protected override void RenderBackColor(int y, int x)
 		{
 			if (isColorMode)

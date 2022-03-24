@@ -10,6 +10,11 @@ namespace StoicGoose.Emulation.Display
 
 		public AswanDisplayController(MemoryReadDelegate memoryRead) : base(memoryRead) { }
 
+		protected override void RenderSleep(int y, int x)
+		{
+			WriteToFramebuffer(y, x, 255, 255, 255);
+		}
+
 		protected override void RenderBackColor(int y, int x)
 		{
 			WriteToFramebuffer(y, x, (byte)(15 - PalMonoPools[BackColorIndex & 0b0111]));

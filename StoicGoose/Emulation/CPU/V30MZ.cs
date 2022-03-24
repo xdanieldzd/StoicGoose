@@ -723,7 +723,7 @@ namespace StoicGoose.Emulation.CPU
 						Push(bp);
 						Push(si);
 						Push(di);
-						cycles = 1;
+						cycles = 8;
 					}
 					break;
 
@@ -738,7 +738,7 @@ namespace StoicGoose.Emulation.CPU
 						dx.Word = Pop();
 						cx.Word = Pop();
 						ax.Word = Pop();
-						cycles = 1;
+						cycles = 8;
 					}
 					break;
 
@@ -784,13 +784,13 @@ namespace StoicGoose.Emulation.CPU
 					/* INSB -- 80186 */
 					// TODO: verify
 					{
+						cycles = 5;
 						if (!prefixHasRepeat)
 							InString(false);
 						else if (cx.Word != 0)
 						{
-							do { InString(false); } while (--cx.Word != 0);
+							do { InString(false); cycles += 5; } while (--cx.Word != 0);
 						}
-						cycles = 5;
 					}
 					break;
 
@@ -798,13 +798,13 @@ namespace StoicGoose.Emulation.CPU
 					/* INSW -- 80186 */
 					// TODO: verify
 					{
+						cycles = 5;
 						if (!prefixHasRepeat)
 							InString(true);
 						else if (cx.Word != 0)
 						{
-							do { InString(true); } while (--cx.Word != 0);
+							do { InString(true); cycles += 5; } while (--cx.Word != 0);
 						}
-						cycles = 5;
 					}
 					break;
 
@@ -812,13 +812,13 @@ namespace StoicGoose.Emulation.CPU
 					/* OUTSB -- 80186 */
 					// TODO: verify
 					{
+						cycles = 5;
 						if (!prefixHasRepeat)
 							OutString(false);
 						else if (cx.Word != 0)
 						{
-							do { OutString(false); } while (--cx.Word != 0);
+							do { OutString(false); cycles += 6; } while (--cx.Word != 0);
 						}
-						cycles = 6;
 					}
 					break;
 
@@ -826,13 +826,13 @@ namespace StoicGoose.Emulation.CPU
 					/* OUTSW -- 80186 */
 					// TODO: verify
 					{
+						cycles = 5;
 						if (!prefixHasRepeat)
 							OutString(true);
 						else if (cx.Word != 0)
 						{
-							do { OutString(true); } while (--cx.Word != 0);
+							do { OutString(true); cycles += 6; } while (--cx.Word != 0);
 						}
-						cycles = 6;
 					}
 					break;
 
@@ -1225,46 +1225,46 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xA4:
 					/* MOVSB */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						MoveString(false);
 					else if (cx.Word != 0)
 					{
-						do { MoveString(false); } while (--cx.Word != 0);
+						do { MoveString(false); cycles += 5; } while (--cx.Word != 0);
 					}
-					cycles = 3;
 					break;
 
 				case 0xA5:
 					/* MOVSW */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						MoveString(true);
 					else if (cx.Word != 0)
 					{
-						do { MoveString(true); } while (--cx.Word != 0);
+						do { MoveString(true); cycles += 5; } while (--cx.Word != 0);
 					}
-					cycles = 3;
 					break;
 
 				case 0xA6:
 					/* CMPSB */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						CompareString(false);
 					else if (cx.Word != 0)
 					{
-						do { CompareString(false); } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
+						do { CompareString(false); cycles += 4; } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
 					}
-					cycles = 4;
 					break;
 
 				case 0xA7:
 					/* CMPSW */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						CompareString(true);
 					else if (cx.Word != 0)
 					{
-						do { CompareString(true); } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
+						do { CompareString(true); cycles += 4; } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
 					}
-					cycles = 4;
 					break;
 
 				case 0xA8:
@@ -1281,68 +1281,68 @@ namespace StoicGoose.Emulation.CPU
 
 				case 0xAA:
 					/* STOSB */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						StoreString(false);
 					else if (cx.Word != 0)
 					{
-						do { StoreString(false); } while (--cx.Word != 0);
+						do { StoreString(false); cycles += 2; } while (--cx.Word != 0);
 					}
-					cycles = 2;
 					break;
 
 				case 0xAB:
 					/* STOSW */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						StoreString(true);
 					else if (cx.Word != 0)
 					{
-						do { StoreString(true); } while (--cx.Word != 0);
+						do { StoreString(true); cycles += 2; } while (--cx.Word != 0);
 					}
-					cycles = 2;
 					break;
 
 				case 0xAC:
 					/* LODSB */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						LoadString(false);
 					else if (cx.Word != 0)
 					{
-						do { LoadString(false); } while (--cx.Word != 0);
+						do { LoadString(false); cycles += 2; } while (--cx.Word != 0);
 					}
-					cycles = 2;
 					break;
 
 				case 0xAD:
 					/* LODSW */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						LoadString(true);
 					else if (cx.Word != 0)
 					{
-						do { LoadString(true); } while (--cx.Word != 0);
+						do { LoadString(true); cycles += 2; } while (--cx.Word != 0);
 					}
-					cycles = 2;
 					break;
 
 				case 0xAE:
 					/* SCASB */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						ScanString(false);
 					else if (cx.Word != 0)
 					{
-						do { ScanString(false); } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
+						do { ScanString(false); cycles += 3; } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
 					}
-					cycles = 3;
 					break;
 
 				case 0xAF:
 					/* SCASW */
+					cycles = 5;
 					if (!prefixHasRepeat)
 						ScanString(true);
 					else if (cx.Word != 0)
 					{
-						do { ScanString(true); } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
+						do { ScanString(true); cycles += 3; } while (--cx.Word != 0 && (prefixRepeatOnNotEqual ? !IsFlagSet(Flags.Zero) : IsFlagSet(Flags.Zero)));
 					}
-					cycles = 3;
 					break;
 
 				case 0xB0:
