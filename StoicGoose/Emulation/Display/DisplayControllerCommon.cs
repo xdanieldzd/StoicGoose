@@ -24,6 +24,7 @@ namespace StoicGoose.Emulation.Display
 		public const int ScreenHeight = VerticalDisp;
 
 		protected const int maxSpriteCount = 128;
+		protected const int maxSpritesPerLine = 32;
 
 		public event EventHandler<UpdateScreenEventArgs> UpdateScreen;
 		public void OnUpdateScreen(UpdateScreenEventArgs e) { UpdateScreen?.Invoke(this, e); }
@@ -41,173 +42,185 @@ namespace StoicGoose.Emulation.Display
 		protected enum TileAttribScreens { SCR1, SCR2 }
 
 		protected readonly uint[] spriteData = new uint[maxSpriteCount];
-		protected readonly List<uint> spriteDataNextFrame = new();
-		protected readonly List<uint> activeSpritesOnLine = new();
+		protected readonly uint[] spriteDataNextFrame = new uint[maxSpriteCount];
+		protected readonly uint[] activeSpritesOnLine = new uint[maxSpritesPerLine];
 
 		protected const byte screenUsageEmpty = 0;
 		protected const byte screenUsageSCR1 = 1 << 0;
 		protected const byte screenUsageSCR2 = 1 << 1;
 		protected const byte screenUsageSPR = 1 << 2;
-		protected readonly byte[] screenUsage;
+		protected readonly byte[] screenUsage = new byte[HorizontalDisp * VerticalDisp];
 
-		protected int spriteCountNextFrame;
+		protected int spriteCountNextFrame = 0, activeSpriteCountOnLine = 0;
 
-		protected int cycleCount;
-		protected readonly int clockCyclesPerLine;
-		protected readonly byte[] outputFramebuffer;
+		protected int cycleCount = 0;
+		protected readonly int clockCyclesPerLine = HorizontalTotal;
+		protected readonly byte[] outputFramebuffer = new byte[ScreenWidth * ScreenHeight * 4];
 
 		public delegate byte MemoryReadDelegate(uint address);
-		protected readonly MemoryReadDelegate memoryReadDelegate;
+		protected readonly MemoryReadDelegate memoryReadDelegate = default;
 
 		/* REG_DISP_CTRL */
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SCR1 enable", 0)]
-		public bool Scr1Enable { get; protected set; }
+		public bool Scr1Enable { get; protected set; } = false;
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SCR2 enable", 1)]
-		public bool Scr2Enable { get; protected set; }
+		public bool Scr2Enable { get; protected set; } = false;
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SPR enable", 2)]
-		public bool SprEnable { get; protected set; }
+		public bool SprEnable { get; protected set; } = false;
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SPR window enable", 3)]
-		public bool SprWindowEnable { get; protected set; }
+		public bool SprWindowEnable { get; protected set; } = false;
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SCR2 window mode; display outside?", 4)]
-		public bool Scr2WindowDisplayOutside { get; protected set; }
+		public bool Scr2WindowDisplayOutside { get; protected set; } = false;
 		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
 		[ImGuiBitDescription("SCR2 window enable", 5)]
-		public bool Scr2WindowEnable { get; protected set; }
+		public bool Scr2WindowEnable { get; protected set; } = false;
 
 		/* REG_BACK_COLOR */
 		[ImGuiRegister(0x001, "REG_BACK_COLOR")]
 		[ImGuiBitDescription("Background color pool index", 0, 2)]
-		public virtual byte BackColorIndex { get; protected set; }
+		public virtual byte BackColorIndex { get; protected set; } = 0;
 
 		/* REG_LINE_xxx */
 		[ImGuiRegister(0x002, "REG_LINE_CUR")]
 		[ImGuiBitDescription("Current line being drawn")]
-		public int LineCurrent { get; protected set; }
+		public int LineCurrent { get; protected set; } = 0;
 		[ImGuiRegister(0x003, "REG_LINE_CMP")]
 		[ImGuiBitDescription("Line compare interrupt line")]
-		public int LineCompare { get; protected set; }
+		public int LineCompare { get; protected set; } = 0;
 
 		/* REG_SPR_xxx */
 		[ImGuiRegister(0x004, "REG_SPR_BASE")]
 		[ImGuiBitDescription("Sprite table base address", 0, 4)]
 		[ImGuiFormat("X4", 9)]
-		public virtual int SprBase { get; protected set; }
+		public virtual int SprBase { get; protected set; } = 0;
 		[ImGuiRegister(0x005, "REG_SPR_FIRST")]
 		[ImGuiBitDescription("First sprite to draw", 0, 6)]
-		public int SprFirst { get; protected set; }
+		public int SprFirst { get; protected set; } = 0;
 		[ImGuiRegister(0x006, "REG_SPR_COUNT")]
 		[ImGuiBitDescription("Number of sprites to draw")]
-		public int SprCount { get; protected set; }
+		public int SprCount { get; protected set; } = 0;
 
 		/* REG_MAP_BASE */
 		[ImGuiRegister(0x007, "REG_MAP_BASE")]
 		[ImGuiBitDescription("SCR1 base address", 0, 2)]
 		[ImGuiFormat("X4", 11)]
-		public virtual int Scr1Base { get; protected set; }
+		public virtual int Scr1Base { get; protected set; } = 0;
 		[ImGuiRegister(0x007, "REG_MAP_BASE")]
 		[ImGuiBitDescription("SCR2 base address", 4, 6)]
 		[ImGuiFormat("X4", 11)]
-		public virtual int Scr2Base { get; protected set; }
+		public virtual int Scr2Base { get; protected set; } = 0;
 
 		/* REG_SCR2_WIN_xx */
 		[ImGuiRegister(0x008, "REG_SCR2_WIN_X0")]
 		[ImGuiBitDescription("Top-left X of SCR2 window")]
-		public int Scr2WinX0 { get; protected set; }
+		public int Scr2WinX0 { get; protected set; } = 0;
 		[ImGuiRegister(0x009, "REG_SCR2_WIN_Y0")]
 		[ImGuiBitDescription("Top-left Y of SCR2 window")]
-		public int Scr2WinY0 { get; protected set; }
+		public int Scr2WinY0 { get; protected set; } = 0;
 		[ImGuiRegister(0x00A, "REG_SCR2_WIN_X1")]
 		[ImGuiBitDescription("Bottom-right X of SCR2 window")]
-		public int Scr2WinX1 { get; protected set; }
+		public int Scr2WinX1 { get; protected set; } = 0;
 		[ImGuiRegister(0x00B, "REG_SCR2_WIN_Y1")]
 		[ImGuiBitDescription("Bottom-right Y of SCR2 window")]
-		public int Scr2WinY1 { get; protected set; }
+		public int Scr2WinY1 { get; protected set; } = 0;
 
 		/* REG_SPR_WIN_xx */
 		[ImGuiRegister(0x00C, "REG_SPR_WIN_X0")]
 		[ImGuiBitDescription("Top-left X of SPR window")]
-		public int SprWinX0 { get; protected set; }
+		public int SprWinX0 { get; protected set; } = 0;
 		[ImGuiRegister(0x00D, "REG_SPR_WIN_Y0")]
 		[ImGuiBitDescription("Top-left Y of SPR window")]
-		public int SprWinY0 { get; protected set; }
+		public int SprWinY0 { get; protected set; } = 0;
 		[ImGuiRegister(0x00E, "REG_SPR_WIN_X1")]
 		[ImGuiBitDescription("Bottom-right X of SPR window")]
-		public int SprWinX1 { get; protected set; }
+		public int SprWinX1 { get; protected set; } = 0;
 		[ImGuiRegister(0x00F, "REG_SPR_WIN_Y1")]
 		[ImGuiBitDescription("Bottom-right Y of SPR window")]
-		public int SprWinY1 { get; protected set; }
+		public int SprWinY1 { get; protected set; } = 0;
 
 		/* REG_SCR1_xx */
 		[ImGuiRegister(0x010, "REG_SCR1_X")]
 		[ImGuiBitDescription("SCR1 X scroll")]
-		public int Scr1ScrollX { get; protected set; }
+		public int Scr1ScrollX { get; protected set; } = 0;
 		[ImGuiRegister(0x011, "REG_SCR1_Y")]
 		[ImGuiBitDescription("SCR1 Y scroll")]
-		public int Scr1ScrollY { get; protected set; }
+		public int Scr1ScrollY { get; protected set; } = 0;
 
 		/* REG_SCR2_xx */
 		[ImGuiRegister(0x012, "REG_SCR2_X")]
 		[ImGuiBitDescription("SCR2 X scroll")]
-		public int Scr2ScrollX { get; protected set; }
+		public int Scr2ScrollX { get; protected set; } = 0;
 		[ImGuiRegister(0x013, "REG_SCR2_Y")]
 		[ImGuiBitDescription("SCR2 Y scroll")]
-		public int Scr2ScrollY { get; protected set; }
+		public int Scr2ScrollY { get; protected set; } = 0;
 
 		/* REG_LCD_CTRL */
 		[ImGuiRegister(0x014, "REG_LCD_CTRL")]
 		[ImGuiBitDescription("LCD sleep mode; is LCD active?", 0)]
-		public bool LcdActive { get; protected set; }
+		public bool LcdActive { get; protected set; } = false;
 
 		/* REG_LCD_ICON */
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Sleep indicator", 0)]
-		public bool IconSleep { get; protected set; }
+		public bool IconSleep { get; protected set; } = false;
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Vertical orientation indicator", 1)]
-		public bool IconVertical { get; protected set; }
+		public bool IconVertical { get; protected set; } = false;
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Horizontal orientation indicator", 2)]
-		public bool IconHorizontal { get; protected set; }
+		public bool IconHorizontal { get; protected set; } = false;
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Auxiliary 1 (Small circle)", 3)]
-		public bool IconAux1 { get; protected set; }
+		public bool IconAux1 { get; protected set; } = false;
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Auxiliary 2 (Medium circle)", 4)]
-		public bool IconAux2 { get; protected set; }
+		public bool IconAux2 { get; protected set; } = false;
 		[ImGuiRegister(0x015, "REG_LCD_ICON")]
 		[ImGuiBitDescription("Auxiliary 3 (Big circle)", 5)]
-		public bool IconAux3 { get; protected set; }
+		public bool IconAux3 { get; protected set; } = false;
 
 		/* REG_LCD_VTOTAL */
 		[ImGuiRegister(0x016, "REG_LCD_VTOTAL")]
 		[ImGuiBitDescription("Display VTOTAL")]
-		public int VTotal { get; protected set; }
+		public int VTotal { get; protected set; } = 0;
 
 		/* REG_LCD_VSYNC */
 		[ImGuiRegister(0x017, "REG_LCD_VSYNC")]
 		[ImGuiBitDescription("VSYNC line position")]
-		public int VSync { get; protected set; }
+		public int VSync { get; protected set; } = 0;
 
-
-
-		// TODO make public
-
+		// TODO: reorganize & make public
 		/* REG_PALMONO_POOL_x */
 		protected readonly byte[] PalMonoPools = new byte[8];
-
 		/* REG_PALMONO_x */
 		protected readonly byte[,] PalMonoData = new byte[16, 4];
 
 		/* REG_DISP_MODE */
-		protected bool DisplayPackedFormatSet;
+		[ImGuiRegister(0x060, "REG_DISP_MODE")]
+		[ImGuiBitDescription("Sleep indicator", 0)]
+		public bool DisplayPackedFormatSet { get; protected set; } = false;
 
 		/* REG_xTMR_xxx */
 		protected readonly DisplayTimer HBlankTimer = new(), VBlankTimer = new();
+
+		[ImGuiRegister(0x0A2, "REG_TMR_CTRL")]
+		[ImGuiBitDescription("H-blank timer enable", 0)]
+		public bool HBlankTimerEnable => HBlankTimer.Enable;
+		[ImGuiRegister(0x0A2, "REG_TMR_CTRL")]
+		[ImGuiBitDescription("H-blank timer mode; is repeating?", 1)]
+		public bool HBlankTimerRepeating => HBlankTimer.Repeating;
+		[ImGuiRegister(0x0A2, "REG_TMR_CTRL")]
+		[ImGuiBitDescription("V-blank timer enable", 2)]
+		public bool VBlankTimerEnable => VBlankTimer.Enable;
+		[ImGuiRegister(0x0A2, "REG_TMR_CTRL")]
+		[ImGuiBitDescription("V-blank timer mode; is repeating?", 3)]
+		public bool VBlankTimerRepeating => VBlankTimer.Repeating;
+		// TODO: ImGuiRegister cover multiple registers & timer frequencies/counters
 
 		protected bool isPackedMode => DisplayPackedFormatSet;
 		protected bool isPlanarMode => !DisplayPackedFormatSet;
@@ -219,10 +232,6 @@ namespace StoicGoose.Emulation.Display
 		{
 			memoryReadDelegate = memoryRead;
 
-			screenUsage = new byte[HorizontalDisp * VerticalDisp];
-
-			clockCyclesPerLine = HorizontalTotal;
-			outputFramebuffer = new byte[ScreenWidth * ScreenHeight * 4];
 		}
 
 		public void Reset()
@@ -232,10 +241,16 @@ namespace StoicGoose.Emulation.Display
 			ResetScreenUsageMap();
 			ResetFramebuffer();
 
-			for (var i = 0; i < maxSpriteCount; i++) spriteData[i] = 0;
+			for (var i = 0; i < maxSpriteCount; i++)
+			{
+				spriteData[i] = 0;
+				spriteDataNextFrame[i] = 0;
+			}
+			for (var i = 0; i < maxSpritesPerLine; i++)
+				activeSpritesOnLine[i] = 0;
 
-			spriteDataNextFrame.Clear();
 			spriteCountNextFrame = 0;
+			activeSpriteCountOnLine = 0;
 
 			ResetRegisters();
 		}
@@ -305,10 +320,11 @@ namespace StoicGoose.Emulation.Display
 					// sprite fetch
 					if (LineCurrent == VerticalDisp - 2)
 					{
+						spriteCountNextFrame = 0;
 						for (var j = SprFirst; j < SprFirst + Math.Min(maxSpriteCount, SprCount); j++)
 						{
 							var k = (uint)((SprBase << 9) + (j << 2));
-							spriteDataNextFrame.Add((uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0)));
+							spriteDataNextFrame[spriteCountNextFrame++] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
 						}
 					}
 				}
@@ -338,9 +354,8 @@ namespace StoicGoose.Emulation.Display
 						LineCurrent = 0;
 
 						// copy sprite data for next frame
-						spriteCountNextFrame = spriteDataNextFrame.Count;
 						for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
-						spriteDataNextFrame.Clear();
+						for (int j = 0; j < maxSpriteCount; j++) spriteDataNextFrame[j] = 0;
 
 						OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
 						ResetScreenUsageMap();

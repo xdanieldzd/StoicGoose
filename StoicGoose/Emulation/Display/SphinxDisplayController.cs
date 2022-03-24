@@ -122,17 +122,18 @@ namespace StoicGoose.Emulation.Display
 		{
 			if (!SprEnable) return;
 
-			activeSpritesOnLine.Clear();
-
+			activeSpriteCountOnLine = 0;
 			for (var i = 0; i < spriteCountNextFrame; i++)
 			{
 				var spriteY = (spriteData[i] >> 16) & 0xFF;
-				if ((byte)(y - spriteY) <= 7 && activeSpritesOnLine.Count < 32)
-					activeSpritesOnLine.Add(spriteData[i]);
+				if ((byte)(y - spriteY) <= 7 && activeSpriteCountOnLine < maxSpritesPerLine)
+					activeSpritesOnLine[activeSpriteCountOnLine++] = spriteData[i];
 			}
 
-			foreach (var activeSprite in activeSpritesOnLine)
+			for (var i = 0; i < activeSpriteCountOnLine; i++)
 			{
+				var activeSprite = activeSpritesOnLine[i];
+
 				var tileNum = (ushort)(activeSprite & 0x01FF);
 				var tilePal = (byte)(((activeSprite >> 9) & 0b111) + 8);
 				var windowDisplayOutside = ((activeSprite >> 12) & 0b1) == 0b1;
