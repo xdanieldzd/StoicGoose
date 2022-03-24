@@ -5,6 +5,7 @@ using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
+using StoicGoose.Interface;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -13,6 +14,13 @@ namespace StoicGoose.Emulation.Machines
 {
 	public partial class WonderSwan : MachineCommon
 	{
+		protected ImGuiDisplayWindow<AswanDisplayController> displayWindow = new();
+
+		public WonderSwan() : base()
+		{
+			displayWindow.IsWindowOpen = true;
+		}
+
 		public override void Initialize()
 		{
 			internalRamSize = 16 * 1024;
@@ -70,6 +78,13 @@ namespace StoicGoose.Emulation.Machines
 				ChangeBit(ref intStatus, 2, true);
 
 			currentClockCyclesInFrame += currentCpuClockCycles;
+		}
+
+		public override void DrawImGuiWindows()
+		{
+			base.DrawImGuiWindows();
+
+			displayWindow.Draw(new object[] { display });
 		}
 
 		public override byte ReadRegister(ushort register)

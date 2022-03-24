@@ -6,6 +6,7 @@ using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.DMA;
 using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
+using StoicGoose.Interface;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -15,6 +16,13 @@ namespace StoicGoose.Emulation.Machines
 	public partial class WonderSwanColor : MachineCommon
 	{
 		SphinxDMAController dma = default;
+
+		protected ImGuiDisplayWindow<SphinxDisplayController> displayWindow = new();
+
+		public WonderSwanColor() : base()
+		{
+			displayWindow.IsWindowOpen = true;
+		}
 
 		public override void Initialize()
 		{
@@ -76,6 +84,13 @@ namespace StoicGoose.Emulation.Machines
 				ChangeBit(ref intStatus, 2, true);
 
 			currentClockCyclesInFrame += currentCpuClockCycles;
+		}
+
+		public override void DrawImGuiWindows()
+		{
+			base.DrawImGuiWindows();
+
+			displayWindow.Draw(new object[] { display });
 		}
 
 		public override byte ReadRegister(ushort register)

@@ -170,7 +170,7 @@ namespace StoicGoose
 					Program.Configuration.Input.SystemControls[button] = string.Empty;
 			}
 
-			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize >= maxScreenSizeFactor)
+			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize > maxScreenSizeFactor)
 				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
 
 			if (Program.Configuration.Video.Shader == string.Empty || !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader))

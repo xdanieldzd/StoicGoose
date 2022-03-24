@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using StoicGoose.Interface;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -59,38 +60,160 @@ namespace StoicGoose.Emulation.Display
 		protected readonly MemoryReadDelegate memoryReadDelegate;
 
 		/* REG_DISP_CTRL */
-		protected bool scr1Enable, scr2Enable, sprEnable, sprWindowEnable, scr2WindowDisplayOutside, scr2WindowEnable;
-		/* REG_BACK_COLOR */
-		protected byte backColorIndex;
-		/* REG_LINE_xxx */
-		protected int lineCurrent, lineCompare;
-		/* REG_SPR_xxx */
-		protected int sprBase, sprFirst, sprCount;
-		/* REG_MAP_BASE */
-		protected int scr1Base, scr2Base;
-		/* REG_SCR2_WIN_xx */
-		protected int scr2WinX0, scr2WinY0, scr2WinX1, scr2WinY1;
-		/* REG_SPR_WIN_xx */
-		protected int sprWinX0, sprWinY0, sprWinX1, sprWinY1;
-		/* REG_SCR1_xx */
-		protected int scr1ScrollX, scr1ScrollY;
-		/* REG_SCR2_xx */
-		protected int scr2ScrollX, scr2ScrollY;
-		/* REG_LCD_xxx */
-		protected bool lcdActive;
-		protected bool iconSleep, iconVertical, iconHorizontal, iconAux1, iconAux2, iconAux3;
-		protected int vtotal, vsync;
-		/* REG_PALMONO_POOL_x */
-		protected readonly byte[] palMonoPools = new byte[8];
-		/* REG_PALMONO_x */
-		protected readonly byte[,] palMonoData = new byte[16, 4];
-		/* REG_DISP_MODE */
-		protected bool displayPackedFormatSet;
-		/* REG_xTMR_xxx */
-		protected readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SCR1 enable", 0)]
+		public bool Scr1Enable { get; protected set; }
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SCR2 enable", 1)]
+		public bool Scr2Enable { get; protected set; }
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SPR enable", 2)]
+		public bool SprEnable { get; protected set; }
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SPR window enable", 3)]
+		public bool SprWindowEnable { get; protected set; }
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SCR2 window mode; display outside?", 4)]
+		public bool Scr2WindowDisplayOutside { get; protected set; }
+		[ImGuiRegister(0x000, "REG_DISP_CTRL")]
+		[ImGuiBitDescription("SCR2 window enable", 5)]
+		public bool Scr2WindowEnable { get; protected set; }
 
-		protected bool isPackedMode => displayPackedFormatSet;
-		protected bool isPlanarMode => !displayPackedFormatSet;
+		/* REG_BACK_COLOR */
+		[ImGuiRegister(0x001, "REG_BACK_COLOR")]
+		[ImGuiBitDescription("Background color pool index", 0, 2)]
+		public virtual byte BackColorIndex { get; protected set; }
+
+		/* REG_LINE_xxx */
+		[ImGuiRegister(0x002, "REG_LINE_CUR")]
+		[ImGuiBitDescription("Current line being drawn")]
+		public int LineCurrent { get; protected set; }
+		[ImGuiRegister(0x003, "REG_LINE_CMP")]
+		[ImGuiBitDescription("Line compare interrupt line")]
+		public int LineCompare { get; protected set; }
+
+		/* REG_SPR_xxx */
+		[ImGuiRegister(0x004, "REG_SPR_BASE")]
+		[ImGuiBitDescription("Sprite table base address", 0, 4)]
+		[ImGuiFormat("X4", 9)]
+		public virtual int SprBase { get; protected set; }
+		[ImGuiRegister(0x005, "REG_SPR_FIRST")]
+		[ImGuiBitDescription("First sprite to draw", 0, 6)]
+		public int SprFirst { get; protected set; }
+		[ImGuiRegister(0x006, "REG_SPR_COUNT")]
+		[ImGuiBitDescription("Number of sprites to draw")]
+		public int SprCount { get; protected set; }
+
+		/* REG_MAP_BASE */
+		[ImGuiRegister(0x007, "REG_MAP_BASE")]
+		[ImGuiBitDescription("SCR1 base address", 0, 2)]
+		[ImGuiFormat("X4", 11)]
+		public virtual int Scr1Base { get; protected set; }
+		[ImGuiRegister(0x007, "REG_MAP_BASE")]
+		[ImGuiBitDescription("SCR2 base address", 4, 6)]
+		[ImGuiFormat("X4", 11)]
+		public virtual int Scr2Base { get; protected set; }
+
+		/* REG_SCR2_WIN_xx */
+		[ImGuiRegister(0x008, "REG_SCR2_WIN_X0")]
+		[ImGuiBitDescription("Top-left X of SCR2 window")]
+		public int Scr2WinX0 { get; protected set; }
+		[ImGuiRegister(0x009, "REG_SCR2_WIN_Y0")]
+		[ImGuiBitDescription("Top-left Y of SCR2 window")]
+		public int Scr2WinY0 { get; protected set; }
+		[ImGuiRegister(0x00A, "REG_SCR2_WIN_X1")]
+		[ImGuiBitDescription("Bottom-right X of SCR2 window")]
+		public int Scr2WinX1 { get; protected set; }
+		[ImGuiRegister(0x00B, "REG_SCR2_WIN_Y1")]
+		[ImGuiBitDescription("Bottom-right Y of SCR2 window")]
+		public int Scr2WinY1 { get; protected set; }
+
+		/* REG_SPR_WIN_xx */
+		[ImGuiRegister(0x00C, "REG_SPR_WIN_X0")]
+		[ImGuiBitDescription("Top-left X of SPR window")]
+		public int SprWinX0 { get; protected set; }
+		[ImGuiRegister(0x00D, "REG_SPR_WIN_Y0")]
+		[ImGuiBitDescription("Top-left Y of SPR window")]
+		public int SprWinY0 { get; protected set; }
+		[ImGuiRegister(0x00E, "REG_SPR_WIN_X1")]
+		[ImGuiBitDescription("Bottom-right X of SPR window")]
+		public int SprWinX1 { get; protected set; }
+		[ImGuiRegister(0x00F, "REG_SPR_WIN_Y1")]
+		[ImGuiBitDescription("Bottom-right Y of SPR window")]
+		public int SprWinY1 { get; protected set; }
+
+		/* REG_SCR1_xx */
+		[ImGuiRegister(0x010, "REG_SCR1_X")]
+		[ImGuiBitDescription("SCR1 X scroll")]
+		public int Scr1ScrollX { get; protected set; }
+		[ImGuiRegister(0x011, "REG_SCR1_Y")]
+		[ImGuiBitDescription("SCR1 Y scroll")]
+		public int Scr1ScrollY { get; protected set; }
+
+		/* REG_SCR2_xx */
+		[ImGuiRegister(0x012, "REG_SCR2_X")]
+		[ImGuiBitDescription("SCR2 X scroll")]
+		public int Scr2ScrollX { get; protected set; }
+		[ImGuiRegister(0x013, "REG_SCR2_Y")]
+		[ImGuiBitDescription("SCR2 Y scroll")]
+		public int Scr2ScrollY { get; protected set; }
+
+		/* REG_LCD_CTRL */
+		[ImGuiRegister(0x014, "REG_LCD_CTRL")]
+		[ImGuiBitDescription("LCD sleep mode; is LCD active?", 0)]
+		public bool LcdActive { get; protected set; }
+
+		/* REG_LCD_ICON */
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Sleep indicator", 0)]
+		public bool IconSleep { get; protected set; }
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Vertical orientation indicator", 1)]
+		public bool IconVertical { get; protected set; }
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Horizontal orientation indicator", 2)]
+		public bool IconHorizontal { get; protected set; }
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Auxiliary 1 (Small circle)", 3)]
+		public bool IconAux1 { get; protected set; }
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Auxiliary 2 (Medium circle)", 4)]
+		public bool IconAux2 { get; protected set; }
+		[ImGuiRegister(0x015, "REG_LCD_ICON")]
+		[ImGuiBitDescription("Auxiliary 3 (Big circle)", 5)]
+		public bool IconAux3 { get; protected set; }
+
+		/* REG_LCD_VTOTAL */
+		[ImGuiRegister(0x016, "REG_LCD_VTOTAL")]
+		[ImGuiBitDescription("Display VTOTAL")]
+		public int VTotal { get; protected set; }
+
+		/* REG_LCD_VSYNC */
+		[ImGuiRegister(0x017, "REG_LCD_VSYNC")]
+		[ImGuiBitDescription("VSYNC line position")]
+		public int VSync { get; protected set; }
+
+
+
+		// TODO make public
+
+		/* REG_PALMONO_POOL_x */
+		protected readonly byte[] PalMonoPools = new byte[8];
+
+		/* REG_PALMONO_x */
+		protected readonly byte[,] PalMonoData = new byte[16, 4];
+
+		/* REG_DISP_MODE */
+		protected bool DisplayPackedFormatSet;
+
+		/* REG_xTMR_xxx */
+		protected readonly DisplayTimer HBlankTimer = new(), VBlankTimer = new();
+
+		protected bool isPackedMode => DisplayPackedFormatSet;
+		protected bool isPlanarMode => !DisplayPackedFormatSet;
+
+		public (bool Scr1Enable, bool Scr2Enable, bool SprEnable, bool SprWindowEnable, bool Scr2WindowDisplayOutside, bool Scr2WindowEnable) DispCtrl =>
+			(Scr1Enable, Scr2Enable, SprEnable, SprWindowEnable, Scr2WindowDisplayOutside, Scr2WindowEnable);
 
 		public DisplayControllerCommon(MemoryReadDelegate memoryRead)
 		{
@@ -136,24 +259,24 @@ namespace StoicGoose.Emulation.Display
 
 		protected virtual void ResetRegisters()
 		{
-			scr1Enable = scr2Enable = sprEnable = sprWindowEnable = scr2WindowDisplayOutside = scr2WindowEnable = false;
-			backColorIndex = 0;
-			lineCurrent = lineCompare = 0;
-			sprBase = sprFirst = sprCount = 0;
-			scr1Base = scr2Base = 0;
-			scr2WinX0 = scr2WinY0 = scr2WinX1 = scr2WinY1 = 0;
-			sprWinX0 = sprWinY0 = sprWinX1 = sprWinY1 = 0;
-			scr1ScrollX = scr1ScrollY = 0;
-			scr2ScrollX = scr2ScrollY = 0;
-			lcdActive = true;   //Final Lap 2000 depends on bootstrap doing this, otherwise LCD stays off?
-			iconSleep = iconVertical = iconHorizontal = iconAux1 = iconAux2 = iconAux3 = false;
-			vtotal = VerticalTotal - 1;
-			vsync = VerticalTotal - 4; //Full usage/meaning unknown, so we're ignoring it for now
-			for (var i = 0; i < palMonoPools.Length; i++) palMonoPools[i] = 0;
-			for (var i = 0; i < palMonoData.GetLength(0); i++) for (var j = 0; j < palMonoData.GetLength(1); j++) palMonoData[i, j] = 0;
-			displayPackedFormatSet = false;
-			hBlankTimer.Reset();
-			vBlankTimer.Reset();
+			Scr1Enable = Scr2Enable = SprEnable = SprWindowEnable = Scr2WindowDisplayOutside = Scr2WindowEnable = false;
+			BackColorIndex = 0;
+			LineCurrent = LineCompare = 0;
+			SprBase = SprFirst = SprCount = 0;
+			Scr1Base = Scr2Base = 0;
+			Scr2WinX0 = Scr2WinY0 = Scr2WinX1 = Scr2WinY1 = 0;
+			SprWinX0 = SprWinY0 = SprWinX1 = SprWinY1 = 0;
+			Scr1ScrollX = Scr1ScrollY = 0;
+			Scr2ScrollX = Scr2ScrollY = 0;
+			LcdActive = true;   //Final Lap 2000 depends on bootstrap doing this, otherwise LCD stays off?
+			IconSleep = IconVertical = IconHorizontal = IconAux1 = IconAux2 = IconAux3 = false;
+			VTotal = VerticalTotal - 1;
+			VSync = VerticalTotal - 4; //Full usage/meaning unknown, so we're ignoring it for now
+			for (var i = 0; i < PalMonoPools.Length; i++) PalMonoPools[i] = 0;
+			for (var i = 0; i < PalMonoData.GetLength(0); i++) for (var j = 0; j < PalMonoData.GetLength(1); j++) PalMonoData[i, j] = 0;
+			DisplayPackedFormatSet = false;
+			HBlankTimer.Reset();
+			VBlankTimer.Reset();
 		}
 
 		public void Shutdown()
@@ -170,49 +293,49 @@ namespace StoicGoose.Emulation.Display
 				if (cycleCount == 0)
 				{
 					// V-blank interrupt
-					if (lineCurrent == VerticalDisp)
+					if (LineCurrent == VerticalDisp)
 					{
 						interrupt |= DisplayInterrupts.VBlank;
 
 						// V-timer interrupt
-						if (vBlankTimer.Step())
+						if (VBlankTimer.Step())
 							interrupt |= DisplayInterrupts.VBlankTimer;
 					}
 
 					// sprite fetch
-					if (lineCurrent == VerticalDisp - 2)
+					if (LineCurrent == VerticalDisp - 2)
 					{
-						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
+						for (var j = SprFirst; j < SprFirst + Math.Min(maxSpriteCount, SprCount); j++)
 						{
-							var k = (uint)((sprBase << 9) + (j << 2));
+							var k = (uint)((SprBase << 9) + (j << 2));
 							spriteDataNextFrame.Add((uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0)));
 						}
 					}
 				}
 
 				// render pixel
-				RenderPixel(lineCurrent, cycleCount++);
+				RenderPixel(LineCurrent, cycleCount++);
 
 				if (cycleCount == HorizontalDisp)
 				{
 					// line compare interrupt
-					if (lineCurrent == lineCompare)
+					if (LineCurrent == LineCompare)
 						interrupt |= DisplayInterrupts.LineCompare;
 
 					// H-timer interrupt
-					if (hBlankTimer.Step())
+					if (HBlankTimer.Step())
 						interrupt |= DisplayInterrupts.HBlankTimer;
 				}
 
 				if (cycleCount == clockCyclesPerLine)
 				{
 					// go to next scanline
-					lineCurrent++;
+					LineCurrent++;
 
 					// is frame finished
-					if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
+					if (LineCurrent >= Math.Max(VerticalDisp, VTotal) + 1)
 					{
-						lineCurrent = 0;
+						LineCurrent = 0;
 
 						// copy sprite data for next frame
 						spriteCountNextFrame = spriteDataNextFrame.Count;
@@ -235,7 +358,7 @@ namespace StoicGoose.Emulation.Display
 		{
 			if (y < 0 || y >= VerticalDisp || x < 0 || x >= HorizontalDisp) return;
 
-			if (lcdActive)
+			if (LcdActive)
 			{
 				RenderBackColor(y, x);
 				RenderSCR1(y, x);
@@ -288,10 +411,10 @@ namespace StoicGoose.Emulation.Display
 
 		protected bool IsInsideSCR2Window(int y, int x)
 		{
-			var x0 = scr2WinX0;
-			var x1 = scr2WinX1;
-			var y0 = scr2WinY0;
-			var y1 = scr2WinY1;
+			var x0 = Scr2WinX0;
+			var x1 = Scr2WinX1;
+			var y0 = Scr2WinY0;
+			var y1 = Scr2WinY1;
 
 			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
 
@@ -301,10 +424,10 @@ namespace StoicGoose.Emulation.Display
 
 		protected bool IsOutsideSCR2Window(int y, int x)
 		{
-			var x0 = scr2WinX0;
-			var x1 = scr2WinX1;
-			var y0 = scr2WinY0;
-			var y1 = scr2WinY1;
+			var x0 = Scr2WinX0;
+			var x1 = Scr2WinX1;
+			var y0 = Scr2WinY0;
+			var y1 = Scr2WinY1;
 
 			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
 
@@ -313,10 +436,10 @@ namespace StoicGoose.Emulation.Display
 
 		protected bool IsInsideSPRWindow(int y, int x)
 		{
-			var x0 = sprWinX0;
-			var x1 = sprWinX1;
-			var y0 = sprWinY0;
-			var y1 = sprWinY1;
+			var x0 = SprWinX0;
+			var x1 = SprWinX1;
+			var y0 = SprWinY0;
+			var y1 = SprWinY1;
 
 			ValidateWindowCoordinates(ref x0, ref x1, ref y0, ref y1);
 
@@ -358,12 +481,12 @@ namespace StoicGoose.Emulation.Display
 		public List<string> GetActiveIcons()
 		{
 			var list = new List<string>();
-			if (iconSleep) list.Add("sleep");
-			if (iconVertical) list.Add("vertical");
-			if (iconHorizontal) list.Add("horizontal");
-			if (iconAux1) list.Add("aux1");
-			if (iconAux2) list.Add("aux2");
-			if (iconAux3) list.Add("aux3");
+			if (IconSleep) list.Add("sleep");
+			if (IconVertical) list.Add("vertical");
+			if (IconHorizontal) list.Add("horizontal");
+			if (IconAux1) list.Add("aux1");
+			if (IconAux2) list.Add("aux2");
+			if (IconAux3) list.Add("aux3");
 			return list;
 		}
 

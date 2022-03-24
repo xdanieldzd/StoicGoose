@@ -81,12 +81,12 @@ namespace StoicGoose.Emulation.Machines
 
 			// TODO: remove these
 
-			cpuWindow.IsWindowOpen = true;
+			cpuWindow.IsWindowOpen = false;
 
 			// cheat system test (Mr. Driller)
-			cheatsWindow.IsWindowOpen = true;
-			cheats[0] = new() { Description = "Infinite lives", Address = 0xC983, Value = 5 };
-			cheats[1] = new() { Description = "Infinite air", Address = 0xC986, Value = 100 };
+			cheatsWindow.IsWindowOpen = false;
+			//cheats[0] = new() { Description = "Infinite lives", Address = 0xC983, Value = 5 };
+			//cheats[1] = new() { Description = "Infinite air", Address = 0xC986, Value = 100 };
 		}
 
 		protected abstract void FillMetadata();
@@ -275,7 +275,7 @@ namespace StoicGoose.Emulation.Machines
 			cpu.CloseTraceLogger();
 		}
 
-		public void DrawImGuiWindows()
+		public virtual void DrawImGuiWindows()
 		{
 			cpuWindow.Draw(new object[] { cpu });
 			cheatsWindow.Draw(new object[] { cheats });

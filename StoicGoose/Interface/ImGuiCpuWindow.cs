@@ -79,6 +79,7 @@ namespace StoicGoose.Interface
 				}
 				ImGui.EndGroup();
 			}
+			ImGui.End();
 		}
 
 		private void DrawFlag(V30MZ cpu, V30MZ.Flags flag, string label)
