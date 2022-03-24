@@ -258,20 +258,54 @@
 
 		private byte Rol8(bool withCarry, byte a, byte b)
 		{
-			int result = ((a << b) | (a >> (8 - b))) + (withCarry && IsFlagSet(Flags.Carry) ? 1 : 0);
+			int result;
 
-			SetClearFlagConditional(Flags.Carry, ((a << b) & (1 << 8)) != 0);
-			SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x80) != 0);
+			if (withCarry)
+			{
+				result = a;
+				for (var n = 0; n < b; n++)
+				{
+					var carry = result & 0x80;
+					result = (result << 1) | (IsFlagSet(Flags.Carry) ? 0x01 : 0);
+					SetClearFlagConditional(Flags.Carry, carry != 0);
+				}
+				SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x80) != 0);
+				result &= 0xFF;
+			}
+			else
+			{
+				result = (a << b) | (a >> (8 - b));
+				SetClearFlagConditional(Flags.Carry, ((a << b) & (1 << 8)) != 0);
+				SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x80) != 0);
+				result &= 0xFF;
+			}
 
 			return (byte)result;
 		}
 
 		private ushort Rol16(bool withCarry, ushort a, ushort b)
 		{
-			int result = ((a << b) | (a >> (16 - b))) + (withCarry && IsFlagSet(Flags.Carry) ? 1 : 0);
+			int result;
 
-			SetClearFlagConditional(Flags.Carry, ((a << b) & (1 << 16)) != 0);
-			SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x8000) != 0);
+			if (withCarry)
+			{
+				result = a;
+				for (var n = 0; n < b; n++)
+				{
+					var carry = result & 0x80;
+					result = (result << 1) | (IsFlagSet(Flags.Carry) ? 0x0001 : 0);
+					SetClearFlagConditional(Flags.Carry, carry != 0);
+				}
+				SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x8000) != 0);
+				result &= 0xFFFF;
+			}
+			else
+			{
+				result = (a << b) | (a >> (16 - b));
+				SetClearFlagConditional(Flags.Carry, ((a << b) & (1 << 16)) != 0);
+				SetClearFlagConditional(Flags.Overflow, ((a ^ result) & 0x8000) != 0);
+				result &= 0xFFFF;
+			}
 
 			return (ushort)result;
 		}
