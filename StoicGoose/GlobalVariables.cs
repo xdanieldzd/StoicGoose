@@ -1,4 +1,7 @@
-﻿namespace StoicGoose
+﻿using System.Collections.Generic;
+using System.Reflection;
+
+namespace StoicGoose
 {
 	public static class GlobalVariables
 	{
@@ -11,14 +14,19 @@
 		public static readonly bool EnableLocalDebugIO = IsAuthorsMachine;
 
 		public static readonly bool EnableConsoleOutput = IsAuthorsMachine;
-		public static readonly bool EnableOpenGLDebug = false;
+		public static readonly bool EnableOpenGLDebug = true;
 
 		public static readonly bool EnableDebugSoundRecording = false;
 		public static readonly bool EnableAutostartLastRom = false;
 
 		public static readonly bool EnableSkipBootstrapIfFound = false;
 
-		public static readonly bool EnableDebugNewUIStuffs = false;
-		public static readonly bool EnableDebugDearImGuiStuffs = true;
+		public static string[] Dump()
+		{
+			var vars = new List<string>();
+			foreach (var fieldInfo in typeof(GlobalVariables).GetFields(BindingFlags.Static | BindingFlags.Public))
+				vars.Add($"{fieldInfo.Name} == {fieldInfo.GetValue(null)}");
+			return vars.ToArray();
+		}
 	}
 }

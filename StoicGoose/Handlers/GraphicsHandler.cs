@@ -201,13 +201,14 @@ namespace StoicGoose.Handlers
 				case WrapMode.Mirror: textureWrapMode = TextureWrapMode.MirroredRepeat; break;
 			}
 
+			commonShaderProgram.Bind();
+
 			for (var i = 0; i < maxTextureSamplerCount; i++)
 			{
 				displayTextures[i]?.Dispose();
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), 0);
 			}
 
-			commonShaderProgram.Bind();
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
 				displayTextures[i] = new Texture(ScreenSize.X, ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);

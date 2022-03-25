@@ -84,25 +84,24 @@ namespace StoicGoose
 
 			InitializeDebugger();
 
-			if (GlobalVariables.EnableAutostartLastRom)
-				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
-
-			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableDebugNewUIStuffs)
+			if (GlobalVariables.IsDebugBuild)
 			{
-				openDebuggerToolStripMenuItem_Click(openDebuggerToolStripMenuItem, EventArgs.Empty);
-				PauseEmulation();
-				ResetEmulation();
+				Console.WriteLine("Global variables:");
+				foreach (var var in GlobalVariables.Dump()) Console.WriteLine($" {var}");
 			}
 
-			if (true)
+			if (GlobalVariables.EnableOpenGLDebug)
 			{
-				Console.WriteLine("OpenGL context info");
+				Console.WriteLine("OpenGL debugging enabled -- context info:");
 				Console.WriteLine($" Version: {ContextInfo.GLVersion}");
 				Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
 				Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
 				Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
 				Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
 			}
+
+			if (GlobalVariables.EnableAutostartLastRom)
+				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
