@@ -77,12 +77,14 @@ namespace StoicGoose.Interface
 								else
 									ImGui.LabelText($"{val}", entry.Description);
 							}
+
+							ImGui.EndDisabled();
 						}
-						ImGui.EndDisabled();
 					}
 				}
+
+				ImGui.End();
 			}
-			ImGui.End();
 		}
 
 		class RegisterParameterInformation

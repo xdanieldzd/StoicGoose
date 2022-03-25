@@ -61,10 +61,10 @@ namespace StoicGoose.Interface
 							ImGui.SameLine();
 							if (ImGui.Button($"Delete##list-delete{i}")) cheatToDeleteIdx = i;
 						}
+						ImGui.EndTable();
 					}
-					ImGui.EndTable();
+					ImGui.EndChild();
 				}
-				ImGui.EndChild();
 
 				ImGui.Dummy(new NumericsVector2(0f, 2f));
 				ImGui.Separator();
@@ -79,12 +79,14 @@ namespace StoicGoose.Interface
 					ImGui.Dummy(new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f));
 					ImGui.SameLine();
 					if (ImGui.Button($"Close##close", new NumericsVector2(ImGui.GetContentRegionAvail().X, 0f))) isWindowOpen = false;
+
+					ImGui.EndChild();
 				}
-				ImGui.EndChild();
 
 				ImGui.PopStyleVar();
+
+				ImGui.End();
 			}
-			ImGui.End();
 
 			if (newCheatToAdd != null)
 			{
@@ -123,8 +125,9 @@ namespace StoicGoose.Interface
 					}
 
 					ImGui.PopStyleVar();
+
+					ImGui.EndPopup();
 				}
-				ImGui.EndPopup();
 
 				if (!popupDummy)
 					newCheatToAdd = null;
@@ -166,8 +169,9 @@ namespace StoicGoose.Interface
 					}
 
 					ImGui.PopStyleVar();
+
+					ImGui.EndPopup();
 				}
-				ImGui.EndPopup();
 
 				if (!popupDummy)
 					cheatToDeleteIdx = -1;
@@ -201,8 +205,9 @@ namespace StoicGoose.Interface
 					}
 
 					ImGui.PopStyleVar();
+
+					ImGui.EndPopup();
 				}
-				ImGui.EndPopup();
 
 				if (!popupDummy)
 					cheatToEditIdx = -1;

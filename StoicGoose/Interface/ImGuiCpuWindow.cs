@@ -44,8 +44,9 @@ namespace StoicGoose.Interface
 
 					if (dbgDrawFlagsPosition < 0f)
 						dbgDrawFlagsPosition = ImGui.GetCursorPosX() - cursorPos - ImGui.GetStyle().WindowPadding.X;
+
+					ImGui.EndGroup();
 				}
-				ImGui.EndGroup();
 
 				ImGui.Dummy(new NumericsVector2(0f, 2f));
 				ImGui.Separator();
@@ -58,8 +59,9 @@ namespace StoicGoose.Interface
 					DrawRegister(cpu.Registers.BX, "B");
 					DrawRegister(cpu.Registers.CX, "C");
 					DrawRegister(cpu.Registers.DX, "D");
+
+					ImGui.EndGroup();
 				}
-				ImGui.EndGroup();
 
 				ImGui.Dummy(new NumericsVector2(0f, 2f));
 				ImGui.Separator();
@@ -76,10 +78,12 @@ namespace StoicGoose.Interface
 					ImGui.Text($"DS: 0x{cpu.Registers.DS:X4}"); ImGui.NextColumn();
 					ImGui.Text($"SS: 0x{cpu.Registers.SS:X4}"); ImGui.NextColumn();
 					ImGui.Text($"ES: 0x{cpu.Registers.ES:X4}"); ImGui.NextColumn();
+
+					ImGui.EndGroup();
 				}
-				ImGui.EndGroup();
+
+				ImGui.End();
 			}
-			ImGui.End();
 		}
 
 		private void DrawFlag(V30MZ cpu, V30MZ.Flags flag, string label)

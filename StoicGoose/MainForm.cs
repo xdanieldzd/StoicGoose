@@ -16,19 +16,19 @@ using StoicGoose.Emulation;
 using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
+using StoicGoose.Interface;
+using StoicGoose.OpenGL;
 
 namespace StoicGoose
 {
 	public partial class MainForm : Form
 	{
-		/* Console P/Invoke */
-		[System.Runtime.InteropServices.DllImport("kernel32.dll")]
-		[return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-		static extern bool AllocConsole();
-
 		/* Constants */
 		readonly static int maxScreenSizeFactor = 5;
 		readonly static int maxRecentFiles = 15;
+
+		/* Log window */
+		readonly ImGuiLogWindow logWindow = default;
 
 		/* Various handlers */
 		GraphicsHandler graphicsHandler = default;
@@ -50,8 +50,11 @@ namespace StoicGoose
 		{
 			InitializeComponent();
 
-			if (GlobalVariables.EnableConsoleOutput && AllocConsole())
+			if (GlobalVariables.EnableConsoleOutput && (logWindow = new()) != null)
 			{
+				logWindow.IsWindowOpen = true;
+
+				Console.SetOut(logWindow.TextWriter);
 				Console.WriteLine($"{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
 			}
@@ -89,6 +92,16 @@ namespace StoicGoose
 				openDebuggerToolStripMenuItem_Click(openDebuggerToolStripMenuItem, EventArgs.Empty);
 				PauseEmulation();
 				ResetEmulation();
+			}
+
+			if (true)
+			{
+				Console.WriteLine("OpenGL context info");
+				Console.WriteLine($" Version: {ContextInfo.GLVersion}");
+				Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
+				Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
+				Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
+				Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
 			}
 		}
 
@@ -149,6 +162,7 @@ namespace StoicGoose
 				imGuiHandler.BeginFrame();
 				graphicsHandler.DrawFrame();
 				emulatorHandler.Machine.DrawImGuiWindows();
+				logWindow.Draw();
 				imGuiHandler.EndFrame();
 			};
 
