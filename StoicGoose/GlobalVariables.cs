@@ -14,7 +14,7 @@ namespace StoicGoose
 		public static readonly bool EnableLocalDebugIO = IsAuthorsMachine;
 
 		public static readonly bool EnableConsoleOutput = IsAuthorsMachine;
-		public static readonly bool EnableOpenGLDebug = true;
+		public static readonly bool EnableOpenGLDebug = false;
 
 		public static readonly bool EnableDebugSoundRecording = false;
 		public static readonly bool EnableAutostartLastRom = false;
