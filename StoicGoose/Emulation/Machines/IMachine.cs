@@ -28,9 +28,11 @@ namespace StoicGoose.Emulation.Machines
 		void LoadInternalEeprom(byte[] data);
 		void LoadRom(byte[] data);
 		void LoadSaveData(byte[] data);
+		void LoadCheatList(List<MachineCommon.Cheat> cheatList);
 
 		byte[] GetInternalEeprom();
 		byte[] GetSaveData();
+		List<MachineCommon.Cheat> GetCheatList();
 
 		(int w, int h) GetScreenSize();
 		double GetRefreshRate();

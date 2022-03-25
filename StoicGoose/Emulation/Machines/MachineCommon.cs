@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using StoicGoose.DataStorage;
@@ -235,6 +236,12 @@ namespace StoicGoose.Emulation.Machines
 				cartridge.LoadEeprom(data);
 		}
 
+		public void LoadCheatList(List<Cheat> cheatList)
+		{
+			for (var i = 0; i < cheats.Length; i++)
+				cheats[i] = (cheatList != null && i < cheatList.Count) ? cheatList[i] : null;
+		}
+
 		public byte[] GetInternalEeprom()
 		{
 			return eeprom.GetContents();
@@ -248,6 +255,11 @@ namespace StoicGoose.Emulation.Machines
 				return cartridge.GetEeprom();
 
 			return Array.Empty<byte>();
+		}
+
+		public List<Cheat> GetCheatList()
+		{
+			return cheats.Where(x => x != null).ToList();
 		}
 
 		public (int w, int h) GetScreenSize()

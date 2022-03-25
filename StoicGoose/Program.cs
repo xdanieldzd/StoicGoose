@@ -15,6 +15,7 @@ namespace StoicGoose
 
 		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
+		const string cheatDataDirectoryName = "Cheats";
 		const string debuggingDataDirectoryName = "Debugging";
 
 		const string assetsDirectoryName = "Assets";
@@ -29,6 +30,7 @@ namespace StoicGoose
 
 		public static string InternalDataPath { get; } = string.Empty;
 		public static string SaveDataPath { get; } = string.Empty;
+		public static string CheatsDataPath { get; } = string.Empty;
 		public static string DebuggingDataPath { get; } = string.Empty;
 
 		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -42,6 +44,7 @@ namespace StoicGoose
 
 			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+			Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 
 			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))

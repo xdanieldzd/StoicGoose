@@ -101,6 +101,7 @@ namespace StoicGoose
 		{
 			SaveInternalEeprom();
 			SaveRam();
+			SaveCheatList();
 
 			emulatorHandler.Shutdown();
 
@@ -397,6 +398,7 @@ namespace StoicGoose
 			{
 				SaveInternalEeprom();
 				SaveRam();
+				SaveCheatList();
 
 				emulatorHandler.Shutdown();
 			}
@@ -413,6 +415,7 @@ namespace StoicGoose
 			CreateRecentFilesMenu();
 
 			LoadRam();
+			LoadCheatList();
 
 			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
@@ -437,6 +440,12 @@ namespace StoicGoose
 				emulatorHandler.Machine.LoadSaveData(data);
 		}
 
+		private void LoadCheatList()
+		{
+			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+			emulatorHandler.Machine.LoadCheatList(File.Exists(path) ? path.DeserializeFromFile<List<MachineCommon.Cheat>>() : new List<MachineCommon.Cheat>());
+		}
+
 		private void SaveRam()
 		{
 			var data = emulatorHandler.Machine.GetSaveData();
@@ -446,6 +455,15 @@ namespace StoicGoose
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
+		}
+
+		private void SaveCheatList()
+		{
+			var data = emulatorHandler.Machine.GetCheatList();
+			if (data.Count == 0) return;
+
+			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+			data.SerializeToFile(path);
 		}
 
 		private void SaveInternalEeprom()
@@ -481,6 +499,7 @@ namespace StoicGoose
 		{
 			SaveInternalEeprom();
 			SaveRam();
+			SaveCheatList();
 
 			emulatorHandler.Reset();
 
