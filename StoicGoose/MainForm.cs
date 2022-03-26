@@ -56,6 +56,7 @@ namespace StoicGoose
 				Console.SetOut(logWindow.TextWriter);
 				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
+				Console.WriteLine("----------------------------------------");
 			}
 
 			if (GlobalVariables.EnableOpenGLDebug)
@@ -81,7 +82,7 @@ namespace StoicGoose
 
 			InitializeUIMiscellanea();
 
-			if (GlobalVariables.IsDebugBuild)
+			if (GlobalVariables.IsDebugBuild && GlobalVariables.EnableSuperVerbosity)
 			{
 				Console.WriteLine($"~ {Ansi.Cyan}Global variables{Ansi.Reset} ~");
 				foreach (var var in GlobalVariables.Dump()) Console.WriteLine($" {var}");
@@ -96,6 +97,29 @@ namespace StoicGoose
 				Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
 				Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
 				Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
+			}
+
+			if (GlobalVariables.IsAuthorsMachine)
+			{
+				Console.WriteLine();
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.White}########################################");
+				Console.WriteLine($"{Ansi.White}########################################");
+				Console.WriteLine($"{Ansi.White}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.Magenta}########################################");
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine($"{Ansi.Cyan}########################################");
+				Console.WriteLine();
+				Console.WriteLine($"Ze goose sez: {Ansi.Cyan}TRANS {Ansi.Magenta}RIGHTS {Ansi.White}ARE {Ansi.Magenta}HUMAN {Ansi.Cyan}RIGHTS{Ansi.Reset}!");
+				Console.WriteLine();
 			}
 
 			if (GlobalVariables.EnableAutostartLastRom)

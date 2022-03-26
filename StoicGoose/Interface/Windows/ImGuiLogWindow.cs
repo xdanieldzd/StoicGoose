@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using ImGuiNET;
@@ -21,6 +22,11 @@ namespace StoicGoose.Interface.Windows
 		readonly static uint defaultTextColor = GetColor(255, 255, 255);
 		readonly static uint filterHighlightTextColor = GetColor(13, 188, 121);
 
+		readonly ImGuiListClipper clipperObject = default;
+		readonly GCHandle clipperHandle = default;
+		readonly IntPtr clipperPointer = IntPtr.Zero;
+		readonly ImGuiListClipperPtr clipper = default;
+
 		readonly LogWriter logWriter = default;
 
 		readonly List<string> messageList = new();
@@ -31,7 +37,20 @@ namespace StoicGoose.Interface.Windows
 
 		public TextWriter TextWriter => logWriter;
 
-		public ImGuiLogWindow() : base("Log", new NumericsVector2(450f, 500f), ImGuiCond.FirstUseEver) => logWriter = new(this);
+		public ImGuiLogWindow() : base("Log", new NumericsVector2(450f, 500f), ImGuiCond.FirstUseEver)
+		{
+			clipperObject = new ImGuiListClipper();
+			clipperHandle = GCHandle.Alloc(clipperObject, GCHandleType.Pinned);
+			clipperPointer = clipperHandle.AddrOfPinnedObject();
+			clipper = new ImGuiListClipperPtr(clipperPointer);
+
+			logWriter = new(this);
+		}
+
+		~ImGuiLogWindow()
+		{
+			clipperHandle.Free();
+		}
 
 		private void Write(char value)
 		{
@@ -83,90 +102,49 @@ namespace StoicGoose.Interface.Windows
 					{
 						var validLines = messageList.Where(x => x.Contains(filterString)).ToArray();
 
-						for (var i = 0; i < validLines.Length; i++)
+						clipper.Begin(validLines.Length);
+						while (clipper.Step())
 						{
-							var line = validLines[i];
-
-							// TODO: proper final byte detection?
-							int escStartIdx;
-							while ((escStartIdx = line.IndexOf('\x1B')) != -1)
+							for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 							{
-								var escEndIdx = line.IndexOf('m', escStartIdx);
-								if (escEndIdx != -1) line = line.Remove(escStartIdx, escEndIdx - escStartIdx + 1);
-							}
+								var line = validLines[i];
 
-							var matches = line.IndexOfAll(filterString).Select(x => (start: x, end: x + filterString.Length)).ToArray();
-							var currentMatch = 0;
-
-							var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
-							var bufferOffset = NumericsVector2.Zero;
-
-							for (var j = 0; j < line.Length; j++)
-							{
-								var ch = line[j];
-
-								var insideMatch = currentMatch >= 0 && currentMatch < matches.Length &&
-									j >= matches[currentMatch].start && j < matches[currentMatch].end;
-
-								var color = insideMatch ? filterHighlightTextColor : defaultTextColor;
-
-								if ((color != prevColor || ch == '\t') && lineBuffer.Length != 0)
+								// TODO: proper final byte detection?
+								int escStartIdx;
+								while ((escStartIdx = line.IndexOf('\x1B')) != -1)
 								{
-									var substring = lineBuffer.ToString();
-									drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
-									bufferOffset.X += ImGui.CalcTextSize(substring).X;
-
-									lineBuffer.Clear();
+									var escEndIdx = line.IndexOf('m', escStartIdx);
+									if (escEndIdx != -1) line = line.Remove(escStartIdx, escEndIdx - escStartIdx + 1);
 								}
-								prevColor = color;
 
-								if (ch == '\t')
-									textScreenPos.X += 1f + (float)Math.Floor((1f + bufferOffset.X) / (4f * fontSize)) * (4f * fontSize);
-								else
-									lineBuffer.Append(ch);
+								var matches = line.IndexOfAll(filterString).Select(x => (start: x, end: x + filterString.Length)).ToArray();
+								var currentMatch = 0;
 
-								if (lineBuffer.ToString() == filterString)
-									currentMatch++;
-							}
+								var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
+								var bufferOffset = NumericsVector2.Zero;
 
-							if (lineBuffer.Length != 0)
-							{
-								drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
-								lineBuffer.Clear();
-							}
-						}
-					}
-					else
-					{
-						for (var i = 0; i < messageList.Count; i++)
-						{
-							var line = messageList[i];
-
-							var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
-							var bufferOffset = NumericsVector2.Zero;
-
-							var color = defaultTextColor;
-
-							for (var j = 0; j < messageList[i].Length; j++)
-							{
-								if (j + 1 < messageList[i].Length && line[j] == '\x1B' && line[j + 1] == '[')
-								{
-									// TODO: proper final byte detection?
-									var escEndIdx = line.IndexOf('m', j);
-									if (escEndIdx != -1)
-									{
-										(color, _) = ParseEscSequence(line[j..(escEndIdx + 1)]);
-										j = escEndIdx;
-									}
-								}
-								else
+								for (var j = 0; j < line.Length; j++)
 								{
 									var ch = line[j];
+
+									var insideMatch = currentMatch >= 0 && currentMatch < matches.Length &&
+										j >= matches[currentMatch].start && j < matches[currentMatch].end;
+
+									var color = insideMatch ? filterHighlightTextColor : defaultTextColor;
 
 									if ((color != prevColor || ch == '\t') && lineBuffer.Length != 0)
 									{
 										var substring = lineBuffer.ToString();
-										drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
+
+										//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
+										ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
+										ImGui.TextColored(new System.Numerics.Vector4(
+											((prevColor >> 0) & 0xFF) / 255f,
+											((prevColor >> 8) & 0xFF) / 255f,
+											((prevColor >> 16) & 0xFF) / 255f,
+											((prevColor >> 24) & 0xFF) / 255f),
+											substring);
+
 										bufferOffset.X += ImGui.CalcTextSize(substring).X;
 
 										lineBuffer.Clear();
@@ -177,15 +155,100 @@ namespace StoicGoose.Interface.Windows
 										textScreenPos.X += 1f + (float)Math.Floor((1f + bufferOffset.X) / (4f * fontSize)) * (4f * fontSize);
 									else
 										lineBuffer.Append(ch);
+
+									if (lineBuffer.ToString() == filterString)
+										currentMatch++;
+								}
+
+								if (lineBuffer.Length != 0)
+								{
+									//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
+									ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
+									ImGui.TextColored(new System.Numerics.Vector4(
+										((prevColor >> 0) & 0xFF) / 255f,
+										((prevColor >> 8) & 0xFF) / 255f,
+										((prevColor >> 16) & 0xFF) / 255f,
+										((prevColor >> 24) & 0xFF) / 255f),
+										lineBuffer.ToString());
+
+									lineBuffer.Clear();
 								}
 							}
-
-							if (lineBuffer.Length != 0)
+						}
+						clipper.End();
+					}
+					else
+					{
+						clipper.Begin(messageList.Count);
+						while (clipper.Step())
+						{
+							for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 							{
-								drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
-								lineBuffer.Clear();
+								var line = messageList[i];
+
+								var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
+								var bufferOffset = NumericsVector2.Zero;
+
+								var color = defaultTextColor;
+
+								for (var j = 0; j < messageList[i].Length; j++)
+								{
+									if (j + 1 < messageList[i].Length && line[j] == '\x1B' && line[j + 1] == '[')
+									{
+										// TODO: proper final byte detection?
+										var escEndIdx = line.IndexOf('m', j);
+										if (escEndIdx != -1)
+										{
+											(color, _) = ParseEscSequence(line[j..(escEndIdx + 1)]);
+											j = escEndIdx;
+										}
+									}
+									else
+									{
+										var ch = line[j];
+
+										if ((color != prevColor || ch == '\t') && lineBuffer.Length != 0)
+										{
+											var substring = lineBuffer.ToString();
+
+											//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
+											ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
+											ImGui.TextColored(new System.Numerics.Vector4(
+												((prevColor >> 0) & 0xFF) / 255f,
+												((prevColor >> 8) & 0xFF) / 255f,
+												((prevColor >> 16) & 0xFF) / 255f,
+												((prevColor >> 24) & 0xFF) / 255f),
+												substring);
+
+											bufferOffset.X += ImGui.CalcTextSize(substring).X;
+
+											lineBuffer.Clear();
+										}
+										prevColor = color;
+
+										if (ch == '\t')
+											textScreenPos.X += 1f + (float)Math.Floor((1f + bufferOffset.X) / (4f * fontSize)) * (4f * fontSize);
+										else
+											lineBuffer.Append(ch);
+									}
+								}
+
+								if (lineBuffer.Length != 0)
+								{
+									//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
+									ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
+									ImGui.TextColored(new System.Numerics.Vector4(
+										((prevColor >> 0) & 0xFF) / 255f,
+										((prevColor >> 8) & 0xFF) / 255f,
+										((prevColor >> 16) & 0xFF) / 255f,
+										((prevColor >> 24) & 0xFF) / 255f),
+										lineBuffer.ToString());
+
+									lineBuffer.Clear();
+								}
 							}
 						}
+						clipper.End();
 					}
 
 					ImGui.PopStyleVar();
