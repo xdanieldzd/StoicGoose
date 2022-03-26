@@ -19,6 +19,8 @@ using StoicGoose.Handlers;
 using StoicGoose.Interface.Windows;
 using StoicGoose.OpenGL;
 
+using CartridgeMetadata = StoicGoose.Emulation.Cartridges.Metadata;
+
 namespace StoicGoose
 {
 	public partial class MainForm : Form
@@ -160,20 +162,20 @@ namespace StoicGoose
 				imGuiHandler.EndFrame();
 			};
 
-			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata["machine/eeprom/filename"]);
+			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata.InternalEepromFilename);
 		}
 
 		private void VerifyConfiguration()
 		{
 			var metadata = emulatorHandler.Machine.Metadata;
 
-			foreach (var button in metadata["machine/input/controls"].StringArray)
+			foreach (var button in metadata.GameControls.Split(','))
 			{
 				if (!Program.Configuration.Input.GameControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.GameControls[button]))
 					Program.Configuration.Input.GameControls[button] = string.Empty;
 			}
 
-			foreach (var button in metadata["machine/input/hardware"].StringArray)
+			foreach (var button in metadata.HardwareControls.Split(','))
 			{
 				if (!Program.Configuration.Input.SystemControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.SystemControls[button]))
 					Program.Configuration.Input.SystemControls[button] = string.Empty;
@@ -204,11 +206,11 @@ namespace StoicGoose
 
 		private Size CalculateRequiredClientSize(int screenSize)
 		{
-			if (graphicsHandler == null)
+			if (emulatorHandler == null || graphicsHandler == null)
 				return ClientSize;
 
-			var screenWidth = graphicsHandler.ScreenSize.X;
-			var screenHeight = graphicsHandler.ScreenSize.Y + emulatorHandler.Machine.Metadata["interface/icons/size"].Integer;
+			var screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.X;
+			var screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.Y + emulatorHandler.Machine.Metadata.StatusIconSize;
 
 			if (!isVerticalOrientation)
 				return new Size(
@@ -226,15 +228,13 @@ namespace StoicGoose
 
 			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
-			var metadata = emulatorHandler.Machine.Metadata;
-			var cartridgeId = metadata.GetValueOrDefault("cartridge/id");
-
+			var cartridgeId = emulatorHandler.Machine.Cartridge.Metadata?.GameIdString;
 			if (cartridgeId != null)
 			{
 				titleStringBuilder.Append($" - [{Path.GetFileName(Program.Configuration.General.RecentFiles.First())}]");
 
 				var statusStringBuilder = new StringBuilder();
-				statusStringBuilder.Append($"Emulating {metadata["machine/description/manufacturer"]} {metadata["machine/description/model"]}, ");
+				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Metadata.Manufacturer} {emulatorHandler.Machine.Metadata.Model}, ");
 				statusStringBuilder.Append($"playing {cartridgeId}");
 
 				tsslStatus.Text = statusStringBuilder.ToString();
@@ -367,7 +367,7 @@ namespace StoicGoose
 			CreateDataBinding(muteSoundToolStripMenuItem.DataBindings, nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute));
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
-			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
+			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata.RomFileFilter}|All Files (*.*)|*.*";
 		}
 
 		private void LoadBootstrap(string filename)
@@ -412,7 +412,7 @@ namespace StoicGoose
 			emulatorHandler.Machine.LoadRom(data);
 
 			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				emulatorHandler.Machine.Metadata.GetValueOrDefault("cartridge/orientation") == "vertical";
+				emulatorHandler.Machine.Cartridge.Metadata.Orientation == CartridgeMetadata.Orientations.Vertical;
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();

@@ -76,7 +76,7 @@ namespace StoicGoose.Emulation
 		private void ThreadMainLoop()
 		{
 			var stopWatch = Stopwatch.StartNew();
-			var interval = 1000.0 / Machine.GetRefreshRate();
+			var interval = 1000.0 / Machine.Metadata.RefreshRate;
 			var lastTime = 0.0;
 
 			while (true)

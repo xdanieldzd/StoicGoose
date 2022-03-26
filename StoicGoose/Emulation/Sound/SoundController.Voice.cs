@@ -1,6 +1,6 @@
 ﻿namespace StoicGoose.Emulation.Sound
 {
-	public sealed partial class SoundController
+	public partial class SoundController
 	{
 		public sealed class Voice : Wave
 		{

@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using StoicGoose.DataStorage;
+using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.OpenGL;
 using StoicGoose.OpenGL.Shaders;
@@ -39,7 +38,7 @@ namespace StoicGoose.Handlers
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
 		readonly static int maxTextureSamplerCount = 8;
 
-		readonly Dictionary<string, ObjectValue> metadata = default;
+		readonly MetadataBase metadata = default;
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
@@ -72,16 +71,13 @@ namespace StoicGoose.Handlers
 
 		Vector2 displayPosition = default, displaySize = default;
 
-		public Vector2i ScreenSize { get; private set; } = Vector2i.Zero;
 		public bool IsVerticalOrientation { get; set; } = false;
 
 		public List<string> AvailableShaders { get; private set; } = default;
 
-		public GraphicsHandler(Dictionary<string, ObjectValue> metadata)
+		public GraphicsHandler(MetadataBase metadata)
 		{
 			this.metadata = metadata;
-
-			ScreenSize = new Vector2i(metadata["machine/display/width"].Integer, metadata["machine/display/height"].Integer);
 
 			AvailableShaders = EnumerateShaders();
 
@@ -120,9 +116,9 @@ namespace StoicGoose.Handlers
 
 		private void ParseSystemIcons()
 		{
-			foreach (var name in metadata.KeyMatchesWildcard("interface/icons/*/resource").Select(x => x.Key.Split('/')[2]).Distinct())
+			foreach (var (name, (filename, _)) in metadata.StatusIcons)
 			{
-				iconTextures.Add(name, new Texture(GetEmbeddedSystemIcon(metadata[$"interface/icons/{name}/resource"]), TextureMinFilter.Linear, TextureMagFilter.Linear));
+				iconTextures.Add(name, new Texture(GetEmbeddedSystemIcon(filename), TextureMinFilter.Linear, TextureMagFilter.Linear));
 				iconModelviewMatrices.Add(name, new Matrix4Uniform(defaultModelviewMatrixName));
 			}
 		}
@@ -211,7 +207,7 @@ namespace StoicGoose.Handlers
 
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
-				displayTextures[i] = new Texture(ScreenSize.X, ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+				displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 
@@ -253,12 +249,10 @@ namespace StoicGoose.Handlers
 
 		public void Resize(Rectangle clientRect)
 		{
-			var screenIconSize = metadata["interface/icons/size"].Integer;
-
 			GL.Viewport(clientRect);
 
-			var screenWidth = IsVerticalOrientation ? (ScreenSize.Y + screenIconSize) : ScreenSize.X;
-			var screenHeight = IsVerticalOrientation ? ScreenSize.X : (ScreenSize.Y + screenIconSize);
+			var screenWidth = IsVerticalOrientation ? (metadata.ScreenSize.Y + metadata.StatusIconSize) : metadata.ScreenSize.X;
+			var screenHeight = IsVerticalOrientation ? metadata.ScreenSize.X : (metadata.ScreenSize.Y + metadata.StatusIconSize);
 
 			var aspects = new Vector2(clientRect.Width / (float)screenWidth, clientRect.Height / (float)screenHeight);
 			var multiplier = (float)Math.Max(1, Math.Min(Math.Floor(aspects.X), Math.Floor(aspects.Y)));
@@ -268,15 +262,15 @@ namespace StoicGoose.Handlers
 			var adjustedX = (float)Math.Floor((clientRect.Width - adjustedWidth) / 2f);
 			var adjustedY = (float)Math.Floor((clientRect.Height - adjustedHeight) / 2f);
 
-			if (!IsVerticalOrientation) adjustedHeight -= screenIconSize * multiplier;
-			else adjustedWidth -= screenIconSize * multiplier;
+			if (!IsVerticalOrientation) adjustedHeight -= metadata.StatusIconSize * multiplier;
+			else adjustedWidth -= metadata.StatusIconSize * multiplier;
 
 			displayPosition = new Vector2(adjustedX, adjustedY);
 			displaySize = new Vector2(adjustedWidth, adjustedHeight);
 
 			foreach (var (icon, _) in iconTextures)
 			{
-				var iconLocation = metadata[$"interface/icons/{icon}/location"].Point;
+				var iconLocation = metadata.StatusIcons[icon].location;
 
 				float x, y;
 
@@ -288,11 +282,11 @@ namespace StoicGoose.Handlers
 				else
 				{
 					x = adjustedX + (iconLocation.Y * multiplier);
-					y = adjustedY + ((-iconLocation.X + screenHeight - screenIconSize) * multiplier);
+					y = adjustedY + ((-iconLocation.X + screenHeight - metadata.StatusIconSize) * multiplier);
 				}
 
 				iconModelviewMatrices[icon].Value =
-					Matrix4.CreateScale(screenIconSize * multiplier, screenIconSize * multiplier, 1f) *
+					Matrix4.CreateScale(metadata.StatusIconSize * multiplier, metadata.StatusIconSize * multiplier, 1f) *
 					Matrix4.CreateTranslation(x, y, 0f);
 			}
 
@@ -305,18 +299,18 @@ namespace StoicGoose.Handlers
 			if (!IsVerticalOrientation)
 			{
 				iconBackgroundModelviewMatrix.Value =
-					Matrix4.CreateScale(adjustedWidth, screenIconSize * multiplier, 1f) *
+					Matrix4.CreateScale(adjustedWidth, metadata.StatusIconSize * multiplier, 1f) *
 					Matrix4.CreateTranslation(adjustedX, adjustedY + adjustedHeight, -0.5f);
 			}
 			else
 			{
 				iconBackgroundModelviewMatrix.Value =
-					Matrix4.CreateScale(screenIconSize * multiplier, adjustedHeight, 1f) *
+					Matrix4.CreateScale(metadata.StatusIconSize * multiplier, adjustedHeight, 1f) *
 					Matrix4.CreateTranslation(adjustedX + adjustedWidth, adjustedY, -0.5f);
 			}
 
 			outputViewport.Value = new Vector4(adjustedX, adjustedY, adjustedWidth, adjustedHeight);
-			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? ScreenSize.Y : ScreenSize.X, IsVerticalOrientation ? ScreenSize.X : ScreenSize.Y);
+			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? metadata.ScreenSize.Y : metadata.ScreenSize.X, IsVerticalOrientation ? metadata.ScreenSize.X : metadata.ScreenSize.Y);
 		}
 
 		public void DrawFrame()
@@ -353,7 +347,7 @@ namespace StoicGoose.Handlers
 			iconBackgroundTexture.Bind();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
-			var activeIcons = metadata.GetValueOrDefault("machine/display/icons/active")?.StringArray;
+			var activeIcons = metadata.IsStatusIconActive.Where(x => x.Value).Select(x => x.Key);
 			if (activeIcons != null)
 			{
 				foreach (var icon in activeIcons)

@@ -25,6 +25,8 @@ namespace StoicGoose.Emulation.Machines
 
 		public WonderSwan() : base()
 		{
+			Metadata = new WonderSwanMetadata();
+
 			machineWindow.IsWindowOpen = true;
 			displayWindow.IsWindowOpen = false;
 		}
@@ -94,6 +96,24 @@ namespace StoicGoose.Emulation.Machines
 
 			displayWindow.Draw(new object[] { DisplayController });
 			machineWindow.Draw(new object[] { this });
+		}
+
+		public override void UpdateStatusIcons()
+		{
+			Metadata.IsStatusIconActive["power"] = true;
+			Metadata.IsStatusIconActive["initialized"] = BuiltInSelfTestOk;
+
+			Metadata.IsStatusIconActive["sleep"] = DisplayController.IconSleep;
+			Metadata.IsStatusIconActive["vertical"] = DisplayController.IconVertical;
+			Metadata.IsStatusIconActive["horizontal"] = DisplayController.IconHorizontal;
+			Metadata.IsStatusIconActive["aux1"] = DisplayController.IconAux1;
+			Metadata.IsStatusIconActive["aux2"] = DisplayController.IconAux2;
+			Metadata.IsStatusIconActive["aux3"] = DisplayController.IconAux3;
+
+			Metadata.IsStatusIconActive["headphones"] = SoundController.HeadphonesConnected;
+			Metadata.IsStatusIconActive["volume0"] = SoundController.MasterVolume == 0;
+			Metadata.IsStatusIconActive["volume1"] = SoundController.MasterVolume == 1;
+			Metadata.IsStatusIconActive["volume2"] = SoundController.MasterVolume == 2;
 		}
 
 		public override byte ReadRegister(ushort register)

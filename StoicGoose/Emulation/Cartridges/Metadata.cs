@@ -10,6 +10,20 @@ namespace StoicGoose.Emulation.Cartridges
 			WonderSwanColor = 0x01
 		}
 
+		public enum RomSizes : byte
+		{
+			Rom1Mbit = 0x00,     // ???
+			Rom2Mbit = 0x01,     // ???
+			Rom4Mbit = 0x02,
+			Rom8Mbit = 0x03,
+			Rom16Mbit = 0x04,
+			Rom24Mbit = 0x05,
+			Rom32Mbit = 0x06,
+			Rom48Mbit = 0x07,
+			Rom64Mbit = 0x08,
+			Rom128Mbit = 0x09
+		}
+
 		public enum SaveTypes : byte
 		{
 			None = 0x00,
@@ -106,10 +120,10 @@ namespace StoicGoose.Emulation.Cartridges
 		public SystemTypes SystemType { get; private set; }
 		public byte GameId { get; private set; }
 		public byte GameRevision { get; private set; }
-		public byte RomSize { get; private set; }
+		public RomSizes RomSize { get; private set; }
 		public SaveTypes SaveType { get; private set; }
 		public byte MiscFlags { get; private set; }
-		public byte RtcPresent { get; private set; }
+		public byte RtcPresentFlag { get; private set; }
 		public ushort Checksum { get; private set; }
 
 		public string PublisherCode => publishers.ContainsKey(PublisherId) ? publishers[PublisherId].code : "---";
@@ -130,6 +144,8 @@ namespace StoicGoose.Emulation.Cartridges
 		public bool IsEepromSave =>
 			SaveType == SaveTypes.Eeprom1Kbit || SaveType == SaveTypes.Eeprom16Kbit || SaveType == SaveTypes.Eeprom8Kbit;
 
+		public bool IsRtcPresent => RtcPresentFlag != 0;
+
 		public Metadata(byte[] data)
 		{
 			var offset = data.Length - 10;
@@ -137,10 +153,10 @@ namespace StoicGoose.Emulation.Cartridges
 			SystemType = (SystemTypes)data[offset + 1];
 			GameId = data[offset + 2];
 			GameRevision = data[offset + 3];
-			RomSize = data[offset + 4];
+			RomSize = (RomSizes)data[offset + 4];
 			SaveType = (SaveTypes)data[offset + 5];
 			MiscFlags = data[offset + 6];
-			RtcPresent = data[offset + 7];
+			RtcPresentFlag = data[offset + 7];
 			Checksum = (ushort)(data[offset + 8] << 8 | data[offset + 9]);
 		}
 	}

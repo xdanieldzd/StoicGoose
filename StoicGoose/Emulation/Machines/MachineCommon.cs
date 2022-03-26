@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Collections.Generic;
 
-using StoicGoose.DataStorage;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
@@ -119,7 +118,7 @@ namespace StoicGoose.Emulation.Machines
 
 		// TODO: decide on accessibility & setting
 
-		public Dictionary<string, ObjectValue> Metadata { get; } = new();
+		public MetadataBase Metadata { get; protected set; } = default;
 
 		protected Cheat[] cheats = new Cheat[512];
 
@@ -128,9 +127,6 @@ namespace StoicGoose.Emulation.Machines
 
 		public MachineCommon()
 		{
-			FillMetadata();
-
-
 			// TODO: remove these
 
 			cpuWindow.IsWindowOpen = false;
@@ -140,9 +136,6 @@ namespace StoicGoose.Emulation.Machines
 			//cheats[0] = new() { Description = "Infinite lives", Address = 0xC983, Value = 5 };
 			//cheats[1] = new() { Description = "Infinite air", Address = 0xC986, Value = 100 };
 		}
-
-		protected abstract void FillMetadata();
-		public abstract void UpdateMetadata();
 
 		public abstract void Initialize();
 
@@ -242,7 +235,7 @@ namespace StoicGoose.Emulation.Machines
 
 			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
 
-			UpdateMetadata();
+			UpdateStatusIcons();
 
 			OnEndOfFrame(EventArgs.Empty);
 		}
@@ -274,17 +267,27 @@ namespace StoicGoose.Emulation.Machines
 		{
 			Cartridge.LoadRom(data);
 
-			Metadata["cartridge/id"] = Cartridge.Metadata.GameIdString;
-			Metadata["cartridge/publisher"] = Cartridge.Metadata.PublisherName;
-			Metadata["cartridge/orientation"] = Cartridge.Metadata.Orientation.ToString().ToLowerInvariant();
-			Metadata["cartridge/savetype"] = Cartridge.Metadata.IsSramSave ? "sram" : (Cartridge.Metadata.IsEepromSave ? "eeprom" : "none");
+			Console.WriteLine("ROM loaded -- cart metadata");
+			Console.WriteLine($" Publisher ID: {Cartridge.Metadata.PublisherCode}, {Cartridge.Metadata.PublisherName} [0x{Cartridge.Metadata.PublisherId:X2}]");
+			Console.WriteLine($" System type: {Cartridge.Metadata.SystemType}");
+			Console.WriteLine($" Game ID: 0x{Cartridge.Metadata.GameId:X2}");
+			Console.WriteLine($"  Calculated ID string: {Cartridge.Metadata.GameIdString}");
+			Console.WriteLine($" Game revision: 0x{Cartridge.Metadata.GameRevision:X2}");
+			Console.WriteLine($" ROM size: {Cartridge.Metadata.RomSize} [0x{(byte)Cartridge.Metadata.RomSize:X2}]");
+			Console.WriteLine($" Save type/size: {Cartridge.Metadata.SaveType}/{Cartridge.Metadata.SaveSize} [0x{(byte)Cartridge.Metadata.SaveType:X2}]");
+			Console.WriteLine($" Misc flags: 0x{Cartridge.Metadata.MiscFlags:X2}");
+			Console.WriteLine($"  Orientation: {Cartridge.Metadata.Orientation}");
+			Console.WriteLine($"  ROM bus width: {Cartridge.Metadata.RomBusWidth}");
+			Console.WriteLine($"  ROM access speed: {Cartridge.Metadata.RomAccessSpeed}");
+			Console.WriteLine($" RTC present: {Cartridge.Metadata.IsRtcPresent} [0x{Cartridge.Metadata.RtcPresentFlag:X2}]");
+			Console.WriteLine($" Checksum: 0x{Cartridge.Metadata.Checksum:X4}");
 		}
 
 		public void LoadSaveData(byte[] data)
 		{
-			if (Metadata.GetValueOrDefault("cartridge/savetype") == "sram")
+			if (Cartridge.Metadata.IsSramSave)
 				Cartridge.LoadSram(data);
-			else if (Metadata.GetValueOrDefault("cartridge/savetype") == "eeprom")
+			else if (Cartridge.Metadata.IsEepromSave)
 				Cartridge.LoadEeprom(data);
 		}
 
@@ -301,9 +304,9 @@ namespace StoicGoose.Emulation.Machines
 
 		public byte[] GetSaveData()
 		{
-			if (Metadata.GetValueOrDefault("cartridge/savetype") == "sram")
+			if (Cartridge.Metadata.IsSramSave)
 				return Cartridge.GetSram();
-			else if (Metadata.GetValueOrDefault("cartridge/savetype") == "eeprom")
+			else if (Cartridge.Metadata.IsEepromSave)
 				return Cartridge.GetEeprom();
 
 			return Array.Empty<byte>();
@@ -312,16 +315,6 @@ namespace StoicGoose.Emulation.Machines
 		public List<Cheat> GetCheatList()
 		{
 			return cheats.Where(x => x != null).ToList();
-		}
-
-		public (int w, int h) GetScreenSize()
-		{
-			return (DisplayControllerCommon.ScreenWidth, DisplayControllerCommon.ScreenHeight);
-		}
-
-		public double GetRefreshRate()
-		{
-			return DisplayControllerCommon.VerticalClock;
 		}
 
 		public void BeginTraceLog(string filename)
@@ -339,6 +332,8 @@ namespace StoicGoose.Emulation.Machines
 			cpuWindow.Draw(new object[] { Cpu });
 			cheatsWindow.Draw(new object[] { cheats });
 		}
+
+		public abstract void UpdateStatusIcons();
 
 		public byte ReadMemory(uint address)
 		{

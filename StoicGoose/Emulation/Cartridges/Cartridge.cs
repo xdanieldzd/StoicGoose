@@ -74,7 +74,7 @@ namespace StoicGoose.Emulation.Cartridges
 				}
 			}
 
-			if (metadata.RtcPresent != 0)
+			if (metadata.IsRtcPresent)
 			{
 				// NOTE: "RTC present" flag is not entirely consistent; ex. Digimon Tamers Battle Spirit has the flag, but does not have an RTC
 				rtc = new RTC();

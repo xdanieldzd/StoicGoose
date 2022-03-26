@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using StoicGoose.DataStorage;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
@@ -13,7 +12,7 @@ namespace StoicGoose.Emulation.Machines
 {
 	public interface IMachine
 	{
-		Dictionary<string, ObjectValue> Metadata { get; }
+		MetadataBase Metadata { get; }
 
 		event EventHandler<PollInputEventArgs> PollInput;
 		event EventHandler<StartOfFrameEventArgs> StartOfFrame;
@@ -43,9 +42,6 @@ namespace StoicGoose.Emulation.Machines
 		byte[] GetInternalEeprom();
 		byte[] GetSaveData();
 		List<MachineCommon.Cheat> GetCheatList();
-
-		(int w, int h) GetScreenSize();
-		double GetRefreshRate();
 
 		byte ReadMemory(uint address);
 		void WriteMemory(uint address, byte value);

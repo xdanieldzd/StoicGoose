@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 
 using StoicGoose.Emulation.Machines;
+using StoicGoose.Interface.Attributes;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Sound
 {
-	public sealed partial class SoundController : IComponent
+	public partial class SoundController : IComponent
 	{
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
 
@@ -28,7 +29,9 @@ namespace StoicGoose.Emulation.Sound
 		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
 		int cycleCount;
 
-		int masterVolume, masterVolumeChange;
+		public int MasterVolume { get; protected set; } = 0;
+
+		int masterVolumeChange;
 
 		public delegate byte MemoryReadDelegate(uint address);
 		readonly MemoryReadDelegate memoryReadDelegate;
@@ -39,8 +42,13 @@ namespace StoicGoose.Emulation.Sound
 		byte waveTableBase;
 		/* REG_SND_OUTPUT */
 		bool speakerEnable, headphoneEnable;
-		bool headphonesConnected; // read-only
+
+		[ImGuiRegister(0x091, "REG_SND_OUTPUT")]
+		[ImGuiBitDescription("Are headphones connected?", 7)]
+		public bool HeadphonesConnected { get; protected set; } = false; // read-only
+
 		byte speakerVolumeShift;
+
 		/* REG_SND_9697 */
 		ushort unknown9697;
 		/* REG_SND_9899 */
@@ -79,7 +87,7 @@ namespace StoicGoose.Emulation.Sound
 
 			FlushSamples();
 
-			masterVolume = maxMasterVolume;
+			MasterVolume = maxMasterVolume;
 			masterVolumeChange = -1;
 
 			ResetRegisters();
@@ -89,7 +97,7 @@ namespace StoicGoose.Emulation.Sound
 		{
 			waveTableBase = 0;
 			speakerEnable = headphoneEnable = false;
-			headphonesConnected = true; // for stereo sound
+			HeadphonesConnected = true; // for stereo sound
 			speakerVolumeShift = 0;
 
 			unknown9697 = 0;
@@ -105,7 +113,7 @@ namespace StoicGoose.Emulation.Sound
 		{
 			if (masterVolumeChange != -1) return;
 
-			masterVolumeChange = masterVolume - 1;
+			masterVolumeChange = MasterVolume - 1;
 			if (masterVolumeChange < 0) masterVolumeChange = maxMasterVolume;
 		}
 
@@ -132,7 +140,7 @@ namespace StoicGoose.Emulation.Sound
 
 				if (masterVolumeChange != -1)
 				{
-					masterVolume = masterVolumeChange;
+					MasterVolume = masterVolumeChange;
 					masterVolumeChange = -1;
 				}
 			}
@@ -154,28 +162,20 @@ namespace StoicGoose.Emulation.Sound
 			if (channels[3].Enable) mixedRight += channels[3].OutputRight;
 			mixedRight = (mixedRight & 0x07FF) << 4;
 
-			if (headphonesConnected && !headphoneEnable && !speakerEnable)
+			if (HeadphonesConnected && !headphoneEnable && !speakerEnable)
 				/* Headphones connected but neither headphones nor speaker enabled? Don't output sound */
 				mixedLeft = mixedRight = 0;
-			else if (!headphonesConnected)
+			else if (!HeadphonesConnected)
 				/* Otherwise, no headphones connected? Mix down to mono */
 				mixedLeft = mixedRight = (mixedLeft + mixedRight) / 2;
 
-			mixedSampleBuffer.Add((short)(mixedLeft * (masterVolume / 2.0)));
-			mixedSampleBuffer.Add((short)(mixedRight * (masterVolume / 2.0)));
+			mixedSampleBuffer.Add((short)(mixedLeft * (MasterVolume / 2.0)));
+			mixedSampleBuffer.Add((short)(mixedRight * (MasterVolume / 2.0)));
 		}
 
 		public void FlushSamples()
 		{
 			mixedSampleBuffer.Clear();
-		}
-
-		public List<string> GetActiveIcons()
-		{
-			var list = new List<string>();
-			if (headphonesConnected) list.Add("headphones");
-			list.Add($"volume{masterVolume}");
-			return list;
 		}
 
 		public byte ReadRegister(ushort register)
@@ -239,7 +239,7 @@ namespace StoicGoose.Emulation.Sound
 					/* REG_SND_OUTPUT */
 					ChangeBit(ref retVal, 0, speakerEnable);
 					ChangeBit(ref retVal, 3, headphoneEnable);
-					ChangeBit(ref retVal, 7, headphonesConnected);
+					ChangeBit(ref retVal, 7, HeadphonesConnected);
 					retVal |= (byte)((speakerVolumeShift & 0b11) << 1);
 					break;
 

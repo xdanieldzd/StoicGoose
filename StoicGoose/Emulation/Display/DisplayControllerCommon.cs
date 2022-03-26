@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using StoicGoose.Interface.Attributes;
 using StoicGoose.WinForms;
@@ -484,18 +483,6 @@ namespace StoicGoose.Emulation.Display
 			outputFramebuffer[outputAddress + 1] = g;
 			outputFramebuffer[outputAddress + 2] = r;
 			outputFramebuffer[outputAddress + 3] = 255;
-		}
-
-		public List<string> GetActiveIcons()
-		{
-			var list = new List<string>();
-			if (IconSleep) list.Add("sleep");
-			if (IconVertical) list.Add("vertical");
-			if (IconHorizontal) list.Add("horizontal");
-			if (IconAux1) list.Add("aux1");
-			if (IconAux2) list.Add("aux2");
-			if (IconAux3) list.Add("aux3");
-			return list;
 		}
 
 		public abstract byte ReadRegister(ushort register);
