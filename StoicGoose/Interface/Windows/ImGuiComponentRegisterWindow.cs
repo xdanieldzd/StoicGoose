@@ -2,38 +2,36 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 using ImGuiNET;
 
-using StoicGoose.Emulation.Display;
+using StoicGoose.Emulation;
+using StoicGoose.Interface.Attributes;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.Interface
+namespace StoicGoose.Interface.Windows
 {
-	public class ImGuiDisplayWindow<T> : ImGuiWindowBase where T : DisplayControllerCommon
+	public abstract class ImGuiComponentRegisterWindow<T> : ImGuiWindowBase where T : IComponent
 	{
 		const BindingFlags getPropBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
-		readonly static Dictionary<(ushort number, string name), List<RegisterParameterInformation>> displayRegisters = new();
+		readonly static Dictionary<(ushort number, string name), List<RegisterParameterInformation>> registers = new();
 
-		public ImGuiDisplayWindow() : base("Display Status", new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
+		public ImGuiComponentRegisterWindow(string title) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
 
-		static ImGuiDisplayWindow()
+		static ImGuiComponentRegisterWindow()
 		{
-			foreach (var propInfo in typeof(T).GetProperties(getPropBindingFlags))
+			foreach (var propInfo in typeof(T).GetProperties(getPropBindingFlags).Where(x => !x.GetGetMethod().IsAbstract))
 			{
 				if (propInfo.GetCustomAttribute<ImGuiRegisterAttribute>() is ImGuiRegisterAttribute regAttrib)
 				{
 					var key = (regAttrib.Number, regAttrib.Name);
-					if (!displayRegisters.ContainsKey(key))
-						displayRegisters.Add(key, new());
+					if (!registers.ContainsKey(key)) registers.Add(key, new());
 				}
 			}
 
-			foreach (var ((number, name), list) in displayRegisters)
+			foreach (var ((number, name), list) in registers)
 			{
 				foreach (var propInfo in typeof(T).GetProperties(getPropBindingFlags)
 					.Where(x => x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Number == number && x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Name == name)
@@ -45,7 +43,7 @@ namespace StoicGoose.Interface
 
 					list.Add(new RegisterParameterInformation()
 					{
-						Index = descAttrib.LowBit,
+						Index = descAttrib?.LowBit ?? 0,
 						Description = descAttrib != null ? $"{descAttrib.BitString}{descAttrib.Description}" : "<no description>",
 						FormatString = formatAttrib?.Format ?? string.Empty,
 						BitShift = formatAttrib?.Shift ?? 0,
@@ -57,11 +55,11 @@ namespace StoicGoose.Interface
 
 		protected override void DrawWindow(params object[] args)
 		{
-			if (args.Length != 1 || args[0] is not T display) return;
+			if (args.Length != 1 || args[0] is not T component) return;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
-				foreach (var ((number, name), list) in displayRegisters.OrderBy(x => x.Key.number))
+				foreach (var ((number, name), list) in registers.OrderBy(x => x.Key.number))
 				{
 					if (ImGui.CollapsingHeader($"0x{number:X3} -- {name}", ImGuiTreeNodeFlags.DefaultOpen))
 					{
@@ -69,7 +67,7 @@ namespace StoicGoose.Interface
 						{
 							foreach (var entry in list.OrderBy(x => x.Index))
 							{
-								var val = entry.PropInfo.GetValue(display);
+								var val = entry.PropInfo.GetValue(component);
 								if (val is bool valBool)
 									ImGui.Checkbox(entry.Description, ref valBool);
 								else if (!string.IsNullOrEmpty(entry.FormatString))

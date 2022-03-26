@@ -5,7 +5,7 @@ using ImGuiNET;
 using NumericsVector2 = System.Numerics.Vector2;
 using Cheat = StoicGoose.Emulation.Machines.MachineCommon.Cheat;
 
-namespace StoicGoose.Interface
+namespace StoicGoose.Interface.Windows
 {
 	public class ImGuiCheatWindow : ImGuiWindowBase
 	{

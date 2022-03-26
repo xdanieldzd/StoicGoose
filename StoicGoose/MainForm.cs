@@ -16,7 +16,7 @@ using StoicGoose.Emulation;
 using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
-using StoicGoose.Interface;
+using StoicGoose.Interface.Windows;
 using StoicGoose.OpenGL;
 
 namespace StoicGoose
@@ -36,9 +36,6 @@ namespace StoicGoose
 		InputHandler inputHandler = default;
 		ImGuiHandler imGuiHandler = default;
 		EmulatorHandler emulatorHandler = default;
-
-		/* Debugger stuff */
-		DebuggerMainForm debuggerMainForm = default;
 
 		/* Misc. runtime variables */
 		Type machineType = default;
@@ -81,8 +78,6 @@ namespace StoicGoose
 			CreateShaderMenu();
 
 			InitializeUIMiscellanea();
-
-			InitializeDebugger();
 
 			if (GlobalVariables.IsDebugBuild)
 			{
@@ -148,8 +143,8 @@ namespace StoicGoose
 
 			imGuiHandler = new ImGuiHandler(renderControl);
 
-			emulatorHandler.Machine.UpdateScreen += graphicsHandler.UpdateScreen;
-			emulatorHandler.Machine.EnqueueSamples += soundHandler.EnqueueSamples;
+			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
+			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
 			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
 			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
@@ -373,11 +368,6 @@ namespace StoicGoose
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
 			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata["interface/files/romfilter"]}|All Files (*.*)|*.*";
-		}
-
-		private void InitializeDebugger()
-		{
-			debuggerMainForm = new DebuggerMainForm(emulatorHandler, PauseEmulation, UnpauseEmulation, ResetEmulation);
 		}
 
 		private void LoadBootstrap(string filename)
@@ -606,7 +596,7 @@ namespace StoicGoose
 
 		private void openDebuggerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			debuggerMainForm.Show();
+			//
 		}
 
 		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)

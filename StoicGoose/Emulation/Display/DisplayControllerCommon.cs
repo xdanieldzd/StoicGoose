@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using StoicGoose.Interface;
+using StoicGoose.Interface.Attributes;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -224,9 +224,6 @@ namespace StoicGoose.Emulation.Display
 
 		protected bool isPackedMode => DisplayPackedFormatSet;
 		protected bool isPlanarMode => !DisplayPackedFormatSet;
-
-		public (bool Scr1Enable, bool Scr2Enable, bool SprEnable, bool SprWindowEnable, bool Scr2WindowDisplayOutside, bool Scr2WindowEnable) DispCtrl =>
-			(Scr1Enable, Scr2Enable, SprEnable, SprWindowEnable, Scr2WindowDisplayOutside, Scr2WindowEnable);
 
 		public DisplayControllerCommon(MemoryReadDelegate memoryRead)
 		{

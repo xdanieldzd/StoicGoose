@@ -5,7 +5,8 @@ using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
-using StoicGoose.Interface;
+using StoicGoose.Interface.Attributes;
+using StoicGoose.Interface.Windows;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -14,77 +15,85 @@ namespace StoicGoose.Emulation.Machines
 {
 	public partial class WonderSwan : MachineCommon
 	{
+		[ImGuiRegister(0x0B0, "REG_INT_BASE")]
+		[ImGuiBitDescription("Interrupt base address", 3, 7)]
+		[ImGuiFormat("X4", 0)]
+		public override byte InterruptBase { get; protected set; } = 0x00;
+
+		protected ImGuiMachineWindow<WonderSwan> machineWindow = new();
 		protected ImGuiDisplayWindow<AswanDisplayController> displayWindow = new();
 
 		public WonderSwan() : base()
 		{
-			displayWindow.IsWindowOpen = true;
+			machineWindow.IsWindowOpen = true;
+			displayWindow.IsWindowOpen = false;
 		}
 
 		public override void Initialize()
 		{
-			internalRamSize = 16 * 1024;
-			internalRamMask = (uint)(internalRamSize - 1);
-			internalRam = new byte[internalRamSize];
+			InternalRamSize = 16 * 1024;
+			InternalRamMask = (uint)(InternalRamSize - 1);
+			InternalRam = new byte[InternalRamSize];
 
-			cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
-			display = new AswanDisplayController(ReadMemory);
-			sound = new SoundController(ReadMemory, 44100, 2);
-			eeprom = new EEPROM(64 * 2, 6);
+			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
+			DisplayController = new AswanDisplayController(ReadMemory);
+			SoundController = new SoundController(ReadMemory, 44100, 2);
+			InternalEeprom = new EEPROM(64 * 2, 6);
 
 			InitializeEepromToDefaults("WONDERSWAN");
 		}
 
 		public override void Reset()
 		{
-			for (var i = 0; i < internalRam.Length; i++) internalRam[i] = 0;
+			for (var i = 0; i < InternalRam.Length; i++) InternalRam[i] = 0;
 
-			cartridge.Reset();
-			cpu.Reset();
-			display.Reset();
-			sound.Reset();
-			eeprom.Reset();
+			Cartridge.Reset();
+			Cpu.Reset();
+			DisplayController.Reset();
+			SoundController.Reset();
+			InternalEeprom.Reset();
 
-			currentClockCyclesInFrame = 0;
-			totalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
+			CurrentClockCyclesInFrame = 0;
+			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
 
 			ResetRegisters();
 		}
 
 		public override void Shutdown()
 		{
-			cartridge.Shutdown();
-			cpu.Shutdown();
-			display.Shutdown();
-			sound.Shutdown();
-			eeprom.Shutdown();
+			Cartridge.Shutdown();
+			Cpu.Shutdown();
+			DisplayController.Shutdown();
+			SoundController.Shutdown();
+			InternalEeprom.Shutdown();
 		}
 
 		public override void RunStep()
 		{
-			var currentCpuClockCycles = cpu.Step();
+			var currentCpuClockCycles = Cpu.Step();
 
-			var displayInterrupt = display.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref intStatus, 4, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref intStatus, 5, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref intStatus, 6, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref intStatus, 7, true);
+			var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref interruptStatus, 4, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref interruptStatus, 5, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref interruptStatus, 6, true);
+			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref interruptStatus, 7, true);
 
 			CheckAndRaiseInterrupts();
 
-			sound.Step(currentCpuClockCycles);
+			SoundController.Step(currentCpuClockCycles);
 
-			if (cartridge.Step(currentCpuClockCycles))
-				ChangeBit(ref intStatus, 2, true);
+			if (Cartridge.Step(currentCpuClockCycles))
+				ChangeBit(ref interruptStatus, 2, true);
 
-			currentClockCyclesInFrame += currentCpuClockCycles;
+			CurrentClockCyclesInFrame += currentCpuClockCycles;
 		}
 
 		public override void DrawImGuiWindows()
 		{
 			base.DrawImGuiWindows();
 
-			displayWindow.Draw(new object[] { display });
+			displayWindow.Draw(new object[] { DisplayController });
+			machineWindow.Draw(new object[] { this });
 		}
 
 		public override byte ReadRegister(ushort register)
@@ -95,7 +104,7 @@ namespace StoicGoose.Emulation.Machines
 			{
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
-					retVal = display.ReadRegister(register);
+					retVal = DisplayController.ReadRegister(register);
 					break;
 
 				/* Misc system registers */
@@ -105,49 +114,49 @@ namespace StoicGoose.Emulation.Machines
 
 				/* Sound controller */
 				case var n when n >= 0x80 && n < 0xA0:
-					retVal = sound.ReadRegister(register);
+					retVal = SoundController.ReadRegister(register);
 					break;
 
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
-					ChangeBit(ref retVal, 0, hwCartEnable);
+					ChangeBit(ref retVal, 0, CartEnable);
 					ChangeBit(ref retVal, 1, false);
-					ChangeBit(ref retVal, 2, hw16BitExtBus);
-					ChangeBit(ref retVal, 3, hwCartRom1CycleSpeed);
-					ChangeBit(ref retVal, 7, hwSelfTestOk);
+					ChangeBit(ref retVal, 2, Is16BitExtBus);
+					ChangeBit(ref retVal, 3, CartRom1CycleSpeed);
+					ChangeBit(ref retVal, 7, BuiltInSelfTestOk);
 					break;
 
 				case 0xB0:
 					/* REG_INT_BASE */
-					retVal = intBase;
+					retVal = InterruptBase;
 					retVal |= 0b11;
 					break;
 
 				case 0xB1:
 					/* REG_SER_DATA */
-					retVal = serData;
+					retVal = SerialData;
 					break;
 
 				case 0xB2:
 					/* REG_INT_ENABLE */
-					retVal = intEnable;
+					retVal = InterruptEnable;
 					break;
 
 				case 0xB3:
 					/* REG_SER_STATUS */
 					//TODO: Puyo Puyo Tsuu accesses this, stub properly?
-					ChangeBit(ref retVal, 7, serEnable);
-					ChangeBit(ref retVal, 6, serBaudRateSelect);
-					ChangeBit(ref retVal, 5, serOverrunReset);
-					ChangeBit(ref retVal, 2, serSendBufferEmpty);
-					ChangeBit(ref retVal, 1, serOverrun);
-					ChangeBit(ref retVal, 0, serDataReceived);
+					ChangeBit(ref retVal, 7, SerialEnable);
+					ChangeBit(ref retVal, 6, SerialBaudRateSelect);
+					ChangeBit(ref retVal, 5, SerialOverrunReset);
+					ChangeBit(ref retVal, 2, SerialSendBufferEmpty);
+					ChangeBit(ref retVal, 1, SerialOverrun);
+					ChangeBit(ref retVal, 0, SerialDataReceived);
 					break;
 
 				case 0xB4:
 					/* REG_INT_STATUS */
-					retVal = intStatus;
+					retVal = interruptStatus;
 					break;
 
 				case 0xB5:
@@ -157,14 +166,14 @@ namespace StoicGoose.Emulation.Machines
 					var eventArgs = new PollInputEventArgs();
 					OnPollInput(eventArgs);
 
-					ChangeBit(ref retVal, 4, keypadYEnable);
-					ChangeBit(ref retVal, 5, keypadXEnable);
-					ChangeBit(ref retVal, 6, keypadButtonEnable);
+					ChangeBit(ref retVal, 4, KeypadYEnable);
+					ChangeBit(ref retVal, 5, KeypadXEnable);
+					ChangeBit(ref retVal, 6, KeypadButtonEnable);
 
 					if (eventArgs.ButtonsHeld.Any())
-						ChangeBit(ref intStatus, 1, true);
+						ChangeBit(ref interruptStatus, 1, true);
 
-					if (keypadYEnable)
+					if (KeypadYEnable)
 					{
 						if (eventArgs.ButtonsHeld.Contains("y1")) ChangeBit(ref retVal, 0, true);
 						if (eventArgs.ButtonsHeld.Contains("y2")) ChangeBit(ref retVal, 1, true);
@@ -172,7 +181,7 @@ namespace StoicGoose.Emulation.Machines
 						if (eventArgs.ButtonsHeld.Contains("y4")) ChangeBit(ref retVal, 3, true);
 					}
 
-					if (keypadXEnable)
+					if (KeypadXEnable)
 					{
 						if (eventArgs.ButtonsHeld.Contains("x1")) ChangeBit(ref retVal, 0, true);
 						if (eventArgs.ButtonsHeld.Contains("x2")) ChangeBit(ref retVal, 1, true);
@@ -180,7 +189,7 @@ namespace StoicGoose.Emulation.Machines
 						if (eventArgs.ButtonsHeld.Contains("x4")) ChangeBit(ref retVal, 3, true);
 					}
 
-					if (keypadButtonEnable)
+					if (KeypadButtonEnable)
 					{
 						if (eventArgs.ButtonsHeld.Contains("start")) ChangeBit(ref retVal, 1, true);
 						if (eventArgs.ButtonsHeld.Contains("a")) ChangeBit(ref retVal, 2, true);
@@ -208,12 +217,12 @@ namespace StoicGoose.Emulation.Machines
 					/* REG_IEEP_ADDR (low) */
 					/* REG_IEEP_ADDR (high) */
 					/* REG_IEEP_CMD (write) */
-					retVal = eeprom.ReadRegister((ushort)(register - 0xBA));
+					retVal = InternalEeprom.ReadRegister((ushort)(register - 0xBA));
 					break;
 
 				/* Cartridge */
 				case var n when n >= 0xC0 && n < 0x100:
-					retVal = cartridge.ReadRegister(register);
+					retVal = Cartridge.ReadRegister(register);
 					break;
 
 				/* Unmapped */
@@ -231,7 +240,7 @@ namespace StoicGoose.Emulation.Machines
 			{
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
-					display.WriteRegister(register, value);
+					DisplayController.WriteRegister(register, value);
 					break;
 
 				/* Misc system registers */
@@ -241,37 +250,37 @@ namespace StoicGoose.Emulation.Machines
 
 				/* Sound controller */
 				case var n when n >= 0x80 && n < 0xA0:
-					sound.WriteRegister(register, value);
+					SoundController.WriteRegister(register, value);
 					break;
 
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
-					if (!hwCartEnable)
-						hwCartEnable = IsBitSet(value, 0);
-					hw16BitExtBus = IsBitSet(value, 2);
-					hwCartRom1CycleSpeed = IsBitSet(value, 3);
+					if (!CartEnable)
+						CartEnable = IsBitSet(value, 0);
+					Is16BitExtBus = IsBitSet(value, 2);
+					CartRom1CycleSpeed = IsBitSet(value, 3);
 					break;
 
 				case 0xB0:
 					/* REG_INT_BASE */
-					intBase = (byte)(value & 0b11111000);
+					InterruptBase = (byte)(value & 0b11111000);
 					break;
 
 				case 0xB1:
 					/* REG_SER_DATA */
-					serData = value;
+					SerialData = value;
 					break;
 
 				case 0xB2:
 					/* REG_INT_ENABLE */
-					intEnable = value;
+					InterruptEnable = value;
 					break;
 
 				case 0xB3:
 					/* REG_SER_STATUS */
-					serEnable = IsBitSet(value, 7);
-					serBaudRateSelect = IsBitSet(value, 6);
+					SerialEnable = IsBitSet(value, 7);
+					SerialBaudRateSelect = IsBitSet(value, 6);
 					break;
 
 				case 0xB4:
@@ -280,14 +289,14 @@ namespace StoicGoose.Emulation.Machines
 
 				case 0xB5:
 					/* REG_KEYPAD */
-					keypadYEnable = IsBitSet(value, 4);
-					keypadXEnable = IsBitSet(value, 5);
-					keypadButtonEnable = IsBitSet(value, 6);
+					KeypadYEnable = IsBitSet(value, 4);
+					KeypadXEnable = IsBitSet(value, 5);
+					KeypadButtonEnable = IsBitSet(value, 6);
 					break;
 
 				case 0xB6:
 					/* REG_INT_ACK */
-					intStatus &= (byte)~(value & 0b11110010);
+					interruptStatus &= (byte)~(value & 0b11110010);
 					break;
 
 				case 0xB7:
@@ -304,12 +313,12 @@ namespace StoicGoose.Emulation.Machines
 					/* REG_IEEP_ADDR (low) */
 					/* REG_IEEP_ADDR (high) */
 					/* REG_IEEP_STATUS (read) */
-					eeprom.WriteRegister((ushort)(register - 0xBA), value);
+					InternalEeprom.WriteRegister((ushort)(register - 0xBA), value);
 					break;
 
 				/* Cartridge */
 				case var n when n >= 0xC0 && n < 0x100:
-					cartridge.WriteRegister(register, value);
+					Cartridge.WriteRegister(register, value);
 					break;
 			}
 		}

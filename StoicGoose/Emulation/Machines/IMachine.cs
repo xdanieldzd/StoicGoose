@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 
 using StoicGoose.DataStorage;
+using StoicGoose.Emulation.Cartridges;
+using StoicGoose.Emulation.CPU;
+using StoicGoose.Emulation.Display;
+using StoicGoose.Emulation.EEPROMs;
+using StoicGoose.Emulation.Sound;
 using StoicGoose.WinForms;
 
 namespace StoicGoose.Emulation.Machines
@@ -10,11 +15,16 @@ namespace StoicGoose.Emulation.Machines
 	{
 		Dictionary<string, ObjectValue> Metadata { get; }
 
-		event EventHandler<UpdateScreenEventArgs> UpdateScreen;
-		event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;
 		event EventHandler<PollInputEventArgs> PollInput;
 		event EventHandler<StartOfFrameEventArgs> StartOfFrame;
 		event EventHandler<EventArgs> EndOfFrame;
+
+		Cartridge Cartridge { get; }
+		V30MZ Cpu { get; }
+		DisplayControllerCommon DisplayController { get; }
+		SoundController SoundController { get; }
+		EEPROM InternalEeprom { get; }
+		// TODO: Sphinx DMA controller?
 
 		void Initialize();
 		void Reset();

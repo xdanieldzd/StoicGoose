@@ -1,5 +1,5 @@
 ﻿using StoicGoose.Emulation.Machines;
-using StoicGoose.Interface;
+using StoicGoose.Interface.Attributes;
 
 using static StoicGoose.Utilities;
 

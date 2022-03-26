@@ -1,6 +1,6 @@
 ﻿namespace StoicGoose.Emulation
 {
-	interface IComponent
+	public interface IComponent
 	{
 		void Reset();
 		void Shutdown();

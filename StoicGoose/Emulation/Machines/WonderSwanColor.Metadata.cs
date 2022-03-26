@@ -56,9 +56,9 @@ namespace StoicGoose.Emulation.Machines
 			// icons
 			var icons = new List<string>();
 			if (true) icons.Add("power");
-			if (hwSelfTestOk) icons.Add("initialized");  //???
-			icons.AddRange(display.GetActiveIcons());
-			icons.AddRange(sound.GetActiveIcons());
+			if (BuiltInSelfTestOk) icons.Add("initialized");  //???
+			icons.AddRange(DisplayController.GetActiveIcons());
+			icons.AddRange(SoundController.GetActiveIcons());
 			Metadata["machine/display/icons/active"] = string.Join(",", icons);
 		}
 	}

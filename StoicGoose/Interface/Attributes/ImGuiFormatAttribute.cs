@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StoicGoose.Interface
+namespace StoicGoose.Interface.Attributes
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class ImGuiFormatAttribute : Attribute
