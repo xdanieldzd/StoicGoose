@@ -23,16 +23,10 @@ namespace StoicGoose.Emulation.Machines
 
 		SphinxDMAController dma = default;
 
-		protected ImGuiMachineWindow<WonderSwanColor> machineWindow = new();
-		protected ImGuiDisplayWindow<SphinxDisplayController> displayWindow = new();
+		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwanColor>("WonderSwan Color Status");
+		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<SphinxDisplayController>("WS Display Controller");
 
-		public WonderSwanColor() : base()
-		{
-			Metadata = new WonderSwanColorMetadata();
-
-			machineWindow.IsWindowOpen = true;
-			displayWindow.IsWindowOpen = false;
-		}
+		public WonderSwanColor() : base() => Metadata = new WonderSwanColorMetadata();
 
 		public override void Initialize()
 		{
@@ -100,8 +94,8 @@ namespace StoicGoose.Emulation.Machines
 		{
 			base.DrawImGuiWindows();
 
-			displayWindow.Draw(new object[] { DisplayController });
-			machineWindow.Draw(new object[] { this });
+			DisplayStatusWindow.Draw(new object[] { DisplayController });
+			MachineStatusWindow.Draw(new object[] { this });
 		}
 
 		public override void UpdateStatusIcons()

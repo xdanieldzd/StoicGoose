@@ -13,7 +13,6 @@ namespace StoicGoose
 #endif
 		public static readonly bool EnableLocalDebugIO = IsAuthorsMachine;
 
-		public static readonly bool EnableConsoleOutput = IsAuthorsMachine;
 		public static readonly bool EnableSuperVerbosity = false;
 		public static readonly bool EnableOpenGLDebug = false;
 

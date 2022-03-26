@@ -39,6 +39,9 @@ namespace StoicGoose.DataStorage
 		[DisplayName("Limit FPS")]
 		[Description("Toggle limiting the framerate to the system's native ~75.47 Hz.")]
 		public bool LimitFps { get; set; } = true;
+		[DisplayName("Enable Cheats")]
+		[Description("Toggle using the cheat system.")]
+		public bool EnableCheats { get; set; } = true;
 		[DisplayName("Recent Files")]
 		[Description("List of recently loaded files.")]
 		public List<string> RecentFiles { get; set; } = new List<string>(15);

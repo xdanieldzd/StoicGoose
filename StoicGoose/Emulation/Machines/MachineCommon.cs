@@ -116,26 +116,15 @@ namespace StoicGoose.Emulation.Machines
 
 		public bool IsBootstrapLoaded => BootstrapRom != null;
 
-		// TODO: decide on accessibility & setting
-
 		public MetadataBase Metadata { get; protected set; } = default;
 
 		protected Cheat[] cheats = new Cheat[512];
 
-		protected ImGuiCpuWindow cpuWindow = new();
-		protected ImGuiCheatWindow cheatsWindow = new();
+		public ImGuiCheatWindow CheatsWindow { get; protected set; } = new();
 
-		public MachineCommon()
-		{
-			// TODO: remove these
-
-			cpuWindow.IsWindowOpen = false;
-
-			// cheat system test (Mr. Driller)
-			cheatsWindow.IsWindowOpen = false;
-			//cheats[0] = new() { Description = "Infinite lives", Address = 0xC983, Value = 5 };
-			//cheats[1] = new() { Description = "Infinite air", Address = 0xC986, Value = 100 };
-		}
+		public abstract ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; }
+		public abstract ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; }
+		public ImGuiCpuWindow CpuStatusWindow { get; protected set; } = new();
 
 		public abstract void Initialize();
 
@@ -332,8 +321,8 @@ namespace StoicGoose.Emulation.Machines
 
 		public virtual void DrawImGuiWindows()
 		{
-			cpuWindow.Draw(new object[] { Cpu });
-			cheatsWindow.Draw(new object[] { cheats });
+			CpuStatusWindow.Draw(new object[] { Cpu });
+			CheatsWindow.Draw(new object[] { cheats });
 		}
 
 		public abstract void UpdateStatusIcons();
@@ -350,11 +339,14 @@ namespace StoicGoose.Emulation.Machines
 				address &= 0xFFFFF;
 
 				/* Handle cheats */
-				for (var i = 0; i < cheats.Length; i++)
+				if (Program.Configuration.General.EnableCheats)
 				{
-					if (cheats[i] == null) break;
-					if (cheats[i].Address == address && cheats[i].Enabled)
-						return cheats[i].Value;
+					for (var i = 0; i < cheats.Length; i++)
+					{
+						if (cheats[i] == null) break;
+						if (cheats[i].Address == address && cheats[i].Enabled)
+							return cheats[i].Value;
+					}
 				}
 
 				if ((address & 0xF0000) == 0x00000)

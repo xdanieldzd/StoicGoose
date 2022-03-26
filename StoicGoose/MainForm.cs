@@ -49,10 +49,8 @@ namespace StoicGoose
 		{
 			InitializeComponent();
 
-			if (GlobalVariables.EnableConsoleOutput && (logWindow = new()) != null)
+			if ((logWindow = new()) != null)
 			{
-				logWindow.IsWindowOpen = true;
-
 				Console.SetOut(logWindow.TextWriter);
 				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
@@ -395,6 +393,8 @@ namespace StoicGoose
 			CreateDataBinding(muteSoundToolStripMenuItem.DataBindings, nameof(muteSoundToolStripMenuItem.Checked), Program.Configuration.Sound, nameof(Program.Configuration.Sound.Mute));
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
+			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
+
 			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata.RomFileFilter}|All Files (*.*)|*.*";
 		}
 
@@ -622,9 +622,29 @@ namespace StoicGoose
 			UnpauseEmulation();
 		}
 
-		private void openDebuggerToolStripMenuItem_Click(object sender, EventArgs e)
+		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			//
+			emulatorHandler.Machine.CheatsWindow.IsWindowOpen = true;
+		}
+
+		private void systemToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.Machine.MachineStatusWindow.IsWindowOpen = true;
+		}
+
+		private void cPUToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.Machine.CpuStatusWindow.IsWindowOpen = true;
+		}
+
+		private void displayControllerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.Machine.DisplayStatusWindow.IsWindowOpen = true;
+		}
+
+		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			logWindow.IsWindowOpen = true;
 		}
 
 		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)

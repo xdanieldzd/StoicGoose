@@ -20,16 +20,10 @@ namespace StoicGoose.Emulation.Machines
 		[ImGuiFormat("X4", 0)]
 		public override byte InterruptBase { get; protected set; } = 0x00;
 
-		protected ImGuiMachineWindow<WonderSwan> machineWindow = new();
-		protected ImGuiDisplayWindow<AswanDisplayController> displayWindow = new();
+		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwan>("WonderSwan Status");
+		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<AswanDisplayController>("WS Display Controller");
 
-		public WonderSwan() : base()
-		{
-			Metadata = new WonderSwanMetadata();
-
-			machineWindow.IsWindowOpen = true;
-			displayWindow.IsWindowOpen = false;
-		}
+		public WonderSwan() : base() => Metadata = new WonderSwanMetadata();
 
 		public override void Initialize()
 		{
@@ -94,8 +88,8 @@ namespace StoicGoose.Emulation.Machines
 		{
 			base.DrawImGuiWindows();
 
-			displayWindow.Draw(new object[] { DisplayController });
-			machineWindow.Draw(new object[] { this });
+			DisplayStatusWindow.Draw(new object[] { DisplayController });
+			MachineStatusWindow.Draw(new object[] { this });
 		}
 
 		public override void UpdateStatusIcons()

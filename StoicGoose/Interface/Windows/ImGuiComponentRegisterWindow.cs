@@ -12,17 +12,19 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.Interface.Windows
 {
-	public abstract class ImGuiComponentRegisterWindow<T> : ImGuiWindowBase where T : IComponent
+	public class ImGuiComponentRegisterWindow : ImGuiWindowBase
 	{
 		const BindingFlags getPropBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
-		readonly static Dictionary<(ushort number, string name), List<RegisterParameterInformation>> registers = new();
+		readonly Type componentType = default;
 
-		public ImGuiComponentRegisterWindow(string title) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
+		readonly Dictionary<(ushort number, string name), List<RegisterParameterInformation>> registers = new();
 
-		static ImGuiComponentRegisterWindow()
+		protected ImGuiComponentRegisterWindow(string title, Type type) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver)
 		{
-			foreach (var propInfo in typeof(T).GetProperties(getPropBindingFlags).Where(x => !x.GetGetMethod().IsAbstract))
+			componentType = type;
+
+			foreach (var propInfo in componentType.GetProperties(getPropBindingFlags).Where(x => !x.GetGetMethod().IsAbstract))
 			{
 				if (propInfo.GetCustomAttribute<ImGuiRegisterAttribute>() is ImGuiRegisterAttribute regAttrib)
 				{
@@ -33,7 +35,7 @@ namespace StoicGoose.Interface.Windows
 
 			foreach (var ((number, name), list) in registers)
 			{
-				foreach (var propInfo in typeof(T).GetProperties(getPropBindingFlags)
+				foreach (var propInfo in componentType.GetProperties(getPropBindingFlags)
 					.Where(x => x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Number == number && x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Name == name)
 					.GroupBy(x => x.Name)
 					.Select(x => x.First()))
@@ -53,9 +55,14 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
+		public static ImGuiComponentRegisterWindow CreateInstance<T>(string title) where T : IComponent
+		{
+			return new(title, typeof(T));
+		}
+
 		protected override void DrawWindow(params object[] args)
 		{
-			if (args.Length != 1 || args[0] is not T component) return;
+			if (args.Length != 1 || args[0].GetType() != componentType) return;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
@@ -67,7 +74,7 @@ namespace StoicGoose.Interface.Windows
 						{
 							foreach (var entry in list.OrderBy(x => x.Index))
 							{
-								var val = entry.PropInfo.GetValue(component);
+								var val = entry.PropInfo.GetValue(args[0], null);
 								if (val is bool valBool)
 									ImGui.Checkbox(entry.Description, ref valBool);
 								else if (!string.IsNullOrEmpty(entry.FormatString))

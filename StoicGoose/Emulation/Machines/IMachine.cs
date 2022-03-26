@@ -6,6 +6,7 @@ using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
+using StoicGoose.Interface.Windows;
 using StoicGoose.WinForms;
 
 namespace StoicGoose.Emulation.Machines
@@ -24,6 +25,12 @@ namespace StoicGoose.Emulation.Machines
 		SoundController SoundController { get; }
 		EEPROM InternalEeprom { get; }
 		// TODO: Sphinx DMA controller?
+
+		ImGuiCheatWindow CheatsWindow { get; }
+
+		ImGuiComponentRegisterWindow MachineStatusWindow { get; }
+		ImGuiComponentRegisterWindow DisplayStatusWindow { get; }
+		ImGuiCpuWindow CpuStatusWindow { get; }
 
 		void Initialize();
 		void Reset();
