@@ -304,10 +304,13 @@ namespace StoicGoose.Emulation.Machines
 
 		public byte[] GetSaveData()
 		{
-			if (Cartridge.Metadata.IsSramSave)
-				return Cartridge.GetSram();
-			else if (Cartridge.Metadata.IsEepromSave)
-				return Cartridge.GetEeprom();
+			if (Cartridge.Metadata != null)
+			{
+				if (Cartridge.Metadata.IsSramSave)
+					return Cartridge.GetSram();
+				else if (Cartridge.Metadata.IsEepromSave)
+					return Cartridge.GetEeprom();
+			}
 
 			return Array.Empty<byte>();
 		}
