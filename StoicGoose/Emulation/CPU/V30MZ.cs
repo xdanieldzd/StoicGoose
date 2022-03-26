@@ -69,30 +69,6 @@ namespace StoicGoose.Emulation.CPU
 			CloseTraceLogger();
 		}
 
-		public Dictionary<string, ushort> GetStatus()
-		{
-			return new()
-			{
-				{ "ip", ip },
-				{ "flags", (ushort)flags },
-
-				{ "ax", ax.Word },
-				{ "bx", bx.Word },
-				{ "cx", cx.Word },
-				{ "dx", dx.Word },
-
-				{ "sp", sp },
-				{ "bp", bp },
-				{ "si", si },
-				{ "di", di },
-
-				{ "cs", cs },
-				{ "ds", ds },
-				{ "ss", ss },
-				{ "es", es },
-			};
-		}
-
 		public void RaiseInterrupt(int vector)
 		{
 			pendingIntVector = vector;

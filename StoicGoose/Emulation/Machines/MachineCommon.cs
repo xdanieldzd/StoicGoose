@@ -324,11 +324,6 @@ namespace StoicGoose.Emulation.Machines
 			return DisplayControllerCommon.VerticalClock;
 		}
 
-		public Dictionary<string, ushort> GetProcessorStatus()
-		{
-			return Cpu.GetStatus();
-		}
-
 		public void BeginTraceLog(string filename)
 		{
 			Cpu.InitializeTraceLogger(filename);

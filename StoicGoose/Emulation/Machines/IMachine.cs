@@ -52,8 +52,6 @@ namespace StoicGoose.Emulation.Machines
 		byte ReadRegister(ushort register);
 		void WriteRegister(ushort register, byte value);
 
-		Dictionary<string, ushort> GetProcessorStatus();
-
 		void BeginTraceLog(string filename);
 		void EndTraceLog();
 
