@@ -91,15 +91,18 @@ namespace StoicGoose
 			if (GlobalVariables.EnableOpenGLDebug)
 			{
 				Console.WriteLine($"~ {Ansi.Yellow}OpenGL debugging enabled{Ansi.Reset} ~");
-				Console.WriteLine($"~ {Ansi.Cyan}GL context info{Ansi.Reset} ~");
-				Console.WriteLine($" Version: {ContextInfo.GLVersion}");
-				Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
-				Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
-				Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
-				Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
+				if (GlobalVariables.EnableSuperVerbosity)
+				{
+					Console.WriteLine($"~ {Ansi.Cyan}GL context info{Ansi.Reset} ~");
+					Console.WriteLine($" Version: {ContextInfo.GLVersion}");
+					Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
+					Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
+					Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
+					Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
+				}
 			}
 
-			if (GlobalVariables.IsAuthorsMachine)
+			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableSuperVerbosity)
 			{
 				Console.WriteLine();
 				Console.WriteLine($"{Ansi.Cyan}########################################");
