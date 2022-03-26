@@ -195,13 +195,13 @@ namespace StoicGoose
 		{
 			var metadata = emulatorHandler.Machine.Metadata;
 
-			foreach (var button in metadata.GameControls.Split(','))
+			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.GameControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.GameControls[button]))
 					Program.Configuration.Input.GameControls[button] = string.Empty;
 			}
 
-			foreach (var button in metadata.HardwareControls.Split(','))
+			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.SystemControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.SystemControls[button]))
 					Program.Configuration.Input.SystemControls[button] = string.Empty;

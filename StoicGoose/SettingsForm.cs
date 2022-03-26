@@ -38,6 +38,7 @@ namespace StoicGoose
 			pageGeneral.Append(CreatePathSelector(Configuration.General, nameof(Configuration.General.BootstrapFile)));
 			pageGeneral.Append(CreatePathSelector(Configuration.General, nameof(Configuration.General.BootstrapFileWSC)));
 			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.LimitFps)));
+			pageGeneral.Append(CreateToggle(Configuration.General, nameof(Configuration.General.EnableCheats)));
 			pageGeneral.Attach(tvSettings);
 
 			var pageVideo = new SettingsPage(Configuration, nameof(Configuration.Video));
