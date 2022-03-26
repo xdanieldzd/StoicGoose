@@ -54,7 +54,7 @@ namespace StoicGoose
 				logWindow.IsWindowOpen = true;
 
 				Console.SetOut(logWindow.TextWriter);
-				Console.WriteLine($"{Application.ProductName} {Program.GetVersionString(true)}");
+				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
 			}
 
@@ -83,13 +83,14 @@ namespace StoicGoose
 
 			if (GlobalVariables.IsDebugBuild)
 			{
-				Console.WriteLine("Global variables:");
+				Console.WriteLine($"~ {Ansi.Cyan}Global variables{Ansi.Reset} ~");
 				foreach (var var in GlobalVariables.Dump()) Console.WriteLine($" {var}");
 			}
 
 			if (GlobalVariables.EnableOpenGLDebug)
 			{
-				Console.WriteLine("OpenGL debugging enabled -- context info:");
+				Console.WriteLine($"~ {Ansi.Yellow}OpenGL debugging enabled{Ansi.Reset} ~");
+				Console.WriteLine($"~ {Ansi.Cyan}GL context info{Ansi.Reset} ~");
 				Console.WriteLine($" Version: {ContextInfo.GLVersion}");
 				Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
 				Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");

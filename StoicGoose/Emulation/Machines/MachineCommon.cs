@@ -267,7 +267,7 @@ namespace StoicGoose.Emulation.Machines
 		{
 			Cartridge.LoadRom(data);
 
-			Console.WriteLine("ROM loaded -- cart metadata");
+			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
 			Console.WriteLine($" Publisher ID: {Cartridge.Metadata.PublisherCode}, {Cartridge.Metadata.PublisherName} [0x{Cartridge.Metadata.PublisherId:X2}]");
 			Console.WriteLine($" System type: {Cartridge.Metadata.SystemType}");
 			Console.WriteLine($" Game ID: 0x{Cartridge.Metadata.GameId:X2}");

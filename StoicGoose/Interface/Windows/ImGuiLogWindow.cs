@@ -18,6 +18,9 @@ namespace StoicGoose.Interface.Windows
 		 * https://github.com/BalazsJako/ImGuiColorTextEdit/blob/0a88824f7de8d0bd11d8419066caa7d3469395c4/TextEditor.cpp#L854
 		 */
 
+		readonly static uint defaultTextColor = GetColor(255, 255, 255);
+		readonly static uint filterHighlightTextColor = GetColor(13, 188, 121);
+
 		readonly LogWriter logWriter = default;
 
 		readonly List<string> messageList = new();
@@ -70,32 +73,42 @@ namespace StoicGoose.Interface.Windows
 
 					var mCharAdvance = new NumericsVector2(fontSize, ImGui.GetTextLineHeightWithSpacing());
 
+					var cursorScreenPos = ImGui.GetCursorScreenPos();
+					var drawList = ImGui.GetWindowDrawList();
+
+					var lineBuffer = new StringBuilder();
+					var prevColor = defaultTextColor;
+
 					if (!string.IsNullOrEmpty(filterString))
 					{
 						var validLines = messageList.Where(x => x.Contains(filterString)).ToArray();
 
-						var cursorScreenPos = ImGui.GetCursorScreenPos();
-						var drawList = ImGui.GetWindowDrawList();
-
-						var lineBuffer = new StringBuilder();
-						var prevColor = uint.MaxValue;
-
 						for (var i = 0; i < validLines.Length; i++)
 						{
-							var matches = validLines[i].IndexOfAll(filterString).Select(x => (start: x, end: x + filterString.Length)).ToArray();
+							var line = validLines[i];
+
+							// TODO: proper final byte detection?
+							int escStartIdx;
+							while ((escStartIdx = line.IndexOf('\x1B')) != -1)
+							{
+								var escEndIdx = line.IndexOf('m', escStartIdx);
+								if (escEndIdx != -1) line = line.Remove(escStartIdx, escEndIdx - escStartIdx + 1);
+							}
+
+							var matches = line.IndexOfAll(filterString).Select(x => (start: x, end: x + filterString.Length)).ToArray();
 							var currentMatch = 0;
 
 							var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
 							var bufferOffset = NumericsVector2.Zero;
 
-							for (var j = 0; j < validLines[i].Length; j++)
+							for (var j = 0; j < line.Length; j++)
 							{
-								var ch = validLines[i][j];
+								var ch = line[j];
 
 								var insideMatch = currentMatch >= 0 && currentMatch < matches.Length &&
 									j >= matches[currentMatch].start && j < matches[currentMatch].end;
 
-								var color = insideMatch ? 0xFF80FF80 : uint.MaxValue;
+								var color = insideMatch ? filterHighlightTextColor : defaultTextColor;
 
 								if ((color != prevColor || ch == '\t') && lineBuffer.Length != 0)
 								{
@@ -125,8 +138,54 @@ namespace StoicGoose.Interface.Windows
 					}
 					else
 					{
-						foreach (var line in messageList)
-							ImGui.TextUnformatted(line);
+						for (var i = 0; i < messageList.Count; i++)
+						{
+							var line = messageList[i];
+
+							var textScreenPos = new NumericsVector2(cursorScreenPos.X, cursorScreenPos.Y + i * mCharAdvance.Y);
+							var bufferOffset = NumericsVector2.Zero;
+
+							var color = defaultTextColor;
+
+							for (var j = 0; j < messageList[i].Length; j++)
+							{
+								if (j + 1 < messageList[i].Length && line[j] == '\x1B' && line[j + 1] == '[')
+								{
+									// TODO: proper final byte detection?
+									var escEndIdx = line.IndexOf('m', j);
+									if (escEndIdx != -1)
+									{
+										(color, _) = ParseEscSequence(line[j..(escEndIdx + 1)]);
+										j = escEndIdx;
+									}
+								}
+								else
+								{
+									var ch = line[j];
+
+									if ((color != prevColor || ch == '\t') && lineBuffer.Length != 0)
+									{
+										var substring = lineBuffer.ToString();
+										drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
+										bufferOffset.X += ImGui.CalcTextSize(substring).X;
+
+										lineBuffer.Clear();
+									}
+									prevColor = color;
+
+									if (ch == '\t')
+										textScreenPos.X += 1f + (float)Math.Floor((1f + bufferOffset.X) / (4f * fontSize)) * (4f * fontSize);
+									else
+										lineBuffer.Append(ch);
+								}
+							}
+
+							if (lineBuffer.Length != 0)
+							{
+								drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
+								lineBuffer.Clear();
+							}
+						}
 					}
 
 					ImGui.PopStyleVar();
@@ -143,6 +202,41 @@ namespace StoicGoose.Interface.Windows
 				ImGui.End();
 			}
 		}
+
+		private (uint fgColor, uint _) ParseEscSequence(string esc)
+		{
+			var fgColor = uint.MaxValue;
+
+			var values = esc[2..^1].Split(';').Select(x => byte.Parse(x)).ToArray();
+			for (var i = 0; i < values.Length; i++)
+			{
+				switch (values[i])
+				{
+					case 0: fgColor = defaultTextColor; break; // reset all
+
+					case 30: fgColor = GetColor(0, 0, 0); break; // black
+					case 31: fgColor = GetColor(205, 49, 49); break; // red
+					case 32: fgColor = GetColor(13, 188, 121); break; // green
+					case 33: fgColor = GetColor(229, 229, 16); break; // yellow
+					case 34: fgColor = GetColor(36, 114, 200); break; // blue
+					case 35: fgColor = GetColor(188, 63, 188); break; // magenta
+					case 36: fgColor = GetColor(17, 168, 205); break; // cyan
+					case 37: fgColor = GetColor(255, 255, 255); break; // white
+
+					case 38:
+						{
+							/* https://en.wikipedia.org/wiki/ANSI_escape_code#24-bit */
+							fgColor = GetColor(values[2], values[3], values[4]);
+							i += 4;
+						}
+						break;
+				}
+			}
+
+			return (fgColor, 0);
+		}
+
+		private static uint GetColor(byte r, byte g, byte b) => 0xFF000000 | ((uint)b << 16) | ((uint)g << 8) | ((uint)r << 0);
 
 		class LogWriter : TextWriter
 		{
