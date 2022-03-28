@@ -31,9 +31,13 @@ namespace StoicGoose.Emulation.Machines
 		public event EventHandler<EventArgs> EndOfFrame = default;
 		public void OnEndOfFrame(EventArgs e) { EndOfFrame?.Invoke(this, e); }
 
-		public int InternalRamSize { get; protected set; } = -1;
+		public abstract int InternalRamSize { get; }
 		public uint InternalRamMask { get; protected set; } = 0;
 		public byte[] InternalRam { get; protected set; } = default;
+
+		public abstract string DefaultUsername { get; }
+		public abstract int InternalEepromSize { get; }
+		public abstract int InternalEepromAddressBits { get; }
 
 		public Cartridge Cartridge { get; protected set; } = new();
 		public V30MZ Cpu { get; protected set; } = default;
@@ -125,18 +129,31 @@ namespace StoicGoose.Emulation.Machines
 		public abstract ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; }
 		public abstract ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; }
 		public ImGuiCpuWindow CpuStatusWindow { get; protected set; } = new();
+		public ImGuiMemoryWindow MemoryEditorWindow { get; protected set; } = new() { IsWindowOpen = true };
 
-		public abstract void Initialize();
+		public virtual void Initialize()
+		{
+			if (InternalRamSize == -1) throw new Exception("Internal RAM size not set");
+			if (string.IsNullOrEmpty(DefaultUsername)) throw new Exception("Default username not set");
+
+			InternalRamMask = (uint)(InternalRamSize - 1);
+			InternalRam = new byte[InternalRamSize];
+
+			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
+			InternalEeprom = new EEPROM(InternalEepromSize, InternalEepromAddressBits);
+
+			InitializeEepromToDefaults();
+		}
 
 		public virtual void Reset()
 		{
 			for (var i = 0; i < InternalRam.Length; i++) InternalRam[i] = 0;
 
-			Cartridge.Reset();
-			Cpu.Reset();
-			DisplayController.Reset();
-			SoundController.Reset();
-			InternalEeprom.Reset();
+			Cartridge?.Reset();
+			Cpu?.Reset();
+			DisplayController?.Reset();
+			SoundController?.Reset();
+			InternalEeprom?.Reset();
 
 			CurrentClockCyclesInFrame = 0;
 			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
@@ -144,10 +161,9 @@ namespace StoicGoose.Emulation.Machines
 			ResetRegisters();
 		}
 
-		public void ResetRegisters()
+		public virtual void ResetRegisters()
 		{
 			CartEnable = BootstrapRom == null;
-			//hwIsWSCOrGreater = false;
 			Is16BitExtBus = true;
 			CartRom1CycleSpeed = false;
 			BuiltInSelfTestOk = true;
@@ -163,13 +179,20 @@ namespace StoicGoose.Emulation.Machines
 			SerialSendBufferEmpty = true;
 		}
 
-		public abstract void Shutdown();
+		public virtual void Shutdown()
+		{
+			Cartridge?.Shutdown();
+			Cpu?.Shutdown();
+			DisplayController?.Shutdown();
+			SoundController?.Shutdown();
+			InternalEeprom?.Shutdown();
+		}
 
-		protected void InitializeEepromToDefaults(string username)
+		protected void InitializeEepromToDefaults()
 		{
 			/* Not 100% verified, same caveats as ex. ares */
 
-			var data = ConvertUsernameForEeprom(username);
+			var data = ConvertUsernameForEeprom(DefaultUsername);
 
 			for (var i = 0; i < data.Length; i++) InternalEeprom.Program(0x60 + i, data[i]); // Username (0x60-0x6F, max 16 characters)
 
@@ -322,6 +345,8 @@ namespace StoicGoose.Emulation.Machines
 		public virtual void DrawImGuiWindows()
 		{
 			CpuStatusWindow.Draw(new object[] { Cpu });
+			MemoryEditorWindow.Draw(new object[] { this });
+
 			CheatsWindow.Draw(new object[] { cheats });
 		}
 

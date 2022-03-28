@@ -94,7 +94,15 @@ namespace StoicGoose.Handlers
 
 			var io = ImGui.GetIO();
 
+			/* TODO: add Japanese pixel font (↓¹) to assets once ImGui.NET is fixed, assuming this (↓²) is the issue; fall back onto Meiryo if missing?
+			 * ¹) 'PixelMplus12 Regular', 'BDF UM+ Outline Regular' or 'M PLUS 1  Code Regular', ca. 13px?
+			 * ²) https://github.com/mellinoe/ImGui.NET/issues/301
+			 */
+
 			io.Fonts.AddFontDefault();
+			var japaneseFontPath = Utilities.GetSystemFontFilePath("Meiryo");
+			if (!string.IsNullOrEmpty(japaneseFontPath)) io.Fonts.AddFontFromFileTTF(japaneseFontPath, 18f, null, io.Fonts.GetGlyphRangesJapanese());
+
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
 			texture = new Texture(fontTexturePixels, fontTextureWidth, fontTextureHeight);
 			io.Fonts.SetTexID((IntPtr)texture.Handle);

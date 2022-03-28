@@ -31,6 +31,7 @@ namespace StoicGoose.Emulation.Machines
 		ImGuiComponentRegisterWindow MachineStatusWindow { get; }
 		ImGuiComponentRegisterWindow DisplayStatusWindow { get; }
 		ImGuiCpuWindow CpuStatusWindow { get; }
+		ImGuiMemoryWindow MemoryEditorWindow { get; }
 
 		void Initialize();
 		void Reset();

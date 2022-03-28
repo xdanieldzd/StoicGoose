@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
-using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
-using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.Interface.Attributes;
 using StoicGoose.Interface.Windows;
@@ -20,6 +17,13 @@ namespace StoicGoose.Emulation.Machines
 		[ImGuiFormat("X4", 0)]
 		public override byte InterruptBase { get; protected set; } = 0x00;
 
+		public override int InternalRamSize => 16 * 1024;
+
+		public override string DefaultUsername => "WONDERSWAN";
+
+		public override int InternalEepromSize => 64 * 2;
+		public override int InternalEepromAddressBits => 6;
+
 		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwan>("WonderSwan Status");
 		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<AswanDisplayController>("WS Display Controller");
 
@@ -27,41 +31,17 @@ namespace StoicGoose.Emulation.Machines
 
 		public override void Initialize()
 		{
-			InternalRamSize = 16 * 1024;
-			InternalRamMask = (uint)(InternalRamSize - 1);
-			InternalRam = new byte[InternalRamSize];
-
-			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
 			DisplayController = new AswanDisplayController(ReadMemory);
 			SoundController = new SoundController(ReadMemory, 44100, 2);
-			InternalEeprom = new EEPROM(64 * 2, 6);
 
-			InitializeEepromToDefaults("WONDERSWAN");
+			base.Initialize();
 		}
 
-		public override void Reset()
+		public override void ResetRegisters()
 		{
-			for (var i = 0; i < InternalRam.Length; i++) InternalRam[i] = 0;
+			IsWSCOrGreater = false;
 
-			Cartridge.Reset();
-			Cpu.Reset();
-			DisplayController.Reset();
-			SoundController.Reset();
-			InternalEeprom.Reset();
-
-			CurrentClockCyclesInFrame = 0;
-			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
-
-			ResetRegisters();
-		}
-
-		public override void Shutdown()
-		{
-			Cartridge.Shutdown();
-			Cpu.Shutdown();
-			DisplayController.Shutdown();
-			SoundController.Shutdown();
-			InternalEeprom.Shutdown();
+			base.ResetRegisters();
 		}
 
 		public override void RunStep()

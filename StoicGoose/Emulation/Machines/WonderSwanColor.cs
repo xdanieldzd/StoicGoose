@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
-using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.DMA;
-using StoicGoose.Emulation.EEPROMs;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.Interface.Attributes;
 using StoicGoose.Interface.Windows;
@@ -21,7 +18,14 @@ namespace StoicGoose.Emulation.Machines
 		[ImGuiFormat("X4", 0)]
 		public override byte InterruptBase { get; protected set; } = 0x00;
 
-		SphinxDMAController dma = default;
+		public override int InternalRamSize => 64 * 1024;
+
+		public override string DefaultUsername => "WONDERSWANCOLOR";
+
+		public override int InternalEepromSize => 1024 * 2;
+		public override int InternalEepromAddressBits => 10;
+
+		public SphinxDMAController DmaController { get; protected set; } = default;
 
 		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwanColor>("WonderSwan Color Status");
 		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<SphinxDisplayController>("WS Display Controller");
@@ -30,49 +34,37 @@ namespace StoicGoose.Emulation.Machines
 
 		public override void Initialize()
 		{
-			InternalRamSize = 64 * 1024;
-			InternalRamMask = (uint)(InternalRamSize - 1);
-			InternalRam = new byte[InternalRamSize];
-
-			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
 			DisplayController = new SphinxDisplayController(ReadMemory);
 			SoundController = new SoundController(ReadMemory, 44100, 2);
-			InternalEeprom = new EEPROM(1024 * 2, 10);
-			dma = new SphinxDMAController(ReadMemory, WriteMemory);
+			DmaController = new SphinxDMAController(ReadMemory, WriteMemory);
 
-			InitializeEepromToDefaults("WONDERSWANCOLOR");
+			base.Initialize();
 		}
 
 		public override void Reset()
 		{
-			for (var i = 0; i < InternalRam.Length; i++) InternalRam[i] = 0;
+			DmaController.Reset();
 
-			Cartridge.Reset();
-			Cpu.Reset();
-			DisplayController.Reset();
-			SoundController.Reset();
-			InternalEeprom.Reset();
-			dma.Reset();
+			base.Reset();
+		}
 
-			CurrentClockCyclesInFrame = 0;
-			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
+		public override void ResetRegisters()
+		{
+			IsWSCOrGreater = true;
 
-			ResetRegisters();
+			base.ResetRegisters();
 		}
 
 		public override void Shutdown()
 		{
-			Cartridge.Shutdown();
-			Cpu.Shutdown();
-			DisplayController.Shutdown();
-			SoundController.Shutdown();
-			InternalEeprom.Shutdown();
-			dma.Shutdown();
+			DmaController.Shutdown();
+
+			base.Shutdown();
 		}
 
 		public override void RunStep()
 		{
-			var currentCpuClockCycles = dma.IsActive ? dma.Step() : Cpu.Step();
+			var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 
 			var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
 			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref interruptStatus, 4, true);
@@ -129,7 +121,7 @@ namespace StoicGoose.Emulation.Machines
 
 				/* DMA controller */
 				case var n when n >= 0x40 && n < 0x4A:
-					retVal = dma.ReadRegister(register);
+					retVal = DmaController.ReadRegister(register);
 					break;
 
 				/* Misc system registers */
@@ -269,7 +261,7 @@ namespace StoicGoose.Emulation.Machines
 
 				/* DMA controller */
 				case var n when n >= 0x40 && n < 0x4A:
-					dma.WriteRegister(register, value);
+					DmaController.WriteRegister(register, value);
 					break;
 
 				/* Misc system registers */
