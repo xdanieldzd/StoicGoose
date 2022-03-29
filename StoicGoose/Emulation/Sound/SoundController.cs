@@ -33,7 +33,6 @@ namespace StoicGoose.Emulation.Sound
 
 		int masterVolumeChange;
 
-		public delegate byte MemoryReadDelegate(uint address);
 		readonly MemoryReadDelegate memoryReadDelegate;
 
 		public delegate byte WaveTableReadDelegate(ushort address);

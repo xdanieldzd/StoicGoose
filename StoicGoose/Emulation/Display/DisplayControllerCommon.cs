@@ -56,7 +56,6 @@ namespace StoicGoose.Emulation.Display
 		protected readonly int clockCyclesPerLine = HorizontalTotal;
 		protected readonly byte[] outputFramebuffer = new byte[ScreenWidth * ScreenHeight * 4];
 
-		public delegate byte MemoryReadDelegate(uint address);
 		protected readonly MemoryReadDelegate memoryReadDelegate = default;
 
 		/* REG_DISP_CTRL */

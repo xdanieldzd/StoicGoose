@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using StoicGoose.Emulation;
+
 namespace StoicGoose.Disassembly
 {
 	public partial class Disassembler

@@ -10,8 +10,8 @@ namespace StoicGoose.Emulation.CPU
 
 		private void InitializeDisassembler()
 		{
-			disassembler.ReadDelegate = new Disassembly.MemoryReadDelegate(memoryReadDelegate);
-			disassembler.WriteDelegate = new Disassembly.MemoryWriteDelegate(memoryWriteDelegate);
+			disassembler.ReadDelegate = new MemoryReadDelegate(memoryReadDelegate);
+			disassembler.WriteDelegate = new MemoryWriteDelegate(memoryWriteDelegate);
 		}
 
 		private string DisassembleInstruction(ushort cs, ushort ip)

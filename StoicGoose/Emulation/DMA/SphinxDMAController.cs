@@ -10,8 +10,6 @@ namespace StoicGoose.Emulation.DMA
 	{
 		// TODO: verify behavior!
 
-		public delegate byte MemoryReadDelegate(uint address);
-		public delegate void MemoryWriteDelegate(uint address, byte value);
 		readonly MemoryReadDelegate memoryReadDelegate;
 		readonly MemoryWriteDelegate memoryWriteDelegate;
 

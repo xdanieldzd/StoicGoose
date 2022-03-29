@@ -2,11 +2,6 @@
 {
 	public sealed partial class V30MZ
 	{
-		public delegate byte MemoryReadDelegate(uint address);
-		public delegate void MemoryWriteDelegate(uint address, byte value);
-		public delegate byte RegisterReadDelegate(ushort register);
-		public delegate void RegisterWriteDelegate(ushort register, byte value);
-
 		readonly MemoryReadDelegate memoryReadDelegate;
 		readonly MemoryWriteDelegate memoryWriteDelegate;
 		readonly RegisterReadDelegate registerReadDelegate;

@@ -1,8 +1,5 @@
 ﻿namespace StoicGoose.Disassembly
 {
-	public delegate byte MemoryReadDelegate(uint address);
-	public delegate void MemoryWriteDelegate(uint address, byte value);
-
 	public partial class Disassembler
 	{
 		public byte ReadMemory8(ushort segment, ushort offset)
