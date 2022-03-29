@@ -87,7 +87,7 @@ namespace StoicGoose.Interface.Windows
 		readonly GCHandle clipperHandle = default;
 		readonly IntPtr clipperPointer = IntPtr.Zero;
 
-		public ImGuiMemoryWindow() : base("Memory Editor", new NumericsVector2(10f, 10f), ImGuiCond.Always)
+		public ImGuiMemoryWindow() : base("Memory Editor")
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -598,15 +598,13 @@ namespace StoicGoose.Interface.Windows
 
 		private void DrawPreviewSjis(IMachine machine, int addr, ref string outBuf)
 		{
-			var buf = new byte[128];
+			var buf = new byte[256];
 			var elemSize = dataTypeSizes[ImGuiDataType.U16];
 			var size = addr + (buf.Length / elemSize) > memorySize ? memorySize - addr : (buf.Length / elemSize);
 
 			for (var i = 0; i < size; i++)
 				buf[i] = machine.ReadMemory((uint)(addr + i));
 			outBuf = Encoding.GetEncoding(932).GetString(buf);
-
-			// 29B4C
 		}
 
 		private void EndiannessCopyLittleEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
