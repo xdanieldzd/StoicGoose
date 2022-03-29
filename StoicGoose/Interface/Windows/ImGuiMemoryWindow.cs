@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 using ImGuiNET;
 
@@ -17,50 +15,77 @@ namespace StoicGoose.Interface.Windows
 	{
 		/* Ported/adapted from https://github.com/ocornut/imgui_club/blob/d4cd9896e15a03e92702a578586c3f91bbde01e8/imgui_memory_editor/imgui_memory_editor.h */
 
-		const int defaultMemorySize = 0x100000;
+		/* Consts, dicts, enums... */
+		const int memorySize = 0x100000;
 
-		enum DataFormat { Bin, Dec, Hex }
+		readonly static Dictionary<ImGuiDataType, int> dataTypeSizes = new()
+		{
+			{ ImGuiDataType.S8, 1 },
+			{ ImGuiDataType.U8, 1 },
+			{ ImGuiDataType.S16, 2 },
+			{ ImGuiDataType.U16, 2 },
+			{ ImGuiDataType.S32, 4 },
+			{ ImGuiDataType.U32, 4 },
+			{ ImGuiDataType.S64, 8 },
+			{ ImGuiDataType.U64, 8 },
+			{ ImGuiDataType.Float, sizeof(float) },
+			{ ImGuiDataType.Double, sizeof(double) },
+		};
 
-		bool readOnly = false;
-		int cols = 16;
-		bool optShowOptions = true;
-		bool optShowDataPreview = true;
-		bool optShowHexIi = false;
-		bool optShowAscii = true;
-		bool optGrayOutZeroes = true;
-		bool optUpperCaseHex = true;
-		int optMidColsCount = 8;
-		int optAddrDigitsCount = 0;
-		float optFooterExtraHeight = 0f;
-		uint highlightColor = 0xFFFFFF32;
+		readonly static Dictionary<ImGuiDataType, string> dataTypeDescs = new()
+		{
+			{ ImGuiDataType.S8, "Int8" },
+			{ ImGuiDataType.U8, "Uint8" },
+			{ ImGuiDataType.S16, "Int16" },
+			{ ImGuiDataType.U16, "Uint16" },
+			{ ImGuiDataType.S32, "Int32" },
+			{ ImGuiDataType.U32, "Uint32" },
+			{ ImGuiDataType.S64, "Int64" },
+			{ ImGuiDataType.U64, "Uint64" },
+			{ ImGuiDataType.Float, "Float" },
+			{ ImGuiDataType.Double, "Double" },
+		};
 
+		enum DataFormat { Dec, Hex, Bin }
+
+		/* Public options */
+		public bool IsReadOnly { get; set; } = false;
+		public int NumColumns { get { return numColumns; } set { numColumns = value; } }
+		public bool ShowOptions { get; set; } = true;
+		public bool ShowDataPreview { get { return showDataPreview; } set { showDataPreview = value; } }
+		public bool ShowAscii { get { return showAscii; } set { showAscii = value; } }
+		public bool GrayOutZeroes { get { return grayOutZeroes; } set { grayOutZeroes = value; } }
+		public bool UpperCaseHex { get { return upperCaseHex; } set { upperCaseHex = value; } }
+		public int MidColsCount { get; set; } = 8;
+		public int AddrDigitsCount { get; set; } = 0;
+		public float FooterExtraHeight { get; set; } = 0f;
+		public uint HighlightColor { get; set; } = 0;
+
+		/* Backing fields for options etc */
+		int numColumns = 16;
+		bool showDataPreview = true, showAscii = true, grayOutZeroes = true, upperCaseHex = true;
+
+		/* Internal stuff */
 		bool contentsWidthChanged = false;
-		int dataPreviewAddr = -1;
-		int dataEditingAddr = -1;
+		int numItemsVisible = 0;
+		int dataPreviewAddr = -1, dataEditingAddr = -1;
 		bool dataEditingTakeFocus = false;
 		string dataInputBuf = new('\0', 32);
 		string addrInputBuf = new('\0', 32);
 		int gotoAddr = -1;
-		int highlightMin = -1, highlightMax = -1;
 		int previewEndianness = 0;
 		ImGuiDataType previewDataType = ImGuiDataType.S32;
+
+		/* Sizing variables */
+		int addrDigitsCount = 0;
+		float lineHeight = 0f, glyphWidth = 0f, hexCellWidth = 0f, spacingBetweenMidCols = 0f, windowWidth = 0f;
+		float posHexStart = 0f, posHexEnd = 0f, posAsciiStart = 0f, posAsciiEnd = 0f;
+
+		ImFontPtr japaneseFont = default;
 
 		readonly ImGuiListClipper clipperObject = default;
 		readonly GCHandle clipperHandle = default;
 		readonly IntPtr clipperPointer = IntPtr.Zero;
-
-		int addrDigitsCount = 0;
-		float lineHeight = 0f;
-		float glyphWidth = 0f;
-		float hexCellWidth = 0f;
-		float spacingBetweenMidCols = 0f;
-		float posHexStart = 0f;
-		float posHexEnd = 0f;
-		float posAsciiStart = 0f;
-		float posAsciiEnd = 0f;
-		float windowWidth = 0f;
-
-		ImFontPtr japaneseFont = default;
 
 		public ImGuiMemoryWindow() : base("Memory Editor", new NumericsVector2(10f, 10f), ImGuiCond.Always)
 		{
@@ -76,36 +101,29 @@ namespace StoicGoose.Interface.Windows
 			clipperHandle.Free();
 		}
 
-		void GotoAddrAndHighlight(int addr_min, int addr_max)
-		{
-			gotoAddr = addr_min;
-			highlightMin = addr_min;
-			highlightMax = addr_max;
-		}
-
-		void CalcSizes(int mem_size, int base_display_addr)
+		private void CalcSizes()
 		{
 			var style = ImGui.GetStyle();
 
-			addrDigitsCount = optAddrDigitsCount;
+			addrDigitsCount = AddrDigitsCount;
 			if (addrDigitsCount == 0)
-				for (var n = base_display_addr + mem_size - 1; n > 0; n >>= 4)
+				for (var i = memorySize - 1; i > 0; i >>= 4)
 					addrDigitsCount++;
 
 			lineHeight = ImGui.GetTextLineHeight();
-			glyphWidth = ImGui.CalcTextSize("F").X + 1;
+			glyphWidth = ImGui.CalcTextSize("F").X + 1f;
 			hexCellWidth = (int)(glyphWidth * 2.5f);
 			spacingBetweenMidCols = (int)(hexCellWidth * 0.25f);
-			posHexStart = (addrDigitsCount + 2) * glyphWidth;
-			posHexEnd = posHexStart + (hexCellWidth * cols);
+			posHexStart = (addrDigitsCount + 1) * glyphWidth;
+			posHexEnd = posHexStart + (hexCellWidth * NumColumns);
 			posAsciiStart = posAsciiEnd = posHexEnd;
 
-			if (optShowAscii)
+			if (ShowAscii)
 			{
 				posAsciiStart = posHexEnd + glyphWidth;
-				if (optMidColsCount > 0)
-					posAsciiStart += ((cols + optMidColsCount - 1) / optMidColsCount) * spacingBetweenMidCols;
-				posAsciiEnd = posAsciiStart + cols * glyphWidth;
+				if (MidColsCount > 0)
+					posAsciiStart += ((NumColumns + MidColsCount - 1) / MidColsCount) * spacingBetweenMidCols;
+				posAsciiEnd = posAsciiStart + NumColumns * glyphWidth;
 			}
 
 			windowWidth = posAsciiEnd + style.ScrollbarSize + style.WindowPadding.X * 2 + glyphWidth;
@@ -116,12 +134,15 @@ namespace StoicGoose.Interface.Windows
 			if (args.Length != 1 || args[0] is not IMachine machine) return;
 			if (machine.Cartridge.Metadata == null) return;
 
+			if (HighlightColor == 0)
+				HighlightColor = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.Text) & 0x00FFFFFF);
+
 			if (japaneseFont.Equals(default(ImFontPtr)))
 				japaneseFont = ImGui.GetIO().Fonts.Fonts[1];
 
-			CalcSizes(defaultMemorySize, 0);
+			CalcSizes();
 
-			ImGui.SetNextWindowSize(new NumericsVector2(windowWidth, windowWidth * 0.6f), ImGuiCond.Always);
+			ImGui.SetNextWindowSize(new NumericsVector2(windowWidth, windowWidth * 0.6f), ImGuiCond.FirstUseEver);
 			ImGui.SetNextWindowSizeConstraints(NumericsVector2.Zero, new NumericsVector2(windowWidth, float.MaxValue));
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoScrollbar))
@@ -129,119 +150,143 @@ namespace StoicGoose.Interface.Windows
 				if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
 					ImGui.OpenPopup("context");
 
-				DrawContents(machine, defaultMemorySize, 0);
+				DrawContents(machine);
 
 				if (contentsWidthChanged)
 				{
-					CalcSizes(defaultMemorySize, 0);
-					ImGui.SetNextWindowSize(new NumericsVector2(windowWidth, ImGui.GetWindowSize().Y));
+					CalcSizes();
+					ImGui.SetWindowSize(new NumericsVector2(windowWidth, ImGui.GetWindowSize().Y));
+					contentsWidthChanged = false;
 				}
 
 				ImGui.End();
 			}
 		}
 
-		private void DrawContents(IMachine machine, int mem_size, int base_display_addr)
+		private void DrawContents(IMachine machine)
 		{
-			if (cols < 1) cols = 1;
+			if (NumColumns < 1) NumColumns = 1;
 
 			var style = ImGui.GetStyle();
 
-			var height_separator = style.ItemSpacing.Y;
-			var footer_height = optFooterExtraHeight;
-			if (optShowOptions)
-				footer_height += height_separator + ImGui.GetFrameHeightWithSpacing();
-			if (optShowDataPreview)
-				footer_height += height_separator + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 4);
+			var heightSeparator = style.ItemSpacing.Y;
+			var footerHeight = FooterExtraHeight;
+			if (ShowOptions)
+				footerHeight += heightSeparator + ImGui.GetFrameHeightWithSpacing();
+			if (ShowDataPreview)
+				footerHeight += heightSeparator + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 4.5f);
 
-			ImGui.BeginChild("##scrolling", new NumericsVector2(0f, -footer_height), false, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav);
+			ImGui.BeginChild("##scrolling", new NumericsVector2(0f, -footerHeight), false, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse);
 			{
-				var draw_list = ImGui.GetWindowDrawList();
+				var drawList = ImGui.GetWindowDrawList();
 
 				ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, NumericsVector2.Zero);
 				ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, NumericsVector2.Zero);
 
-				var line_count_total = (mem_size + cols - 1) / cols;
+				var lineCountTotal = (memorySize + NumColumns - 1) / NumColumns;
 
 				var clipper = new ImGuiListClipperPtr(clipperPointer);
-				clipper.Begin(line_count_total, lineHeight);
+				clipper.Begin(lineCountTotal, lineHeight);
 				{
-					var data_next = false;
+					var dataNext = false;
 
-					if (readOnly || dataEditingAddr >= mem_size)
+					if (IsReadOnly || dataEditingAddr >= memorySize)
 						dataEditingAddr = -1;
-					if (dataPreviewAddr >= mem_size)
+					if (dataPreviewAddr >= memorySize)
 						dataPreviewAddr = -1;
 
-					var preview_data_type_size = optShowDataPreview ? DataTypeGetSize(previewDataType) : 0;
+					var previewDataTypeSize = ShowDataPreview && dataTypeSizes.ContainsKey(previewDataType) ? dataTypeSizes[previewDataType] : 0;
 
-					var data_editing_addr_next = -1;
+					var dataEditingAddrNext = -1;
 					if (dataEditingAddr != -1)
 					{
-						if (ImGui.IsKeyPressed(ImGuiKey.UpArrow) && dataEditingAddr >= cols) { data_editing_addr_next = dataEditingAddr - cols; }
-						else if (ImGui.IsKeyPressed(ImGuiKey.DownArrow) && dataEditingAddr < mem_size - cols) { data_editing_addr_next = dataEditingAddr + cols; }
-						else if (ImGui.IsKeyPressed(ImGuiKey.LeftArrow) && dataEditingAddr > 0) { data_editing_addr_next = dataEditingAddr - 1; }
-						else if (ImGui.IsKeyPressed(ImGuiKey.RightArrow) && dataEditingAddr < mem_size - 1) { data_editing_addr_next = dataEditingAddr + 1; }
+						void setScroll() => ImGui.SetScrollFromPosY(ImGui.GetCursorStartPos().Y + dataEditingAddrNext / NumColumns * lineHeight);
+
+						if (ImGui.IsKeyPressed(ImGuiKey.UpArrow) && dataEditingAddr >= NumColumns) { dataEditingAddrNext = dataEditingAddr - NumColumns; }
+						else if (ImGui.IsKeyPressed(ImGuiKey.DownArrow) && dataEditingAddr < memorySize - NumColumns) { dataEditingAddrNext = dataEditingAddr + NumColumns; }
+						else if (ImGui.IsKeyPressed(ImGuiKey.LeftArrow) && dataEditingAddr > 0) { dataEditingAddrNext = dataEditingAddr - 1; }
+						else if (ImGui.IsKeyPressed(ImGuiKey.RightArrow) && dataEditingAddr < memorySize - 1) { dataEditingAddrNext = dataEditingAddr + 1; }
+						else if (ImGui.IsKeyPressed(ImGuiKey.PageUp) && numItemsVisible != 0)
+						{
+							if (dataEditingAddr >= NumColumns * numItemsVisible) dataEditingAddrNext = dataEditingAddr - NumColumns * numItemsVisible;
+							else dataEditingAddrNext = 0;
+							setScroll();
+						}
+						else if (ImGui.IsKeyPressed(ImGuiKey.PageDown) && numItemsVisible != 0)
+						{
+							if (dataEditingAddr < memorySize - NumColumns * numItemsVisible) dataEditingAddrNext = dataEditingAddr + NumColumns * numItemsVisible;
+							else dataEditingAddrNext = memorySize - NumColumns;
+							setScroll();
+						}
+						else if (ImGui.IsKeyPressed(ImGuiKey.Home))
+						{
+							dataEditingAddrNext = 0;
+							setScroll();
+						}
+						else if (ImGui.IsKeyPressed(ImGuiKey.End))
+						{
+							dataEditingAddrNext = memorySize - NumColumns;
+							setScroll();
+						}
 					}
 
-					var window_pos = ImGui.GetWindowPos();
-					if (optShowAscii)
-						draw_list.AddLine(new NumericsVector2(window_pos.X + posAsciiStart - glyphWidth, window_pos.Y), new NumericsVector2(window_pos.X + posAsciiStart - glyphWidth, window_pos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
+					var windowPos = ImGui.GetWindowPos();
+					drawList.AddLine(new NumericsVector2(windowPos.X + posHexStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posHexStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
+					if (ShowAscii)
+						drawList.AddLine(new NumericsVector2(windowPos.X + posAsciiStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posAsciiStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
 
-					var color_text = ImGui.GetColorU32(ImGuiCol.Text);
-					var color_disabled = optGrayOutZeroes ? ImGui.GetColorU32(ImGuiCol.TextDisabled) : color_text;
+					var colorText = ImGui.GetColorU32(ImGuiCol.Text);
+					var colorDisabled = GrayOutZeroes ? ImGui.GetColorU32(ImGuiCol.TextDisabled) : colorText;
 
 					while (clipper.Step())
 					{
-						for (var line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++)
+						numItemsVisible = clipper.DisplayEnd - clipper.DisplayStart - 1;
+
+						for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 						{
-							var addr = line_i * cols;
+							var addr = i * NumColumns;
 
-							ImGui.Text(string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}{addrDigitsCount}}}: ", base_display_addr + addr));
+							ImGui.Text(string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", addr));
 
-							for (var n = 0; n < cols && addr < mem_size; n++, addr++)
+							for (var j = 0; j < NumColumns && addr < memorySize; j++, addr++)
 							{
-								var byte_pos_x = posHexStart + hexCellWidth * n;
-								if (optMidColsCount > 0)
-									byte_pos_x += (n / optMidColsCount) * spacingBetweenMidCols;
+								var bytePosX = posHexStart + hexCellWidth * j;
+								if (MidColsCount > 0)
+									bytePosX += j / MidColsCount * spacingBetweenMidCols;
 
-								ImGui.SameLine(byte_pos_x);
+								ImGui.SameLine(bytePosX);
 
-								bool is_highlight_from_user_range = (addr >= highlightMin && addr < highlightMax);
-								bool is_highlight_from_preview = (addr >= dataPreviewAddr && addr < dataPreviewAddr + preview_data_type_size) && dataPreviewAddr != -1;
-
-								if (is_highlight_from_user_range || is_highlight_from_preview)
+								if (dataPreviewAddr != -1 && addr >= dataPreviewAddr && addr < dataPreviewAddr + previewDataTypeSize)
 								{
 									var pos = ImGui.GetCursorScreenPos();
-									var highlight_width = glyphWidth * 2;
-									var is_next_byte_highlighted = (addr + 1 < mem_size) && highlightMax != -1 && addr + 1 < highlightMax;
-									if (is_next_byte_highlighted || (n + 1 == cols))
+									var highlightWidth = glyphWidth * 2;
+									if (addr < dataPreviewAddr + previewDataTypeSize - 1 && ((addr + 1 < memorySize) || (j + 1 == NumColumns)))
 									{
-										highlight_width = hexCellWidth;
-										if (optMidColsCount > 0 && n > 0 && (n + 1) < cols && ((n + 1) % optMidColsCount) == 0)
-											highlight_width += spacingBetweenMidCols;
+										highlightWidth = hexCellWidth;
+										if (MidColsCount > 0 && j > 0 && (j + 1) < NumColumns && ((j + 1) % MidColsCount) == 0)
+											highlightWidth += spacingBetweenMidCols;
 									}
 
-									draw_list.AddRectFilled(pos, new NumericsVector2(pos.X + highlight_width, pos.Y + lineHeight), highlightColor);
+									drawList.AddRectFilled(pos, new NumericsVector2(pos.X + highlightWidth, pos.Y + lineHeight), HighlightColor);
 								}
 
 								if (dataEditingAddr == addr)
 								{
 									unsafe
 									{
-										var data_write = false;
+										var dataWrite = false;
 										ImGui.PushID(addr);
 										if (dataEditingTakeFocus)
 										{
 											ImGui.SetKeyboardFocusHere(0);
-											addrInputBuf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", base_display_addr + addr);
-											dataInputBuf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr));
+											addrInputBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", addr);
+											dataInputBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr));
 										}
 
-										var user_data = new UserData()
+										var userData = new UserData()
 										{
 											CursorPos = -1,
-											CurrentBufOverwrite = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr))
+											CurrentBufOverwrite = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr))
 										};
 
 										int callback(ImGuiInputTextCallbackData* data)
@@ -249,12 +294,12 @@ namespace StoicGoose.Interface.Windows
 											var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
 
 											if (!dataPtr.HasSelection())
-												user_data.CursorPos = data->CursorPos;
+												userData.CursorPos = data->CursorPos;
 
 											if (dataPtr.SelectionStart == 0 && dataPtr.SelectionEnd == dataPtr.BufTextLen)
 											{
 												dataPtr.DeleteChars(0, dataPtr.BufTextLen);
-												dataPtr.InsertChars(0, user_data.CurrentBufOverwrite);
+												dataPtr.InsertChars(0, userData.CurrentBufOverwrite);
 												dataPtr.SelectionStart = 0;
 												dataPtr.SelectionEnd = 2;
 												dataPtr.CursorPos = 0;
@@ -263,21 +308,21 @@ namespace StoicGoose.Interface.Windows
 											return 0;
 										}
 
-										var flags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.NoHorizontalScroll | ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.AlwaysOverwrite;
+										var flags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.NoHorizontalScroll | ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.AlwaysOverwrite;
 
-										ImGui.SetNextItemWidth(glyphWidth * 2);
-										if (ImGui.InputText("##data", ref dataInputBuf, 32, flags, callback))
-											data_write = data_next = true;
+										ImGui.SetNextItemWidth(glyphWidth * 2f);
+										if (ImGui.InputText("##data", ref dataInputBuf, 2, flags, callback))
+											dataWrite = dataNext = true;
 										else if (!dataEditingTakeFocus && !ImGui.IsItemActive())
-											dataEditingAddr = data_editing_addr_next = -1;
+											dataEditingAddr = dataEditingAddrNext = -1;
 
 										dataEditingTakeFocus = false;
-										if (user_data.CursorPos >= 2)
-											data_write = data_next = true;
-										if (data_editing_addr_next != -1)
-											data_write = data_next = false;
+										if (userData.CursorPos >= 2)
+											dataWrite = dataNext = true;
+										if (dataEditingAddrNext != -1)
+											dataWrite = dataNext = false;
 
-										if (data_write)
+										if (dataWrite)
 											machine.WriteMemory((uint)addr, byte.Parse(dataInputBuf, System.Globalization.NumberStyles.HexNumber));
 
 										ImGui.PopID();
@@ -287,41 +332,27 @@ namespace StoicGoose.Interface.Windows
 								{
 									var b = machine.ReadMemory((uint)addr);
 
-									if (optShowHexIi)
-									{
-										if (b >= 32 && b < 128)
-											ImGui.Text($"{(char)b} ");
-										else if (b == 0xFF && optGrayOutZeroes)
-											ImGui.TextDisabled("## ");
-										else if (b == 0x00)
-											ImGui.Text("   ");
-										else
-											ImGui.Text(string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}} ", b));
-									}
+									if (b == 0 && GrayOutZeroes)
+										ImGui.TextDisabled("00 ");
 									else
-									{
-										if (b == 0 && optGrayOutZeroes)
-											ImGui.TextDisabled("00 ");
-										else
-											ImGui.Text(string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}} ", b));
-									}
+										ImGui.Text(string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}} ", b));
 
-									if (!readOnly && ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+									if (!IsReadOnly && ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
 									{
 										dataEditingTakeFocus = true;
-										data_editing_addr_next = addr;
+										dataEditingAddrNext = addr;
 									}
 								}
 							}
 
-							if (optShowAscii)
+							if (ShowAscii)
 							{
 								ImGui.SameLine(posAsciiStart);
 
 								var pos = ImGui.GetCursorScreenPos();
-								addr = line_i * cols;
+								addr = i * NumColumns;
 
-								ImGui.PushID(line_i);
+								ImGui.PushID(i);
 								if (ImGui.InvisibleButton("ascii", new NumericsVector2(posAsciiEnd - posAsciiStart, lineHeight)))
 								{
 									dataEditingAddr = dataPreviewAddr = addr + (int)((ImGui.GetIO().MousePos.X - pos.X) / glyphWidth);
@@ -329,18 +360,21 @@ namespace StoicGoose.Interface.Windows
 								}
 								ImGui.PopID();
 
-								for (var n = 0; n < cols && addr < mem_size; n++, addr++)
+								for (var j = 0; j < NumColumns && addr < memorySize; j++, addr++)
 								{
+									if (dataPreviewAddr != -1 && addr >= dataPreviewAddr && addr < dataPreviewAddr + previewDataTypeSize)
+										drawList.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), HighlightColor);
+
 									if (addr == dataEditingAddr)
 									{
-										draw_list.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), ImGui.GetColorU32(ImGuiCol.FrameBg));
-										draw_list.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), ImGui.GetColorU32(ImGuiCol.TextSelectedBg));
+										drawList.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), ImGui.GetColorU32(ImGuiCol.FrameBg));
+										drawList.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), ImGui.GetColorU32(ImGuiCol.TextSelectedBg));
 									}
 
-									var c = (char)machine.ReadMemory((uint)addr);
-									var display_c = (c < 32 || c >= 128) ? '.' : c;
+									var ch = (char)machine.ReadMemory((uint)addr);
+									var displayCh = (char.IsControl(ch) || char.IsWhiteSpace(ch)) ? '.' : ch;
 
-									draw_list.AddText(pos, (display_c == c) ? color_text : color_disabled, new string(new char[] { display_c }));
+									drawList.AddText(pos, (displayCh == ch) ? colorText : colorDisabled, new string(new char[] { displayCh }));
 									pos.X += glyphWidth;
 								}
 							}
@@ -353,68 +387,70 @@ namespace StoicGoose.Interface.Windows
 
 					ImGui.SetCursorPosX(windowWidth);
 
-					if (data_next && dataEditingAddr + 1 < mem_size)
+					if (dataNext && dataEditingAddr + 1 < memorySize)
 					{
 						dataEditingAddr = dataPreviewAddr = dataEditingAddr + 1;
 						dataEditingTakeFocus = true;
 					}
-					else if (data_editing_addr_next != -1)
+					else if (dataEditingAddrNext != -1)
 					{
-						dataEditingAddr = dataPreviewAddr = data_editing_addr_next;
+						dataEditingAddr = dataPreviewAddr = dataEditingAddrNext;
 						dataEditingTakeFocus = true;
 					}
 
-					if (optShowOptions)
+					if (ShowOptions)
 					{
 						ImGui.Separator();
-						DrawOptionsLine(mem_size, base_display_addr);
+						DrawOptionsLine();
 					}
 
-					if (optShowDataPreview)
+					if (ShowDataPreview)
 					{
 						ImGui.Separator();
-						DrawPreviewLine(machine, mem_size, base_display_addr);
+						DrawPreviewLine(machine, colorText, colorDisabled);
 					}
 				}
 			}
 		}
 
-		private void DrawOptionsLine(int mem_size, int base_display_addr)
+		private void DrawOptionsLine()
 		{
 			var style = ImGui.GetStyle();
 
 			if (ImGui.Button("Options"))
 				ImGui.OpenPopup("context");
+
 			if (ImGui.BeginPopup("context"))
 			{
-				ImGui.SetNextItemWidth(glyphWidth * 7f + style.FramePadding.X * 2f);
-				if (ImGui.DragInt("##cols", ref cols, 0.2f, 4, 32, "%d cols")) { contentsWidthChanged = true; if (cols < 1) cols = 1; }
-				ImGui.Checkbox("Show Data Preview", ref optShowDataPreview);
-				ImGui.Checkbox("Show HexII", ref optShowHexIi);
-				if (ImGui.Checkbox("Show ASCII", ref optShowAscii)) contentsWidthChanged = true;
-				ImGui.Checkbox("Gray out zeroes", ref optGrayOutZeroes);
-				ImGui.Checkbox("Uppercase hex", ref optUpperCaseHex);
+				ImGui.SetNextItemWidth(glyphWidth * 17f + style.FramePadding.X * 2f);
+				if (ImGui.SliderInt("##cols", ref numColumns, 4, 32, "%d columns")) { contentsWidthChanged = true; if (NumColumns < 1) NumColumns = 1; }
+				ImGui.Checkbox("Show Data Preview", ref showDataPreview);
+				if (ImGui.Checkbox("Show ASCII", ref showAscii)) contentsWidthChanged = true;
+				ImGui.Checkbox("Gray out Zeroes", ref grayOutZeroes);
+				ImGui.Checkbox("Uppercase Hex", ref upperCaseHex);
 
 				ImGui.EndPopup();
 			}
 
 			ImGui.SameLine();
-			ImGui.Text(string.Format($"Range {{0:{(optUpperCaseHex ? "X" : "x")}{addrDigitsCount}}}..{{1:{(optUpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", base_display_addr, base_display_addr + mem_size - 1));
+			ImGui.Text(string.Format($"Range {{0:{(UpperCaseHex ? "X" : "x")}{addrDigitsCount}}}..{{1:{(UpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", 0, memorySize - 1));
 			ImGui.SameLine();
 
+			var flags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue;
+			if (upperCaseHex) flags |= ImGuiInputTextFlags.CharsUppercase;
+
 			ImGui.SetNextItemWidth((addrDigitsCount + 1) * glyphWidth + style.FramePadding.X * 2f);
-			if (ImGui.InputText("##addr", ref addrInputBuf, 32, ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue))
+			if (ImGui.InputText("##addr", ref addrInputBuf, (uint)addrDigitsCount, flags))
 			{
-				gotoAddr = int.Parse(addrInputBuf, System.Globalization.NumberStyles.HexNumber) - base_display_addr;
-				highlightMin = highlightMax = -1;
+				gotoAddr = int.Parse(addrInputBuf, System.Globalization.NumberStyles.HexNumber);
 			}
 
 			if (gotoAddr != -1)
 			{
-				if (gotoAddr < mem_size)
+				if (gotoAddr < memorySize)
 				{
 					ImGui.BeginChild("##scrolling");
-					ImGui.SetScrollFromPosY(ImGui.GetCursorStartPos().Y + (gotoAddr / cols) * lineHeight);
+					ImGui.SetScrollFromPosY(ImGui.GetCursorStartPos().Y + (gotoAddr / NumColumns) * lineHeight);
 					ImGui.EndChild();
 
 					dataEditingAddr = dataPreviewAddr = gotoAddr;
@@ -424,7 +460,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void DrawPreviewLine(IMachine machine, int mem_size, int base_display_addr)
+		private void DrawPreviewLine(IMachine machine, uint colorText, uint colorDisabled)
 		{
 			var style = ImGui.GetStyle();
 
@@ -433,187 +469,191 @@ namespace StoicGoose.Interface.Windows
 			ImGui.SameLine();
 
 			ImGui.SetNextItemWidth((glyphWidth * 10f) + style.FramePadding.X * 2f + style.ItemInnerSpacing.X);
-			if (ImGui.BeginCombo("##combo_type", DataTypeGetDesc(previewDataType), ImGuiComboFlags.HeightLargest))
+			if (ImGui.BeginCombo("##combo_type", dataTypeDescs.ContainsKey(previewDataType) ? dataTypeDescs[previewDataType] : "N/A", ImGuiComboFlags.HeightLargest))
 			{
-				for (var n = 0; n < (int)ImGuiDataType.COUNT; n++)
-					if (ImGui.Selectable(DataTypeGetDesc((ImGuiDataType)n), previewDataType == (ImGuiDataType)n))
-						previewDataType = (ImGuiDataType)n;
+				foreach (ImGuiDataType type in Enum.GetValues(typeof(ImGuiDataType)))
+					if (dataTypeDescs.ContainsKey(type) && ImGui.Selectable(dataTypeDescs[type], previewDataType == type))
+						previewDataType = type;
 				ImGui.EndCombo();
 			}
 			ImGui.SameLine();
 			ImGui.SetNextItemWidth((glyphWidth * 6f) + style.FramePadding.X * 2f + style.ItemInnerSpacing.X);
-			ImGui.Combo("##combo_endianness", ref previewEndianness, "LE\0BE\0\0");
+			ImGui.Combo("##combo_endianness", ref previewEndianness, new string[] { "LE", "BE" }, 2);
 
 			var buf = string.Empty;
-			var x = glyphWidth * 6f;
-			var has_value = dataPreviewAddr != -1;
+			var dist = glyphWidth * 5f;
+			var hasValue = dataPreviewAddr != -1;
 
-			if (has_value)
-				DrawPreviewData(machine, dataPreviewAddr, mem_size, previewDataType, DataFormat.Dec, ref buf);
-			ImGui.Text("Dec"); ImGui.SameLine(x); ImGui.TextUnformatted(has_value ? buf : "N/A");
+			var drawList = ImGui.GetWindowDrawList();
+			var pos = ImGui.GetCursorScreenPos();
 
-			if (has_value)
-				DrawPreviewData(machine, dataPreviewAddr, mem_size, previewDataType, DataFormat.Hex, ref buf);
-			ImGui.Text("Hex"); ImGui.SameLine(x); ImGui.TextUnformatted(has_value ? buf : "N/A");
-
-			if (has_value)
-				DrawPreviewData(machine, dataPreviewAddr, mem_size, previewDataType, DataFormat.Bin, ref buf);
-			ImGui.Text("Bin"); ImGui.SameLine(x); ImGui.TextUnformatted(has_value ? buf : "N/A");
-
-			ImGui.Text("Sjs"); ImGui.SameLine(x);
-			if (has_value)
+			foreach (DataFormat format in Enum.GetValues(typeof(DataFormat)))
 			{
-				var sjsbuf = new byte[64];
-				for (var i = 0; i < sjsbuf.Length && i < mem_size; i++) sjsbuf[i] = machine.ReadMemory((uint)(dataPreviewAddr + i));
-				buf = Encoding.GetEncoding(932).GetString(sjsbuf);
+				drawList.AddText(pos, colorText, $"{format}");
+
+				if (hasValue && dataTypeSizes.ContainsKey(previewDataType))
+					DrawPreviewData(machine, dataPreviewAddr, previewDataType, format, ref buf);
+				else
+					buf = "N/A";
+
+				if (hasValue && format == DataFormat.Bin)
+				{
+					for (var i = 0; i < buf.Length; i++)
+						drawList.AddText(new NumericsVector2(pos.X + dist + (i * (glyphWidth - 1f)), pos.Y),
+							grayOutZeroes && buf[i] == '0' ? colorDisabled : colorText, new string(new char[] { buf[i] }));
+				}
+				else
+					drawList.AddText(new NumericsVector2(pos.X + dist, pos.Y), colorText, buf);
+
+				pos.Y += ImGui.GetTextLineHeightWithSpacing();
+			}
+
+			drawList.AddText(pos, colorText, "SJIS");
+			if (hasValue)
+			{
+				DrawPreviewSjis(machine, dataPreviewAddr, ref buf);
 				ImGui.PushFont(japaneseFont);
-				ImGui.TextUnformatted(buf);
+				drawList.AddText(new NumericsVector2(pos.X + dist, pos.Y), colorText, buf);
 				ImGui.PopFont();
 			}
 			else
-				ImGui.TextUnformatted("N/A");
+				drawList.AddText(new NumericsVector2(pos.X + dist, pos.Y), colorText, "N/A");
 		}
 
-		private void DrawPreviewData(IMachine machine, int addr, int mem_size, ImGuiDataType data_type, DataFormat data_format, ref string out_buf)
+		private void DrawPreviewData(IMachine machine, int addr, ImGuiDataType dataType, DataFormat dataFormat, ref string outBuf)
 		{
-			var buf = new byte[8];
-			var elem_size = DataTypeGetSize(data_type);
-			var size = addr + elem_size > mem_size ? mem_size - addr : elem_size;
+			if (!dataTypeSizes.ContainsKey(dataType)) return;
 
+			var elemSize = dataTypeSizes[dataType];
+			var size = addr + elemSize > memorySize ? memorySize - addr : elemSize;
+
+			var buf = new byte[elemSize];
 			for (var i = 0; i < size; i++)
 				buf[i] = machine.ReadMemory((uint)(addr + i));
 
-			if (data_format == DataFormat.Bin)
+			if (dataFormat == DataFormat.Bin)
 			{
-				var binbuf = new byte[8];
-				EndiannessCopy(ref binbuf, buf, size);
-				out_buf = FormatBinary(binbuf, size * 8);
+				var binBuf = new byte[elemSize];
+				EndiannessCopy(ref binBuf, buf, elemSize);
+				outBuf = FormatBinary(binBuf, size * 8);
 				return;
 			}
 
-			var otherbuf = new byte[8];
-			switch (data_type)
+			var otherBuf = new byte[elemSize];
+			EndiannessCopy(ref otherBuf, buf, elemSize);
+
+			switch (dataType)
 			{
 				case ImGuiDataType.S8:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{(sbyte)otherbuf[0]}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}} ", (sbyte)otherbuf[0]);
+					if (dataFormat == DataFormat.Dec) outBuf = $"{(sbyte)otherBuf[0]}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}} ", (sbyte)otherBuf[0]);
 					break;
 
 				case ImGuiDataType.U8:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{otherbuf[0]}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}2}} ", otherbuf[0]);
+					if (dataFormat == DataFormat.Dec) outBuf = $"{otherBuf[0]}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}} ", otherBuf[0]);
 					break;
 
 				case ImGuiDataType.S16:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToInt16(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}4}} ", BitConverter.ToInt16(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToInt16(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}4}} ", BitConverter.ToInt16(otherBuf));
 					break;
 
 				case ImGuiDataType.U16:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToUInt16(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}4}} ", BitConverter.ToUInt16(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToUInt16(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}4}} ", BitConverter.ToUInt16(otherBuf));
 					break;
 
 				case ImGuiDataType.S32:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToInt32(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToInt32(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToInt32(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToInt32(otherBuf));
 					break;
 
 				case ImGuiDataType.U32:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToUInt32(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToUInt32(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToUInt32(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToUInt32(otherBuf));
 					break;
 
 				case ImGuiDataType.S64:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToInt64(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}16}} ", BitConverter.ToInt64(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToInt64(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}16}} ", BitConverter.ToInt64(otherBuf));
 					break;
 
 				case ImGuiDataType.U64:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToUInt64(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToUInt64(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToUInt64(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}16}} ", BitConverter.ToUInt64(otherBuf));
 					break;
 
 				case ImGuiDataType.Float:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToSingle(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}4}} ", BitConverter.ToUInt32(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToSingle(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToUInt32(otherBuf));
 					break;
 
 				case ImGuiDataType.Double:
-					EndiannessCopy(ref otherbuf, buf, size);
-					if (data_format == DataFormat.Dec) out_buf = $"{BitConverter.ToDouble(otherbuf)}";
-					else if (data_format == DataFormat.Hex) out_buf = string.Format($"{{0:{(optUpperCaseHex ? "X" : "x")}8}} ", BitConverter.ToUInt64(otherbuf));
+					if (dataFormat == DataFormat.Dec) outBuf = $"{BitConverter.ToDouble(otherBuf)}";
+					else if (dataFormat == DataFormat.Hex) outBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}16}} ", BitConverter.ToUInt64(otherBuf));
 					break;
 			}
 		}
 
-		void EndiannessCopyLittleEndian(ref byte[] dst, byte[] src, int size, bool is_little_endian)
+		private void DrawPreviewSjis(IMachine machine, int addr, ref string outBuf)
 		{
-			if (is_little_endian)
-				Array.Copy(src, dst, size);
+			var buf = new byte[128];
+			var elemSize = dataTypeSizes[ImGuiDataType.U16];
+			var size = addr + (buf.Length / elemSize) > memorySize ? memorySize - addr : (buf.Length / elemSize);
+
+			for (var i = 0; i < size; i++)
+				buf[i] = machine.ReadMemory((uint)(addr + i));
+			outBuf = Encoding.GetEncoding(932).GetString(buf);
+
+			// 29B4C
+		}
+
+		private void EndiannessCopyLittleEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
+		{
+			if (isLittleEndian)
+				Array.Copy(src, dst, src.Length);
 			else
 			{
-				for (int i = 0, j = size - 1; i < size; i++, j--)
-					dst[i] = src[j];
+				for (int i = 0; i < dst.Length; i += elemSize)
+					for (var j = 0; j < elemSize; j++)
+						dst[i + j] = src[(i + (elemSize - 1)) - j];
 			}
 		}
 
-		void EndiannessCopyBigEndian(ref byte[] dst, byte[] src, int size, bool is_little_endian)
+		private void EndiannessCopyBigEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
 		{
-			if (is_little_endian)
+			if (isLittleEndian)
 			{
-				for (int i = 0, j = size - 1; i < size; i++, j--)
-					dst[i] = src[j];
+				for (int i = 0, j = dst.Length - 1; i < dst.Length; i += elemSize, j -= elemSize)
+					for (var k = 0; k < elemSize; k++)
+						dst[i + k] = src[j - k];
 			}
 			else
-				Array.Copy(src, dst, size);
+				Array.Copy(src, dst, src.Length);
 		}
 
-		void EndiannessCopy(ref byte[] dst, byte[] src, int size)
+		private void EndiannessCopy(ref byte[] dst, byte[] src, int elemSize)
 		{
+			if (dst.Length != src.Length) throw new ArgumentException("Array size mismatch");
+
 			if (BitConverter.IsLittleEndian)
-				EndiannessCopyLittleEndian(ref dst, src, size, previewEndianness != 0);
+				EndiannessCopyLittleEndian(ref dst, src, elemSize, previewEndianness != 0);
 			else
-				EndiannessCopyBigEndian(ref dst, src, size, previewEndianness != 0);
+				EndiannessCopyBigEndian(ref dst, src, elemSize, previewEndianness != 0);
 		}
 
-		string FormatBinary(byte[] buf, int width)
+		private string FormatBinary(byte[] buf, int width)
 		{
-			System.Diagnostics.Debug.Assert(width <= 64);
-			int out_n = 0;
-			char[] out_buf = new char[64 + 8 + 1];
-			int n = width / 8;
-			for (int j = n - 1; j >= 0; --j)
+			var outBuf = new char[width + (width / buf.Length)];
+			for (int i = buf.Length - 1, j = 0; i >= 0; i--, j += 9)
 			{
-				for (int i = 0; i < 8; ++i)
-					out_buf[out_n++] = (buf[j] & (1 << (7 - i))) != 0 ? '1' : '0';
-				out_buf[out_n++] = ' ';
+				for (var k = 0; k < 8; k++)
+					outBuf[j + k] = (buf[i] & (1 << (7 - k))) != 0 ? '1' : '0';
+				outBuf[j + 8] = ' ';
+
 			}
-			System.Diagnostics.Debug.Assert(out_n < out_buf.Length);
-			return new string(out_buf);
-		}
-
-		static int DataTypeGetSize(ImGuiDataType data_type)
-		{
-			int[] sizes = { 1, 1, 2, 2, 4, 4, 8, 8, sizeof(float), sizeof(double) };
-			System.Diagnostics.Debug.Assert(data_type >= 0 && data_type < ImGuiDataType.COUNT);
-			return sizes[(int)data_type];
-		}
-
-		static string DataTypeGetDesc(ImGuiDataType data_type)
-		{
-			string[] descs = { "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32", "Int64", "Uint64", "Float", "Double" };
-			System.Diagnostics.Debug.Assert(data_type >= 0 && data_type < ImGuiDataType.COUNT);
-			return descs[(int)data_type];
+			return new string(outBuf);
 		}
 
 		public class UserData
