@@ -19,7 +19,7 @@ namespace StoicGoose
 		public static readonly bool EnableDebugSoundRecording = false;
 		public static readonly bool EnableAutostartLastRom = true;
 
-		public static readonly bool EnableSkipBootstrapIfFound = true;
+		public static readonly bool EnableSkipBootstrapIfFound = false;
 
 		public static string[] Dump()
 		{

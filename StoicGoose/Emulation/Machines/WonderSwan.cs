@@ -64,9 +64,9 @@ namespace StoicGoose.Emulation.Machines
 			CurrentClockCyclesInFrame += currentCpuClockCycles;
 		}
 
-		public override void DrawImGuiWindows()
+		public override void DrawInternalWindows()
 		{
-			base.DrawImGuiWindows();
+			base.DrawInternalWindows();
 
 			DisplayStatusWindow.Draw(new object[] { DisplayController });
 			MachineStatusWindow.Draw(new object[] { this });

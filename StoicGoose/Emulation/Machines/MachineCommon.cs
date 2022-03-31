@@ -129,7 +129,7 @@ namespace StoicGoose.Emulation.Machines
 		public abstract ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; }
 		public abstract ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; }
 		public ImGuiCpuWindow CpuStatusWindow { get; protected set; } = new();
-		public ImGuiMemoryWindow MemoryEditorWindow { get; protected set; } = new() { IsWindowOpen = true };
+		public ImGuiMemoryWindow MemoryEditorWindow { get; protected set; } = new();
 
 		public virtual void Initialize()
 		{
@@ -342,7 +342,7 @@ namespace StoicGoose.Emulation.Machines
 			Cpu.CloseTraceLogger();
 		}
 
-		public virtual void DrawImGuiWindows()
+		public virtual void DrawInternalWindows()
 		{
 			CpuStatusWindow.Draw(new object[] { Cpu });
 			MemoryEditorWindow.Draw(new object[] { this });

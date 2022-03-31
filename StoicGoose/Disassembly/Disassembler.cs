@@ -59,6 +59,8 @@ namespace StoicGoose.Disassembly
 					length++;
 			}
 
+			if (length == 0) throw new System.Exception("Could not evaluate length of opcode");
+
 			return length;
 		}
 
@@ -332,10 +334,10 @@ namespace StoicGoose.Disassembly
 					case 0xE2: disasm = CreateConditionalJump("loop"); IncrementAddress(); break;
 					case 0xE3: disasm = CreateConditionalJump("jcxz"); IncrementAddress(); break;
 
-					case 0xE4: disasm = $"in al, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
-					case 0xE5: disasm = $"in ax, {GetImmediate8(0)}"; comment = wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
-					case 0xE6: disasm = $"out {GetImmediate8(0)}, al"; comment = wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
-					case 0xE7: disasm = $"out {GetImmediate8(0)}, ax"; comment = wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]; IncrementAddress(); break;
+					case 0xE4: disasm = $"in al, {wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]}"; comment = GetImmediate8(0); IncrementAddress(); break;
+					case 0xE5: disasm = $"in ax, {wonderSwanPortNamesInput[ReadMemory8(nextSegment, nextOffset)]}"; comment = GetImmediate8(0); IncrementAddress(); break;
+					case 0xE6: disasm = $"out {wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]}, al"; comment = GetImmediate8(0); IncrementAddress(); break;
+					case 0xE7: disasm = $"out {wonderSwanPortNamesOutput[ReadMemory8(nextSegment, nextOffset)]}, ax"; comment = GetImmediate8(0); IncrementAddress(); break;
 
 					case 0xE8:
 						disasm = $"call 0x{nextOffset + 2 + (short)ReadMemory16(nextSegment, nextOffset):X4}";

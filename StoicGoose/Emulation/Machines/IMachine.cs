@@ -59,6 +59,6 @@ namespace StoicGoose.Emulation.Machines
 		void BeginTraceLog(string filename);
 		void EndTraceLog();
 
-		void DrawImGuiWindows();
+		void DrawInternalWindows();
 	}
 }

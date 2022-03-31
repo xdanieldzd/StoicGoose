@@ -81,6 +81,7 @@ namespace StoicGoose.Interface.Windows
 		float lineHeight = 0f, glyphWidth = 0f, hexCellWidth = 0f, spacingBetweenMidCols = 0f, windowWidth = 0f;
 		float posHexStart = 0f, posHexEnd = 0f, posAsciiStart = 0f, posAsciiEnd = 0f;
 
+		/* Functional stuffs */
 		ImFontPtr japaneseFont = default;
 
 		readonly ImGuiListClipper clipperObject = default;

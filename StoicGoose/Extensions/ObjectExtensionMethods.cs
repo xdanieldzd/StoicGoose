@@ -1,6 +1,4 @@
-﻿using System;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace StoicGoose.Extensions
 {
@@ -17,18 +15,6 @@ namespace StoicGoose.Extensions
 			{
 				ObjectCreationHandling = ObjectCreationHandling.Replace
 			});
-		}
-
-		/* https://stackoverflow.com/a/1130781 */
-		public static bool IsNumber(this object obj)
-		{
-			if (Equals(obj, null)) return false;
-
-			var objType = Nullable.GetUnderlyingType(obj.GetType()) ?? obj.GetType();
-			if (objType.IsPrimitive)
-				return objType != typeof(bool) && objType != typeof(char) && objType != typeof(IntPtr) && objType != typeof(UIntPtr);
-
-			return objType == typeof(decimal);
 		}
 	}
 }

@@ -20,13 +20,14 @@ namespace StoicGoose.Interface.Windows
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
+				var tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY | ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX;
 				var tableColumnFlags = ImGuiTableColumnFlags.NoSort | ImGuiTableColumnFlags.NoReorder | ImGuiTableColumnFlags.NoResize;
 
 				ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 				if (ImGui.BeginChild("##list", new NumericsVector2(0f, -45f)))
 				{
-					if (ImGui.BeginTable("##list-table", 5, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX))
+					if (ImGui.BeginTable("##list-table", 5, tableFlags))
 					{
 						ImGui.TableSetupScrollFreeze(0, 1);
 						ImGui.TableSetupColumn(string.Empty, tableColumnFlags);

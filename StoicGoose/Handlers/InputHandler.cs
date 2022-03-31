@@ -5,6 +5,8 @@ using System.Linq;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.WinForms;
 
+using ImGuiNET;
+
 using StoicGoose.WinForms;
 
 namespace StoicGoose.Handlers
@@ -36,6 +38,8 @@ namespace StoicGoose.Handlers
 
 		public void PollInput(object sender, PollInputEventArgs e)
 		{
+			if (ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)) return;
+
 			e.ButtonsHeld.Clear();
 
 			if (!IsVerticalOrientation)

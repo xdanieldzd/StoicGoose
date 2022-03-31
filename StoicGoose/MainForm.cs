@@ -183,7 +183,7 @@ namespace StoicGoose
 			{
 				imGuiHandler.BeginFrame();
 				graphicsHandler.DrawFrame();
-				emulatorHandler.Machine.DrawImGuiWindows();
+				emulatorHandler.DrawInternalWindows();
 				logWindow.Draw();
 				imGuiHandler.EndFrame();
 			};
@@ -625,6 +625,16 @@ namespace StoicGoose
 		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			emulatorHandler.Machine.CheatsWindow.IsWindowOpen = true;
+		}
+
+		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.DisassemblerWindow.IsWindowOpen = true;
+		}
+
+		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.Machine.MemoryEditorWindow.IsWindowOpen = true;
 		}
 
 		private void systemToolStripMenuItem_Click(object sender, EventArgs e)
