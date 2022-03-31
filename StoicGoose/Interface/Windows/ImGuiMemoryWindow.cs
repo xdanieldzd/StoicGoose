@@ -5,7 +5,7 @@ using System.Text;
 
 using ImGuiNET;
 
-using StoicGoose.Emulation.Machines;
+using StoicGoose.Emulation;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
@@ -130,10 +130,9 @@ namespace StoicGoose.Interface.Windows
 			windowWidth = posAsciiEnd + style.ScrollbarSize + style.WindowPadding.X * 2 + glyphWidth;
 		}
 
-		protected override void DrawWindow(params object[] args)
+		protected override void DrawWindow(object userData)
 		{
-			if (args.Length != 1 || args[0] is not IMachine machine) return;
-			if (machine.Cartridge.Metadata == null) return;
+			if (userData is not EmulatorHandler handler) return;
 
 			if (HighlightColor == 0)
 				HighlightColor = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.Text) & 0x00FFFFFF);
@@ -151,7 +150,7 @@ namespace StoicGoose.Interface.Windows
 				if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
 					ImGui.OpenPopup("context");
 
-				DrawContents(machine);
+				DrawContents(handler);
 
 				if (contentsWidthChanged)
 				{
@@ -164,7 +163,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void DrawContents(IMachine machine)
+		private void DrawContents(EmulatorHandler handler)
 		{
 			if (NumColumns < 1) NumColumns = 1;
 
@@ -275,19 +274,21 @@ namespace StoicGoose.Interface.Windows
 								{
 									unsafe
 									{
+										var b = handler.IsRunning ? handler.Machine.ReadMemory((uint)addr) : 0;
+
 										var dataWrite = false;
 										ImGui.PushID(addr);
 										if (dataEditingTakeFocus)
 										{
 											ImGui.SetKeyboardFocusHere(0);
 											addrInputBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}{addrDigitsCount}}}", addr);
-											dataInputBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr));
+											dataInputBuf = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", b);
 										}
 
 										var userData = new UserData()
 										{
 											CursorPos = -1,
-											CurrentBufOverwrite = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", machine.ReadMemory((uint)addr))
+											CurrentBufOverwrite = string.Format($"{{0:{(UpperCaseHex ? "X" : "x")}2}}", b)
 										};
 
 										int callback(ImGuiInputTextCallbackData* data)
@@ -324,14 +325,14 @@ namespace StoicGoose.Interface.Windows
 											dataWrite = dataNext = false;
 
 										if (dataWrite)
-											machine.WriteMemory((uint)addr, byte.Parse(dataInputBuf, System.Globalization.NumberStyles.HexNumber));
+											handler.Machine.WriteMemory((uint)addr, byte.Parse(dataInputBuf, System.Globalization.NumberStyles.HexNumber));
 
 										ImGui.PopID();
 									}
 								}
 								else
 								{
-									var b = machine.ReadMemory((uint)addr);
+									var b = handler.IsRunning ? handler.Machine.ReadMemory((uint)addr) : 0;
 
 									if (b == 0 && GrayOutZeroes)
 										ImGui.TextDisabled("00 ");
@@ -372,7 +373,7 @@ namespace StoicGoose.Interface.Windows
 										drawList.AddRectFilled(pos, new NumericsVector2(pos.X + glyphWidth, pos.Y + lineHeight), ImGui.GetColorU32(ImGuiCol.TextSelectedBg));
 									}
 
-									var ch = (char)machine.ReadMemory((uint)addr);
+									var ch = handler.IsRunning ? (char)handler.Machine.ReadMemory((uint)addr) : '\0';
 									var displayCh = (char.IsControl(ch) || char.IsWhiteSpace(ch)) ? '.' : ch;
 
 									drawList.AddText(pos, (displayCh == ch) ? colorText : colorDisabled, new string(new char[] { displayCh }));
@@ -399,6 +400,8 @@ namespace StoicGoose.Interface.Windows
 						dataEditingTakeFocus = true;
 					}
 
+					if (!handler.IsRunning) ImGui.BeginDisabled();
+
 					if (ShowOptions)
 					{
 						ImGui.Separator();
@@ -408,8 +411,10 @@ namespace StoicGoose.Interface.Windows
 					if (ShowDataPreview)
 					{
 						ImGui.Separator();
-						DrawPreviewLine(machine, colorText, colorDisabled);
+						DrawPreviewLine(handler, colorText, colorDisabled);
 					}
+
+					if (!handler.IsRunning) ImGui.EndDisabled();
 				}
 			}
 		}
@@ -461,7 +466,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void DrawPreviewLine(IMachine machine, uint colorText, uint colorDisabled)
+		private void DrawPreviewLine(EmulatorHandler handler, uint colorText, uint colorDisabled)
 		{
 			var style = ImGui.GetStyle();
 
@@ -493,7 +498,7 @@ namespace StoicGoose.Interface.Windows
 				drawList.AddText(pos, colorText, $"{format}");
 
 				if (hasValue && dataTypeSizes.ContainsKey(previewDataType))
-					DrawPreviewData(machine, dataPreviewAddr, previewDataType, format, ref buf);
+					DrawPreviewData(handler, dataPreviewAddr, previewDataType, format, ref buf);
 				else
 					buf = "N/A";
 
@@ -512,7 +517,7 @@ namespace StoicGoose.Interface.Windows
 			drawList.AddText(pos, colorText, "SJIS");
 			if (hasValue)
 			{
-				DrawPreviewSjis(machine, dataPreviewAddr, ref buf);
+				DrawPreviewSjis(handler, dataPreviewAddr, ref buf);
 				ImGui.PushFont(japaneseFont);
 				drawList.AddText(new NumericsVector2(pos.X + dist, pos.Y), colorText, buf);
 				ImGui.PopFont();
@@ -521,7 +526,7 @@ namespace StoicGoose.Interface.Windows
 				drawList.AddText(new NumericsVector2(pos.X + dist, pos.Y), colorText, "N/A");
 		}
 
-		private void DrawPreviewData(IMachine machine, int addr, ImGuiDataType dataType, DataFormat dataFormat, ref string outBuf)
+		private void DrawPreviewData(EmulatorHandler handler, int addr, ImGuiDataType dataType, DataFormat dataFormat, ref string outBuf)
 		{
 			if (!dataTypeSizes.ContainsKey(dataType)) return;
 
@@ -530,7 +535,7 @@ namespace StoicGoose.Interface.Windows
 
 			var buf = new byte[elemSize];
 			for (var i = 0; i < size; i++)
-				buf[i] = machine.ReadMemory((uint)(addr + i));
+				buf[i] = handler.IsRunning ? handler.Machine.ReadMemory((uint)(addr + i)) : (byte)0;
 
 			if (dataFormat == DataFormat.Bin)
 			{
@@ -597,14 +602,14 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void DrawPreviewSjis(IMachine machine, int addr, ref string outBuf)
+		private void DrawPreviewSjis(EmulatorHandler handler, int addr, ref string outBuf)
 		{
 			var buf = new byte[256];
 			var elemSize = dataTypeSizes[ImGuiDataType.U16];
 			var size = addr + (buf.Length / elemSize) > memorySize ? memorySize - addr : (buf.Length / elemSize);
 
 			for (var i = 0; i < size; i++)
-				buf[i] = machine.ReadMemory((uint)(addr + i));
+				buf[i] = handler.IsRunning ? handler.Machine.ReadMemory((uint)(addr + i)) : (byte)0;
 			outBuf = Encoding.GetEncoding(932).GetString(buf);
 		}
 

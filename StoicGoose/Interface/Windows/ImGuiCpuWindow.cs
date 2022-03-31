@@ -14,9 +14,9 @@ namespace StoicGoose.Interface.Windows
 
 		public ImGuiCpuWindow() : base("CPU Status", new NumericsVector2(425f, 185f), ImGuiCond.FirstUseEver) { }
 
-		protected override void DrawWindow(params object[] args)
+		protected override void DrawWindow(object userData)
 		{
-			if (args.Length != 1 || args[0] is not V30MZ cpu) return;
+			if (userData is not V30MZ cpu) return;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{

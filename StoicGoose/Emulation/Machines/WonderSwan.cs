@@ -24,9 +24,6 @@ namespace StoicGoose.Emulation.Machines
 		public override int InternalEepromSize => 64 * 2;
 		public override int InternalEepromAddressBits => 6;
 
-		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwan>("WonderSwan Status");
-		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<AswanDisplayController>("WS Display Controller");
-
 		public WonderSwan() : base() => Metadata = new WonderSwanMetadata();
 
 		public override void Initialize()
@@ -62,14 +59,6 @@ namespace StoicGoose.Emulation.Machines
 				ChangeBit(ref interruptStatus, 2, true);
 
 			CurrentClockCyclesInFrame += currentCpuClockCycles;
-		}
-
-		public override void DrawInternalWindows()
-		{
-			base.DrawInternalWindows();
-
-			DisplayStatusWindow.Draw(new object[] { DisplayController });
-			MachineStatusWindow.Draw(new object[] { this });
 		}
 
 		public override void UpdateStatusIcons()

@@ -79,6 +79,22 @@ namespace StoicGoose.Emulation.Cartridges
 				// NOTE: "RTC present" flag is not entirely consistent; ex. Digimon Tamers Battle Spirit has the flag, but does not have an RTC
 				rtc = new RTC();
 			}
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "ROM loaded.");
+			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
+			Console.WriteLine($" Publisher ID: {Metadata.PublisherCode}, {Metadata.PublisherName} [0x{Metadata.PublisherId:X2}]");
+			Console.WriteLine($" System type: {Metadata.SystemType}");
+			Console.WriteLine($" Game ID: 0x{Metadata.GameId:X2}");
+			Console.WriteLine($"  Calculated ID string: {Metadata.GameIdString}");
+			Console.WriteLine($" Game revision: 0x{Metadata.GameRevision:X2}");
+			Console.WriteLine($" ROM size: {Metadata.RomSize} [0x{(byte)Metadata.RomSize:X2}]");
+			Console.WriteLine($" Save type/size: {Metadata.SaveType}/{Metadata.SaveSize} [0x{(byte)Metadata.SaveType:X2}]");
+			Console.WriteLine($" Misc flags: 0x{Metadata.MiscFlags:X2}");
+			Console.WriteLine($"  Orientation: {Metadata.Orientation}");
+			Console.WriteLine($"  ROM bus width: {Metadata.RomBusWidth}");
+			Console.WriteLine($"  ROM access speed: {Metadata.RomAccessSpeed}");
+			Console.WriteLine($" RTC present: {Metadata.IsRtcPresent} [0x{Metadata.RtcPresentFlag:X2}]");
+			Console.WriteLine($" Checksum: 0x{Metadata.Checksum:X4}");
 		}
 
 		public void LoadSram(byte[] data)

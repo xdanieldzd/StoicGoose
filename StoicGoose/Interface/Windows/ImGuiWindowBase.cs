@@ -26,15 +26,15 @@ namespace StoicGoose.Interface.Windows
 			SizingCondition = condition;
 		}
 
-		public virtual void Draw(params object[] args)
+		public virtual void Draw(object userData)
 		{
 			if (!isWindowOpen) return;
 
 			ImGui.SetNextWindowSize(WindowSize, SizingCondition);
 
-			DrawWindow(args);
+			DrawWindow(userData);
 		}
 
-		protected abstract void DrawWindow(params object[] args);
+		protected abstract void DrawWindow(object userData);
 	}
 }

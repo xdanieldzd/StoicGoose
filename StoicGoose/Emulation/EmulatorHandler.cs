@@ -4,7 +4,6 @@ using System.Threading;
 using System.Windows.Forms;
 
 using StoicGoose.Emulation.Machines;
-using StoicGoose.Interface.Windows;
 
 namespace StoicGoose.Emulation
 {
@@ -23,8 +22,6 @@ namespace StoicGoose.Emulation
 		public bool IsPaused => threadPaused;
 
 		public IMachine Machine { get; } = default;
-
-		public ImGuiDisassemblerWindow DisassemblerWindow { get; protected set; } = new() { IsWindowOpen = true };
 
 		public EmulatorHandler(Type machineType)
 		{
@@ -74,13 +71,6 @@ namespace StoicGoose.Emulation
 		{
 			isFpsLimiterChangeRequested = true;
 			newLimitFps = value;
-		}
-
-		public void DrawInternalWindows()
-		{
-			DisassemblerWindow.Draw(new object[] { this });
-
-			Machine.DrawInternalWindows();
 		}
 
 		private void ThreadMainLoop()

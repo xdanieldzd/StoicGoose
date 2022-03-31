@@ -126,11 +126,6 @@ namespace StoicGoose.Emulation.Machines
 
 		public ImGuiCheatWindow CheatsWindow { get; protected set; } = new();
 
-		public abstract ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; }
-		public abstract ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; }
-		public ImGuiCpuWindow CpuStatusWindow { get; protected set; } = new();
-		public ImGuiMemoryWindow MemoryEditorWindow { get; protected set; } = new();
-
 		public virtual void Initialize()
 		{
 			if (InternalRamSize == -1) throw new Exception("Internal RAM size not set");
@@ -143,6 +138,8 @@ namespace StoicGoose.Emulation.Machines
 			InternalEeprom = new EEPROM(InternalEepromSize, InternalEepromAddressBits);
 
 			InitializeEepromToDefaults();
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine initialized.");
 		}
 
 		public virtual void Reset()
@@ -159,6 +156,8 @@ namespace StoicGoose.Emulation.Machines
 			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
 
 			ResetRegisters();
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine reset.");
 		}
 
 		public virtual void ResetRegisters()
@@ -186,6 +185,8 @@ namespace StoicGoose.Emulation.Machines
 			DisplayController?.Shutdown();
 			SoundController?.Shutdown();
 			InternalEeprom?.Shutdown();
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine shutdown.");
 		}
 
 		protected void InitializeEepromToDefaults()
@@ -278,21 +279,6 @@ namespace StoicGoose.Emulation.Machines
 		public void LoadRom(byte[] data)
 		{
 			Cartridge.LoadRom(data);
-
-			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
-			Console.WriteLine($" Publisher ID: {Cartridge.Metadata.PublisherCode}, {Cartridge.Metadata.PublisherName} [0x{Cartridge.Metadata.PublisherId:X2}]");
-			Console.WriteLine($" System type: {Cartridge.Metadata.SystemType}");
-			Console.WriteLine($" Game ID: 0x{Cartridge.Metadata.GameId:X2}");
-			Console.WriteLine($"  Calculated ID string: {Cartridge.Metadata.GameIdString}");
-			Console.WriteLine($" Game revision: 0x{Cartridge.Metadata.GameRevision:X2}");
-			Console.WriteLine($" ROM size: {Cartridge.Metadata.RomSize} [0x{(byte)Cartridge.Metadata.RomSize:X2}]");
-			Console.WriteLine($" Save type/size: {Cartridge.Metadata.SaveType}/{Cartridge.Metadata.SaveSize} [0x{(byte)Cartridge.Metadata.SaveType:X2}]");
-			Console.WriteLine($" Misc flags: 0x{Cartridge.Metadata.MiscFlags:X2}");
-			Console.WriteLine($"  Orientation: {Cartridge.Metadata.Orientation}");
-			Console.WriteLine($"  ROM bus width: {Cartridge.Metadata.RomBusWidth}");
-			Console.WriteLine($"  ROM access speed: {Cartridge.Metadata.RomAccessSpeed}");
-			Console.WriteLine($" RTC present: {Cartridge.Metadata.IsRtcPresent} [0x{Cartridge.Metadata.RtcPresentFlag:X2}]");
-			Console.WriteLine($" Checksum: 0x{Cartridge.Metadata.Checksum:X4}");
 		}
 
 		public void LoadSaveData(byte[] data)
@@ -342,14 +328,10 @@ namespace StoicGoose.Emulation.Machines
 			Cpu.CloseTraceLogger();
 		}
 
-		public virtual void DrawInternalWindows()
+		public void DrawCheatsWindow()
 		{
-			CpuStatusWindow.Draw(new object[] { Cpu });
-			MemoryEditorWindow.Draw(new object[] { this });
-
-			CheatsWindow.Draw(new object[] { cheats });
+			CheatsWindow.Draw(cheats);
 		}
-
 		public abstract void UpdateStatusIcons();
 
 		public byte ReadMemory(uint address)

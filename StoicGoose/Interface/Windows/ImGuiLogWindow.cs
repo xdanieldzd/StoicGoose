@@ -62,7 +62,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		protected override void DrawWindow(params object[] args)
+		protected override void DrawWindow(object userData)
 		{
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
@@ -136,14 +136,8 @@ namespace StoicGoose.Interface.Windows
 									{
 										var substring = lineBuffer.ToString();
 
-										//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
 										ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
-										ImGui.TextColored(new System.Numerics.Vector4(
-											((prevColor >> 0) & 0xFF) / 255f,
-											((prevColor >> 8) & 0xFF) / 255f,
-											((prevColor >> 16) & 0xFF) / 255f,
-											((prevColor >> 24) & 0xFF) / 255f),
-											substring);
+										ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(prevColor), substring);
 
 										bufferOffset.X += ImGui.CalcTextSize(substring).X;
 
@@ -162,14 +156,8 @@ namespace StoicGoose.Interface.Windows
 
 								if (lineBuffer.Length != 0)
 								{
-									//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
 									ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
-									ImGui.TextColored(new System.Numerics.Vector4(
-										((prevColor >> 0) & 0xFF) / 255f,
-										((prevColor >> 8) & 0xFF) / 255f,
-										((prevColor >> 16) & 0xFF) / 255f,
-										((prevColor >> 24) & 0xFF) / 255f),
-										lineBuffer.ToString());
+									ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(prevColor), lineBuffer.ToString());
 
 									lineBuffer.Clear();
 								}
@@ -211,14 +199,8 @@ namespace StoicGoose.Interface.Windows
 										{
 											var substring = lineBuffer.ToString();
 
-											//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, substring);
 											ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
-											ImGui.TextColored(new System.Numerics.Vector4(
-												((prevColor >> 0) & 0xFF) / 255f,
-												((prevColor >> 8) & 0xFF) / 255f,
-												((prevColor >> 16) & 0xFF) / 255f,
-												((prevColor >> 24) & 0xFF) / 255f),
-												substring);
+											ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(prevColor), substring);
 
 											bufferOffset.X += ImGui.CalcTextSize(substring).X;
 
@@ -235,14 +217,8 @@ namespace StoicGoose.Interface.Windows
 
 								if (lineBuffer.Length != 0)
 								{
-									//drawList.AddText(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y), prevColor, lineBuffer.ToString());
 									ImGui.SetCursorScreenPos(new NumericsVector2(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y));
-									ImGui.TextColored(new System.Numerics.Vector4(
-										((prevColor >> 0) & 0xFF) / 255f,
-										((prevColor >> 8) & 0xFF) / 255f,
-										((prevColor >> 16) & 0xFF) / 255f,
-										((prevColor >> 24) & 0xFF) / 255f),
-										lineBuffer.ToString());
+									ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(prevColor), lineBuffer.ToString());
 
 									lineBuffer.Clear();
 								}

@@ -28,11 +28,6 @@ namespace StoicGoose.Emulation.Machines
 
 		ImGuiCheatWindow CheatsWindow { get; }
 
-		ImGuiComponentRegisterWindow MachineStatusWindow { get; }
-		ImGuiComponentRegisterWindow DisplayStatusWindow { get; }
-		ImGuiCpuWindow CpuStatusWindow { get; }
-		ImGuiMemoryWindow MemoryEditorWindow { get; }
-
 		void Initialize();
 		void Reset();
 		void Shutdown();
@@ -59,6 +54,6 @@ namespace StoicGoose.Emulation.Machines
 		void BeginTraceLog(string filename);
 		void EndTraceLog();
 
-		void DrawInternalWindows();
+		void DrawCheatsWindow();
 	}
 }

@@ -55,14 +55,9 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		public static ImGuiComponentRegisterWindow CreateInstance<T>(string title) where T : IComponent
+		protected override void DrawWindow(object userData)
 		{
-			return new(title, typeof(T));
-		}
-
-		protected override void DrawWindow(params object[] args)
-		{
-			if (args.Length != 1 || args[0].GetType() != componentType) return;
+			if (userData.GetType() != componentType) return;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
@@ -74,7 +69,7 @@ namespace StoicGoose.Interface.Windows
 						{
 							foreach (var entry in list.OrderBy(x => x.Index))
 							{
-								var val = entry.PropInfo.GetValue(args[0], null);
+								var val = entry.PropInfo.GetValue(userData, null);
 								if (val is bool valBool)
 									ImGui.Checkbox(entry.Description, ref valBool);
 								else if (!string.IsNullOrEmpty(entry.FormatString))

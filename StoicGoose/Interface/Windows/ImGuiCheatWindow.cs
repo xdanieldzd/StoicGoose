@@ -14,9 +14,9 @@ namespace StoicGoose.Interface.Windows
 
 		public ImGuiCheatWindow() : base("Cheats", new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
 
-		protected override void DrawWindow(params object[] args)
+		protected override void DrawWindow(object userData)
 		{
-			if (args.Length != 1 || args[0] is not Cheat[] cheats) return;
+			if (userData is not Cheat[] cheats) return;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{

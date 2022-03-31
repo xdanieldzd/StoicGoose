@@ -10,6 +10,7 @@ using OpenTK.WinForms;
 
 using ImGuiNET;
 
+using StoicGoose.Interface.Windows;
 using StoicGoose.OpenGL;
 using StoicGoose.OpenGL.Shaders;
 using StoicGoose.OpenGL.Uniforms;
@@ -70,6 +71,8 @@ namespace StoicGoose.Handlers
 
 		readonly ShaderProgram shaderProgram = default;
 		readonly Texture texture = default;
+
+		readonly List<(ImGuiWindowBase window, Func<object> getUserDataFunc)> windowList = new();
 
 		bool wasFrameBegun = false;
 
@@ -189,6 +192,25 @@ namespace StoicGoose.Handlers
 			lastMouseWheelOffset = mouseState.Scroll;
 		}
 
+		public void RegisterWindow(ImGuiWindowBase window, Func<object> getUserData)
+		{
+			windowList.Add((window, getUserData));
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Registered {window.GetType().Name}.");
+		}
+
+		public T GetWindow<T>() where T : ImGuiWindowBase
+		{
+			return (T)windowList.First(x => x.window is T).window;
+		}
+
+		public void DeregisterWindows<T>() where T : ImGuiWindowBase
+		{
+			windowList.RemoveAll(x => x.window is T);
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Deregistered all {typeof(T).Name}.");
+		}
+
 		public void BeginFrame()
 		{
 			if (wasFrameBegun) throw new Exception("Cannot begin new ImGui frame, last frame still in progress");
@@ -203,6 +225,9 @@ namespace StoicGoose.Handlers
 		public void EndFrame()
 		{
 			if (!wasFrameBegun) throw new Exception("Cannot end ImGui frame, frame has not begun");
+
+			foreach (var (window, getUserDataFunc) in windowList)
+				window.Draw(getUserDataFunc());
 
 			ImGui.Render();
 			RenderDrawData(ImGui.GetDrawData());

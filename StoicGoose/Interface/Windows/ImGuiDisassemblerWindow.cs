@@ -69,10 +69,9 @@ namespace StoicGoose.Interface.Windows
 			posMnemonicStart = posHexEnd + glyphWidth;
 		}
 
-		protected override void DrawWindow(params object[] args)
+		protected override void DrawWindow(object userData)
 		{
-			if (args.Length != 1 || args[0] is not EmulatorHandler handler) return;
-			if (handler.Machine.Cartridge.Metadata == null) return;
+			if (userData is not EmulatorHandler handler) return;
 
 			if (HighlightColor1 == 0)
 				HighlightColor1 = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
@@ -84,7 +83,7 @@ namespace StoicGoose.Interface.Windows
 			if (disassembler.ReadDelegate == null) disassembler.ReadDelegate = handler.Machine.ReadMemory;
 			if (disassembler.WriteDelegate == null) disassembler.WriteDelegate = handler.Machine.WriteMemory;
 
-			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.Registers.CS)
+			if (handler.IsRunning && (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.Registers.CS))
 			{
 				instructionAddresses.Clear();
 				codeSegment = handler.Machine.Cpu.Registers.CS;
@@ -198,6 +197,8 @@ namespace StoicGoose.Interface.Windows
 
 				if (ImGui.BeginChild("##controls"))
 				{
+					if (!handler.IsRunning) ImGui.BeginDisabled();
+
 					ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new NumericsVector2(12f, 12f));
 
 					var contentAvailWidth = ImGui.GetContentRegionAvail().X;
@@ -265,6 +266,8 @@ namespace StoicGoose.Interface.Windows
 					}
 					ImGui.PopStyleVar();
 					ImGui.EndChild();
+
+					if (!handler.IsRunning) ImGui.EndDisabled();
 				}
 
 				ImGui.End();

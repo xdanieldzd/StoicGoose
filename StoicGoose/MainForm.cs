@@ -170,6 +170,11 @@ namespace StoicGoose
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
 			imGuiHandler = new ImGuiHandler(renderControl);
+			imGuiHandler.RegisterWindow(new ImGuiDisassemblerWindow() { IsWindowOpen = true }, () => emulatorHandler);
+			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
+			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
+			imGuiHandler.RegisterWindow(new ImGuiCpuWindow(), () => emulatorHandler.Machine.Cpu);
+			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
 
 			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
 			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
@@ -183,8 +188,8 @@ namespace StoicGoose
 			{
 				imGuiHandler.BeginFrame();
 				graphicsHandler.DrawFrame();
-				emulatorHandler.DrawInternalWindows();
-				logWindow.Draw();
+				emulatorHandler.Machine.DrawCheatsWindow(); // TODO: refactor cheats handling
+				logWindow.Draw(null);
 				imGuiHandler.EndFrame();
 			};
 
@@ -629,27 +634,27 @@ namespace StoicGoose
 
 		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.DisassemblerWindow.IsWindowOpen = true;
+			imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
 		}
 
 		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.MemoryEditorWindow.IsWindowOpen = true;
+			imGuiHandler.GetWindow<ImGuiMemoryWindow>().IsWindowOpen = true;
 		}
 
 		private void systemToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.MachineStatusWindow.IsWindowOpen = true;
+			imGuiHandler.GetWindow<ImGuiMachineStatusWindow>().IsWindowOpen = true;
 		}
 
 		private void cPUToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.CpuStatusWindow.IsWindowOpen = true;
+			imGuiHandler.GetWindow<ImGuiCpuWindow>().IsWindowOpen = true;
 		}
 
 		private void displayControllerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.DisplayStatusWindow.IsWindowOpen = true;
+			imGuiHandler.GetWindow<ImGuiDisplayStatusWindow>().IsWindowOpen = true;
 		}
 
 		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)

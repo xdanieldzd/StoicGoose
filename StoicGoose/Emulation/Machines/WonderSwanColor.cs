@@ -27,9 +27,6 @@ namespace StoicGoose.Emulation.Machines
 
 		public SphinxDMAController DmaController { get; protected set; } = default;
 
-		public override ImGuiComponentRegisterWindow MachineStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<WonderSwanColor>("WonderSwan Color Status");
-		public override ImGuiComponentRegisterWindow DisplayStatusWindow { get; protected set; } = ImGuiComponentRegisterWindow.CreateInstance<SphinxDisplayController>("WS Display Controller");
-
 		public WonderSwanColor() : base() => Metadata = new WonderSwanColorMetadata();
 
 		public override void Initialize()
@@ -80,14 +77,6 @@ namespace StoicGoose.Emulation.Machines
 				ChangeBit(ref interruptStatus, 2, true);
 
 			CurrentClockCyclesInFrame += currentCpuClockCycles;
-		}
-
-		public override void DrawInternalWindows()
-		{
-			base.DrawInternalWindows();
-
-			DisplayStatusWindow.Draw(new object[] { DisplayController });
-			MachineStatusWindow.Draw(new object[] { this });
 		}
 
 		public override void UpdateStatusIcons()
