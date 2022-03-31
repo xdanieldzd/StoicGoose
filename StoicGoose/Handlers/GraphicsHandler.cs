@@ -207,7 +207,7 @@ namespace StoicGoose.Handlers
 
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
-				displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+				displayTextures[i] = new Texture(255, 255, 255, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 

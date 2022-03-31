@@ -34,16 +34,19 @@ namespace StoicGoose.OpenGL
 		}
 
 		public Texture(int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
+			: this(255, 255, 255, 255, width, height, textureMinFilter, textureMagFilter, textureWrapMode) { }
+
+		public Texture(byte r, byte g, byte b, byte a, int width, int height, TextureMinFilter textureMinFilter = TextureMinFilter.Nearest, TextureMagFilter textureMagFilter = TextureMagFilter.Nearest, TextureWrapMode textureWrapMode = TextureWrapMode.Repeat)
 		{
 			Size = new Vector2i(width, height);
 
 			var data = new byte[width * height * 4];
 			for (var i = 0; i < data.Length; i += 4)
 			{
-				data[i + 0] = 255;
-				data[i + 1] = 255;
-				data[i + 2] = 255;
-				data[i + 3] = 255;
+				data[i + 0] = b;
+				data[i + 1] = g;
+				data[i + 2] = r;
+				data[i + 3] = a;
 			}
 
 			var handle = GCHandle.Alloc(data, GCHandleType.Pinned);

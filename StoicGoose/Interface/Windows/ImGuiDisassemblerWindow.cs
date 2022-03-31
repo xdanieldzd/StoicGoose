@@ -72,6 +72,7 @@ namespace StoicGoose.Interface.Windows
 		protected override void DrawWindow(params object[] args)
 		{
 			if (args.Length != 1 || args[0] is not EmulatorHandler handler) return;
+			if (handler.Machine.Cartridge.Metadata == null) return;
 
 			if (HighlightColor1 == 0)
 				HighlightColor1 = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
