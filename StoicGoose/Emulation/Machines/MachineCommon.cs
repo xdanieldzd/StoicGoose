@@ -336,7 +336,7 @@ namespace StoicGoose.Emulation.Machines
 
 		public byte ReadMemory(uint address)
 		{
-			if (!CartEnable && address >= (0x100000 - BootstrapRom.Length))
+			if (!CartEnable && BootstrapRom != null && address >= (0x100000 - BootstrapRom.Length))
 			{
 				/* Bootstrap enabled */
 				return BootstrapRom[address & (BootstrapRom.Length - 1)];

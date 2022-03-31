@@ -128,13 +128,13 @@ namespace StoicGoose.Emulation.Cartridges
 			return address switch
 			{
 				/* SRAM */
-				var n when n >= 0x010000 && n < 0x020000 => sram.Length != 0 ? sram[((uint)(sramBank << 16) | (address & 0x0FFFF)) & sramMask] : (byte)0x90,
+				var n when n >= 0x010000 && n < 0x020000 && sram.Length != 0 => sram[((uint)(sramBank << 16) | (address & 0x0FFFF)) & sramMask],
 				/* ROM bank 0 */
-				var n when n >= 0x020000 && n < 0x030000 => rom[((uint)(romBank0 << 16) | (address & 0x0FFFF)) & romMask],
+				var n when n >= 0x020000 && n < 0x030000 && rom.Length != 0 => rom[((uint)(romBank0 << 16) | (address & 0x0FFFF)) & romMask],
 				/* ROM bank 1 */
-				var n when n >= 0x030000 && n < 0x040000 => rom[((uint)(romBank1 << 16) | (address & 0x0FFFF)) & romMask],
+				var n when n >= 0x030000 && n < 0x040000 && rom.Length != 0 => rom[((uint)(romBank1 << 16) | (address & 0x0FFFF)) & romMask],
 				/* ROM bank 2 */
-				var n when n >= 0x040000 && n < 0x100000 => rom[((uint)(romBank2 << 20) | (address & 0xFFFFF)) & romMask],
+				var n when n >= 0x040000 && n < 0x100000 && rom.Length != 0 => rom[((uint)(romBank2 << 20) | (address & 0xFFFFF)) & romMask],
 				/* Unmapped */
 				_ => 0x90,
 			};
