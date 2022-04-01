@@ -5,6 +5,8 @@ using System.Reflection;
 
 using ImGuiNET;
 
+using NumericsVector2 = System.Numerics.Vector2;
+
 namespace StoicGoose.Interface
 {
 	public static class ImGuiHelpers
@@ -45,6 +47,57 @@ namespace StoicGoose.Interface
 			var result = ImGui.InputText(label, ref stringValue, (uint)digits, textFlags);
 			if (!string.IsNullOrEmpty(stringValue)) value = (T)typeParseMethodDict[type].Invoke(null, new object[] { stringValue, NumberStyles.HexNumber });
 			return result;
+		}
+
+		/* https://github.com/ocornut/imgui/blob/f5c5926fb91764c2ec0e995970818d79b5873d42/imgui_demo.cpp#L191 */
+		public static void HelpMarker(string desc)
+		{
+			ImGui.TextDisabled("(?)");
+			if (ImGui.IsItemHovered())
+			{
+				ImGui.BeginTooltip();
+				ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35f);
+				ImGui.TextUnformatted(desc);
+				ImGui.PopTextWrapPos();
+				ImGui.EndTooltip();
+			}
+		}
+
+		public static int MessageBox(string message, string title, params string[] buttons)
+		{
+			var buttonIdx = -1;
+
+			var viewportCenter = ImGui.GetMainViewport().GetCenter();
+			ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
+
+			var popupDummy = true;
+			if (ImGui.BeginPopupModal(title, ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
+			{
+				ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
+				ImGui.Text(message);
+
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+				ImGui.Separator();
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+
+				var buttonWidth = (ImGui.GetContentRegionAvail().X - (ImGui.GetStyle().ItemSpacing.X * (buttons.Length - 1))) / buttons.Length;
+				for (var i = 0; i < buttons.Length; i++)
+				{
+					if (ImGui.Button(buttons[i], new NumericsVector2(buttonWidth, 0f)))
+					{
+						ImGui.CloseCurrentPopup();
+						buttonIdx = i;
+						break;
+					}
+					ImGui.SameLine();
+				}
+
+				ImGui.PopStyleVar();
+
+				ImGui.EndPopup();
+			}
+
+			return buttonIdx;
 		}
 	}
 }

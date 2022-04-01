@@ -20,6 +20,9 @@ namespace StoicGoose.DataStorage
 		[DisplayName("Input")]
 		[Description("Settings related to emulation input.")]
 		public InputConfiguration Input { get; set; } = new InputConfiguration();
+		[DisplayName("Debugging")]
+		[Description("Settings related to debugging features.")]
+		public DebugConfiguration Debugging { get; set; } = new DebugConfiguration();
 	}
 
 	public sealed class GeneralConfiguration : ConfigurationBase<GeneralConfiguration>
@@ -87,5 +90,12 @@ namespace StoicGoose.DataStorage
 		[DisplayName("System Controls")]
 		[Description("Controls related to hardware functions, i.e. volume button.")]
 		public Dictionary<string, string> SystemControls { get; set; } = new Dictionary<string, string>();
+	}
+
+	public sealed class DebugConfiguration : ConfigurationBase<DebugConfiguration>
+	{
+		[DisplayName("Enable Breakpoints")]
+		[Description("Toggles breakpoints globally.")]
+		public bool EnableBreakpoints { get; set; } = false;
 	}
 }

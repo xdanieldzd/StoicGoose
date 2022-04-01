@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace StoicGoose.Disassembly
+namespace StoicGoose.Debugging
 {
 	public partial class Disassembler
 	{

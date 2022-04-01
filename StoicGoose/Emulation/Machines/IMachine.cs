@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using StoicGoose.Debugging;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
@@ -15,9 +16,13 @@ namespace StoicGoose.Emulation.Machines
 	{
 		MetadataBase Metadata { get; }
 
+		Breakpoint[] Breakpoints { get; }
+		BreakpointVariables BreakpointVariables { get; }
+
 		event EventHandler<PollInputEventArgs> PollInput;
 		event EventHandler<StartOfFrameEventArgs> StartOfFrame;
 		event EventHandler<EventArgs> EndOfFrame;
+		event EventHandler<EventArgs> BreakpointHit;
 
 		Cartridge Cartridge { get; }
 		V30MZ Cpu { get; }
@@ -27,6 +32,7 @@ namespace StoicGoose.Emulation.Machines
 		// TODO: Sphinx DMA controller?
 
 		ImGuiCheatWindow CheatsWindow { get; }
+		ImGuiBreakpointWindow BreakpointWindow { get; }
 
 		void Initialize();
 		void Reset();
@@ -35,16 +41,20 @@ namespace StoicGoose.Emulation.Machines
 		void RunFrame();
 		void RunStep();
 
+		void ThreadHasPaused(object sender, EventArgs e);
+
 		void LoadBootstrap(byte[] data);
 		bool IsBootstrapLoaded { get; }
 		void LoadInternalEeprom(byte[] data);
 		void LoadRom(byte[] data);
 		void LoadSaveData(byte[] data);
 		void LoadCheatList(List<MachineCommon.Cheat> cheatList);
+		void LoadBreakpoints(List<Breakpoint> breakpoints);
 
 		byte[] GetInternalEeprom();
 		byte[] GetSaveData();
 		List<MachineCommon.Cheat> GetCheatList();
+		List<Breakpoint> GetBreakpoints();
 
 		byte ReadMemory(uint address);
 		void WriteMemory(uint address, byte value);
@@ -54,6 +64,6 @@ namespace StoicGoose.Emulation.Machines
 		void BeginTraceLog(string filename);
 		void EndTraceLog();
 
-		void DrawCheatsWindow();
+		void DrawCheatsAndBreakpointWindows();
 	}
 }

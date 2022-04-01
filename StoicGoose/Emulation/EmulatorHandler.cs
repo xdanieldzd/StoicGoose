@@ -23,6 +23,9 @@ namespace StoicGoose.Emulation
 
 		public IMachine Machine { get; } = default;
 
+		public event EventHandler<EventArgs> ThreadHasPaused;
+		public void OnThreadHasPaused(EventArgs e) { ThreadHasPaused?.Invoke(this, e); }
+
 		public EmulatorHandler(Type machineType)
 		{
 			Machine = Activator.CreateInstance(machineType) as IMachine;
@@ -96,6 +99,8 @@ namespace StoicGoose.Emulation
 				{
 					threadPaused = newPauseState;
 					isPauseRequested = false;
+
+					OnThreadHasPaused(EventArgs.Empty);
 				}
 
 				if (isFpsLimiterChangeRequested)

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace StoicGoose.Disassembly
+namespace StoicGoose.Debugging
 {
 	public partial class Disassembler
 	{

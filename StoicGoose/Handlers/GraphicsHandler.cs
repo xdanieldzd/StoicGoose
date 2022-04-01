@@ -347,15 +347,20 @@ namespace StoicGoose.Handlers
 			iconBackgroundTexture.Bind();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
-			var activeIcons = metadata.IsStatusIconActive.Where(x => x.Value).Select(x => x.Key);
-			if (activeIcons != null)
+			lock (metadata.IsStatusIconActive)
 			{
-				foreach (var icon in activeIcons)
-				{
-					iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
+				// TODO: verify this helps???
 
-					iconTextures[icon].Bind();
-					commonVertexArray.Draw(PrimitiveType.Triangles);
+				var activeIcons = metadata.IsStatusIconActive.Where(x => x.Value).Select(x => x.Key);
+				if (activeIcons != null)
+				{
+					foreach (var icon in activeIcons)
+					{
+						iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
+
+						iconTextures[icon].Bind();
+						commonVertexArray.Draw(PrimitiveType.Triangles);
+					}
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using StoicGoose.Disassembly;
+using StoicGoose.Debugging;
 
 namespace StoicGoose.Emulation.CPU
 {

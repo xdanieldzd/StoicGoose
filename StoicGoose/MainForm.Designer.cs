@@ -32,9 +32,9 @@
 			this.menuStrip = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openROMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.recentFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.emulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.pauseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,27 +42,31 @@
 			this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.screenSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.shadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
 			this.muteSoundToolStripMenuItem = new StoicGoose.WinForms.BindableToolStripMenuItem();
-			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
 			this.limitFPSToolStripMenuItem = new StoicGoose.WinForms.BindableToolStripMenuItem();
 			this.rotateScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
 			this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.cheatsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.enableCheatsToolStripMenuItem = new StoicGoose.WinForms.BindableToolStripMenuItem();
-			this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
 			this.cheatListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.memoryEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusWindowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.systemToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.cPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.displayControllerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
+			this.enableBreakpointsToolStripMenuItem = new StoicGoose.WinForms.BindableToolStripMenuItem();
+			this.breakpointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
 			this.logWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+			this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
 			this.traceLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.memoryEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
@@ -70,7 +74,6 @@
 			this.tsslEmulationStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.ofdOpenRom = new System.Windows.Forms.OpenFileDialog();
 			this.renderControl = new StoicGoose.OpenGL.RenderControl();
-			this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip.SuspendLayout();
 			this.statusStrip.SuspendLayout();
 			this.SuspendLayout();
@@ -78,12 +81,12 @@
 			// menuStrip
 			// 
 			this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.fileToolStripMenuItem,
-			this.emulationToolStripMenuItem,
-			this.optionsToolStripMenuItem,
-			this.cheatsToolStripMenuItem,
-			this.debugToolStripMenuItem,
-			this.helpToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.emulationToolStripMenuItem,
+            this.optionsToolStripMenuItem,
+            this.cheatsToolStripMenuItem,
+            this.debugToolStripMenuItem,
+            this.helpToolStripMenuItem});
 			this.menuStrip.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip.Name = "menuStrip";
 			this.menuStrip.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
@@ -94,11 +97,11 @@
 			// fileToolStripMenuItem
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.openROMToolStripMenuItem,
-			this.toolStripMenuItem1,
-			this.recentFilesToolStripMenuItem,
-			this.toolStripMenuItem2,
-			this.exitToolStripMenuItem});
+            this.openROMToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.recentFilesToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.exitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
 			this.fileToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -112,10 +115,10 @@
 			this.openROMToolStripMenuItem.Text = "&Open ROM...";
 			this.openROMToolStripMenuItem.Click += new System.EventHandler(this.loadROMToolStripMenuItem_Click);
 			// 
-			// toolStripMenuItem1
+			// toolStripSeparator1
 			// 
-			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(184, 6);
+			this.toolStripSeparator1.Name = "toolStripSeparator1";
+			this.toolStripSeparator1.Size = new System.Drawing.Size(184, 6);
 			// 
 			// recentFilesToolStripMenuItem
 			// 
@@ -123,10 +126,10 @@
 			this.recentFilesToolStripMenuItem.Size = new System.Drawing.Size(187, 22);
 			this.recentFilesToolStripMenuItem.Text = "&Recent Files";
 			// 
-			// toolStripMenuItem2
+			// toolStripSeparator2
 			// 
-			this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-			this.toolStripMenuItem2.Size = new System.Drawing.Size(184, 6);
+			this.toolStripSeparator2.Name = "toolStripSeparator2";
+			this.toolStripSeparator2.Size = new System.Drawing.Size(184, 6);
 			// 
 			// exitToolStripMenuItem
 			// 
@@ -138,8 +141,8 @@
 			// emulationToolStripMenuItem
 			// 
 			this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.pauseToolStripMenuItem,
-			this.resetToolStripMenuItem});
+            this.pauseToolStripMenuItem,
+            this.resetToolStripMenuItem});
 			this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
 			this.emulationToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
@@ -164,15 +167,15 @@
 			// optionsToolStripMenuItem
 			// 
 			this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.screenSizeToolStripMenuItem,
-			this.shadersToolStripMenuItem,
-			this.toolStripMenuItem3,
-			this.muteSoundToolStripMenuItem,
-			this.toolStripMenuItem4,
-			this.limitFPSToolStripMenuItem,
-			this.rotateScreenToolStripMenuItem,
-			this.toolStripMenuItem5,
-			this.settingsToolStripMenuItem});
+            this.screenSizeToolStripMenuItem,
+            this.shadersToolStripMenuItem,
+            this.toolStripSeparator3,
+            this.muteSoundToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.limitFPSToolStripMenuItem,
+            this.rotateScreenToolStripMenuItem,
+            this.toolStripSeparator5,
+            this.settingsToolStripMenuItem});
 			this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
 			this.optionsToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
@@ -190,10 +193,10 @@
 			this.shadersToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
 			this.shadersToolStripMenuItem.Text = "&Shaders";
 			// 
-			// toolStripMenuItem3
+			// toolStripSeparator3
 			// 
-			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-			this.toolStripMenuItem3.Size = new System.Drawing.Size(143, 6);
+			this.toolStripSeparator3.Name = "toolStripSeparator3";
+			this.toolStripSeparator3.Size = new System.Drawing.Size(143, 6);
 			// 
 			// muteSoundToolStripMenuItem
 			// 
@@ -202,10 +205,10 @@
 			this.muteSoundToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
 			this.muteSoundToolStripMenuItem.Text = "&Mute Sound";
 			// 
-			// toolStripMenuItem4
+			// toolStripSeparator4
 			// 
-			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(143, 6);
+			this.toolStripSeparator4.Name = "toolStripSeparator4";
+			this.toolStripSeparator4.Size = new System.Drawing.Size(143, 6);
 			// 
 			// limitFPSToolStripMenuItem
 			// 
@@ -221,10 +224,10 @@
 			this.rotateScreenToolStripMenuItem.Text = "&Rotate Screen";
 			this.rotateScreenToolStripMenuItem.Click += new System.EventHandler(this.rotateScreenToolStripMenuItem_Click);
 			// 
-			// toolStripMenuItem5
+			// toolStripSeparator5
 			// 
-			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-			this.toolStripMenuItem5.Size = new System.Drawing.Size(143, 6);
+			this.toolStripSeparator5.Name = "toolStripSeparator5";
+			this.toolStripSeparator5.Size = new System.Drawing.Size(143, 6);
 			// 
 			// settingsToolStripMenuItem
 			// 
@@ -236,9 +239,9 @@
 			// cheatsToolStripMenuItem
 			// 
 			this.cheatsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.enableCheatsToolStripMenuItem,
-			this.toolStripMenuItem7,
-			this.cheatListToolStripMenuItem});
+            this.enableCheatsToolStripMenuItem,
+            this.toolStripSeparator6,
+            this.cheatListToolStripMenuItem});
 			this.cheatsToolStripMenuItem.Name = "cheatsToolStripMenuItem";
 			this.cheatsToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
 			this.cheatsToolStripMenuItem.Text = "&Cheats";
@@ -247,42 +250,59 @@
 			// 
 			this.enableCheatsToolStripMenuItem.CheckOnClick = true;
 			this.enableCheatsToolStripMenuItem.Name = "enableCheatsToolStripMenuItem";
-			this.enableCheatsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.enableCheatsToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
 			this.enableCheatsToolStripMenuItem.Text = "Enable &Cheats";
 			// 
-			// toolStripMenuItem7
+			// toolStripSeparator6
 			// 
-			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-			this.toolStripMenuItem7.Size = new System.Drawing.Size(177, 6);
+			this.toolStripSeparator6.Name = "toolStripSeparator6";
+			this.toolStripSeparator6.Size = new System.Drawing.Size(145, 6);
 			// 
 			// cheatListToolStripMenuItem
 			// 
 			this.cheatListToolStripMenuItem.Name = "cheatListToolStripMenuItem";
-			this.cheatListToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.cheatListToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
 			this.cheatListToolStripMenuItem.Text = "&Cheat List";
 			this.cheatListToolStripMenuItem.Click += new System.EventHandler(this.cheatListToolStripMenuItem_Click);
 			// 
 			// debugToolStripMenuItem
 			// 
 			this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.disassemblerToolStripMenuItem,
-			this.memoryEditorToolStripMenuItem,
-			this.toolStripMenuItem6,
-			this.statusWindowsToolStripMenuItem,
-			this.logWindowToolStripMenuItem,
-			this.toolStripMenuItem8,
-			this.traceLogToolStripMenuItem});
+            this.disassemblerToolStripMenuItem,
+            this.memoryEditorToolStripMenuItem,
+            this.statusWindowsToolStripMenuItem,
+            this.toolStripSeparator7,
+            this.enableBreakpointsToolStripMenuItem,
+            this.breakpointsToolStripMenuItem,
+            this.toolStripSeparator8,
+            this.logWindowToolStripMenuItem,
+            this.toolStripSeparator9,
+            this.traceLogToolStripMenuItem});
 			this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
 			this.debugToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
 			this.debugToolStripMenuItem.Text = "&Debug";
 			// 
+			// disassemblerToolStripMenuItem
+			// 
+			this.disassemblerToolStripMenuItem.Name = "disassemblerToolStripMenuItem";
+			this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.disassemblerToolStripMenuItem.Text = "&Disassembler";
+			this.disassemblerToolStripMenuItem.Click += new System.EventHandler(this.disassemblerToolStripMenuItem_Click);
+			// 
+			// memoryEditorToolStripMenuItem
+			// 
+			this.memoryEditorToolStripMenuItem.Name = "memoryEditorToolStripMenuItem";
+			this.memoryEditorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.memoryEditorToolStripMenuItem.Text = "&Memory Editor";
+			this.memoryEditorToolStripMenuItem.Click += new System.EventHandler(this.memoryEditorToolStripMenuItem_Click);
+			// 
 			// statusWindowsToolStripMenuItem
 			// 
 			this.statusWindowsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.systemToolStripMenuItem,
-			this.cPUToolStripMenuItem,
-			this.displayControllerToolStripMenuItem});
+            this.systemToolStripMenuItem,
+            this.cPUToolStripMenuItem,
+            this.displayControllerToolStripMenuItem});
 			this.statusWindowsToolStripMenuItem.Name = "statusWindowsToolStripMenuItem";
 			this.statusWindowsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
 			this.statusWindowsToolStripMenuItem.Text = "&Status Windows...";
@@ -308,6 +328,30 @@
 			this.displayControllerToolStripMenuItem.Text = "&Display Controller";
 			this.displayControllerToolStripMenuItem.Click += new System.EventHandler(this.displayControllerToolStripMenuItem_Click);
 			// 
+			// toolStripSeparator7
+			// 
+			this.toolStripSeparator7.Name = "toolStripSeparator7";
+			this.toolStripSeparator7.Size = new System.Drawing.Size(177, 6);
+			// 
+			// enableBreakpointsToolStripMenuItem
+			// 
+			this.enableBreakpointsToolStripMenuItem.CheckOnClick = true;
+			this.enableBreakpointsToolStripMenuItem.Name = "enableBreakpointsToolStripMenuItem";
+			this.enableBreakpointsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.enableBreakpointsToolStripMenuItem.Text = "Enable &Breakpoints";
+			// 
+			// breakpointsToolStripMenuItem
+			// 
+			this.breakpointsToolStripMenuItem.Name = "breakpointsToolStripMenuItem";
+			this.breakpointsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.breakpointsToolStripMenuItem.Text = "&Breakpoints";
+			this.breakpointsToolStripMenuItem.Click += new System.EventHandler(this.breakpointsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator8
+			// 
+			this.toolStripSeparator8.Name = "toolStripSeparator8";
+			this.toolStripSeparator8.Size = new System.Drawing.Size(177, 6);
+			// 
 			// logWindowToolStripMenuItem
 			// 
 			this.logWindowToolStripMenuItem.Name = "logWindowToolStripMenuItem";
@@ -315,10 +359,10 @@
 			this.logWindowToolStripMenuItem.Text = "&Log Window";
 			this.logWindowToolStripMenuItem.Click += new System.EventHandler(this.logWindowToolStripMenuItem_Click);
 			// 
-			// toolStripMenuItem6
+			// toolStripSeparator9
 			// 
-			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(177, 6);
+			this.toolStripSeparator9.Name = "toolStripSeparator9";
+			this.toolStripSeparator9.Size = new System.Drawing.Size(177, 6);
 			// 
 			// traceLogToolStripMenuItem
 			// 
@@ -327,24 +371,10 @@
 			this.traceLogToolStripMenuItem.Text = "&Trace Log";
 			this.traceLogToolStripMenuItem.Click += new System.EventHandler(this.traceLogToolStripMenuItem_Click);
 			// 
-			// memoryEditorToolStripMenuItem
-			// 
-			this.memoryEditorToolStripMenuItem.Name = "memoryEditorToolStripMenuItem";
-			this.memoryEditorToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.memoryEditorToolStripMenuItem.Text = "&Memory Editor";
-			this.memoryEditorToolStripMenuItem.Click += new System.EventHandler(this.memoryEditorToolStripMenuItem_Click);
-			// 
-			// disassemblerToolStripMenuItem
-			// 
-			this.disassemblerToolStripMenuItem.Name = "disassemblerToolStripMenuItem";
-			this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.disassemblerToolStripMenuItem.Text = "&Disassembler";
-			this.disassemblerToolStripMenuItem.Click += new System.EventHandler(this.disassemblerToolStripMenuItem_Click);
-			// 
 			// helpToolStripMenuItem
 			// 
 			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem});
 			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
 			this.helpToolStripMenuItem.Overflow = System.Windows.Forms.ToolStripItemOverflow.AsNeeded;
 			this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
@@ -360,8 +390,8 @@
 			// statusStrip
 			// 
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.tsslStatus,
-			this.tsslEmulationStatus});
+            this.tsslStatus,
+            this.tsslEmulationStatus});
 			this.statusStrip.Location = new System.Drawing.Point(0, 279);
 			this.statusStrip.Name = "statusStrip";
 			this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
@@ -397,11 +427,6 @@
 			this.renderControl.Size = new System.Drawing.Size(448, 255);
 			this.renderControl.TabIndex = 4;
 			// 
-			// toolStripMenuItem8
-			// 
-			this.toolStripMenuItem8.Name = "toolStripMenuItem8";
-			this.toolStripMenuItem8.Size = new System.Drawing.Size(177, 6);
-			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -432,7 +457,6 @@
 		private System.Windows.Forms.MenuStrip menuStrip;
 		private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openROMToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
 		private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
 		private System.Windows.Forms.StatusStrip statusStrip;
 		private System.Windows.Forms.ToolStripStatusLabel tsslStatus;
@@ -440,7 +464,6 @@
 		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
 		private System.Windows.Forms.OpenFileDialog ofdOpenRom;
 		private System.Windows.Forms.ToolStripMenuItem debugToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
 		private System.Windows.Forms.ToolStripMenuItem recentFilesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripStatusLabel tsslEmulationStatus;
 		private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
@@ -452,25 +475,30 @@
 		private StoicGoose.WinForms.BindableToolStripMenuItem limitFPSToolStripMenuItem;
 		private StoicGoose.OpenGL.RenderControl renderControl;
 		private System.Windows.Forms.ToolStripMenuItem shadersToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
 		private StoicGoose.WinForms.BindableToolStripMenuItem muteSoundToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
 		private System.Windows.Forms.ToolStripMenuItem traceLogToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem statusWindowsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem systemToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem cPUToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem displayControllerToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem logWindowToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
 		private System.Windows.Forms.ToolStripMenuItem cheatsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem cheatListToolStripMenuItem;
 		private StoicGoose.WinForms.BindableToolStripMenuItem enableCheatsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
 		private System.Windows.Forms.ToolStripMenuItem memoryEditorToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem disassemblerToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem8;
+		private StoicGoose.WinForms.BindableToolStripMenuItem enableBreakpointsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem breakpointsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
 	}
 }
 

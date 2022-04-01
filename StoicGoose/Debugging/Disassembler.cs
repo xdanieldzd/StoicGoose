@@ -3,7 +3,7 @@ using System.Linq;
 
 using StoicGoose.Emulation;
 
-namespace StoicGoose.Disassembly
+namespace StoicGoose.Debugging
 {
 	public partial class Disassembler
 	{

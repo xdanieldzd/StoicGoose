@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 using ImGuiNET;
 
-using StoicGoose.Disassembly;
+using StoicGoose.Debugging;
 using StoicGoose.Emulation;
 
 using NumericsVector2 = System.Numerics.Vector2;
@@ -47,6 +47,12 @@ namespace StoicGoose.Interface.Windows
 		readonly ImGuiListClipper clipperObject = default;
 		readonly GCHandle clipperHandle = default;
 		readonly IntPtr clipperPointer = IntPtr.Zero;
+
+		public event EventHandler<EventArgs> PauseEmulation;
+		public void OnPauseEmulation(EventArgs e) { PauseEmulation?.Invoke(this, e); }
+
+		public event EventHandler<EventArgs> UnpauseEmulation;
+		public void OnUnpauseEmulation(EventArgs e) { UnpauseEmulation?.Invoke(this, e); }
 
 		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(650, 605f), ImGuiCond.Always)
 		{
@@ -304,7 +310,7 @@ namespace StoicGoose.Interface.Windows
 
 					if (!handler.IsPaused)
 					{
-						if (ImGui.Button("Pause", new NumericsVector2(buttonWidth, 0f))) handler.Pause();
+						if (ImGui.Button("Pause", new NumericsVector2(buttonWidth, 0f))) OnPauseEmulation(EventArgs.Empty);
 						ImGui.SameLine();
 						ImGui.BeginDisabled();
 						ImGui.Button("Unpause", new NumericsVector2(buttonWidth, 0f));
@@ -316,7 +322,7 @@ namespace StoicGoose.Interface.Windows
 						ImGui.Button("Pause", new NumericsVector2(buttonWidth, 0f));
 						ImGui.EndDisabled();
 						ImGui.SameLine();
-						if (ImGui.Button("Unpause", new NumericsVector2(buttonWidth, 0f))) handler.Unpause();
+						if (ImGui.Button("Unpause", new NumericsVector2(buttonWidth, 0f))) OnUnpauseEmulation(EventArgs.Empty);
 					}
 					ImGui.SameLine();
 					if (handler.IsPaused)

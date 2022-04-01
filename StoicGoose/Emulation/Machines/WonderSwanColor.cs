@@ -61,22 +61,25 @@ namespace StoicGoose.Emulation.Machines
 
 		public override void RunStep()
 		{
-			var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
+			if (!HandleBreakpoints())
+			{
+				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 
-			var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref interruptStatus, 4, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref interruptStatus, 5, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref interruptStatus, 6, true);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref interruptStatus, 7, true);
+				var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref interruptStatus, 4, true);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref interruptStatus, 5, true);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref interruptStatus, 6, true);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref interruptStatus, 7, true);
 
-			CheckAndRaiseInterrupts();
+				CheckAndRaiseInterrupts();
 
-			SoundController.Step(currentCpuClockCycles);
+				SoundController.Step(currentCpuClockCycles);
 
-			if (Cartridge.Step(currentCpuClockCycles))
-				ChangeBit(ref interruptStatus, 2, true);
+				if (Cartridge.Step(currentCpuClockCycles))
+					ChangeBit(ref interruptStatus, 2, true);
 
-			CurrentClockCyclesInFrame += currentCpuClockCycles;
+				CurrentClockCyclesInFrame += currentCpuClockCycles;
+			}
 		}
 
 		public override void UpdateStatusIcons()

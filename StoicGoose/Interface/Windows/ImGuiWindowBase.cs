@@ -11,8 +11,10 @@ namespace StoicGoose.Interface.Windows
 		public bool IsWindowOpen { get => isWindowOpen; set => isWindowOpen = value; }
 
 		public string WindowTitle { get; } = string.Empty;
-		public NumericsVector2 WindowSize { get; } = NumericsVector2.Zero;
+		public NumericsVector2 InitialWindowSize { get; } = NumericsVector2.Zero;
 		public ImGuiCond SizingCondition { get; } = ImGuiCond.None;
+
+		public bool IsCollapsed { get; set; } = false;
 
 		public ImGuiWindowBase(string title)
 		{
@@ -22,7 +24,7 @@ namespace StoicGoose.Interface.Windows
 		public ImGuiWindowBase(string title, NumericsVector2 size, ImGuiCond condition)
 		{
 			WindowTitle = title;
-			WindowSize = size;
+			InitialWindowSize = size;
 			SizingCondition = condition;
 		}
 
@@ -30,9 +32,12 @@ namespace StoicGoose.Interface.Windows
 		{
 			if (!isWindowOpen) return;
 
-			ImGui.SetNextWindowSize(WindowSize, SizingCondition);
+			ImGui.SetNextWindowSize(InitialWindowSize, SizingCondition);
+			ImGui.SetNextWindowCollapsed(IsCollapsed);
 
 			DrawWindow(userData);
+
+			IsCollapsed = ImGui.IsWindowCollapsed();
 		}
 
 		protected abstract void DrawWindow(object userData);

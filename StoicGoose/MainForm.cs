@@ -12,6 +12,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
+using StoicGoose.Debugging;
 using StoicGoose.Emulation;
 using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
@@ -137,6 +138,7 @@ namespace StoicGoose
 			SaveInternalEeprom();
 			SaveRam();
 			SaveCheatList();
+			SaveBreakpoints();
 
 			emulatorHandler.Shutdown();
 
@@ -170,7 +172,11 @@ namespace StoicGoose
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 
 			imGuiHandler = new ImGuiHandler(renderControl);
-			imGuiHandler.RegisterWindow(new ImGuiDisassemblerWindow() { IsWindowOpen = true }, () => emulatorHandler);
+
+			var disassemblerWindow = new ImGuiDisassemblerWindow();
+			disassemblerWindow.PauseEmulation += (s, e) => { PauseEmulation(); };
+			disassemblerWindow.UnpauseEmulation += (s, e) => { UnpauseEmulation(); };
+			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
 			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
 			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
 			imGuiHandler.RegisterWindow(new ImGuiCpuWindow(), () => emulatorHandler.Machine.Cpu);
@@ -181,6 +187,14 @@ namespace StoicGoose
 			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
 			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
+			emulatorHandler.Machine.BreakpointHit += (s, e) =>
+			{
+				PauseEmulation();
+				var window = imGuiHandler.GetWindow<ImGuiDisassemblerWindow>();
+				window.IsWindowOpen = true;
+				window.IsCollapsed = false;
+			};
+			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
 
 			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
@@ -188,7 +202,7 @@ namespace StoicGoose
 			{
 				imGuiHandler.BeginFrame();
 				graphicsHandler.DrawFrame();
-				emulatorHandler.Machine.DrawCheatsWindow(); // TODO: refactor cheats handling
+				emulatorHandler.Machine.DrawCheatsAndBreakpointWindows(); // TODO: refactor cheats handling
 				logWindow.Draw(null);
 				imGuiHandler.EndFrame();
 			};
@@ -400,6 +414,8 @@ namespace StoicGoose
 
 			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
 
+			CreateDataBinding(enableBreakpointsToolStripMenuItem.DataBindings, nameof(enableBreakpointsToolStripMenuItem.Checked), Program.Configuration.Debugging, nameof(Program.Configuration.Debugging.EnableBreakpoints));
+
 			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata.RomFileFilter}|All Files (*.*)|*.*";
 		}
 
@@ -435,6 +451,7 @@ namespace StoicGoose
 				SaveInternalEeprom();
 				SaveRam();
 				SaveCheatList();
+				SaveBreakpoints();
 
 				emulatorHandler.Shutdown();
 			}
@@ -452,6 +469,7 @@ namespace StoicGoose
 
 			LoadRam();
 			LoadCheatList();
+			LoadBreakpoints();
 
 			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
@@ -482,6 +500,12 @@ namespace StoicGoose
 			emulatorHandler.Machine.LoadCheatList(File.Exists(path) ? path.DeserializeFromFile<List<MachineCommon.Cheat>>() : new List<MachineCommon.Cheat>());
 		}
 
+		private void LoadBreakpoints()
+		{
+			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
+			emulatorHandler.Machine.LoadBreakpoints(File.Exists(path) ? path.DeserializeFromFile<List<Breakpoint>>() : new List<Breakpoint>());
+		}
+
 		private void SaveRam()
 		{
 			var data = emulatorHandler.Machine.GetSaveData();
@@ -499,6 +523,15 @@ namespace StoicGoose
 			if (data.Count == 0) return;
 
 			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+			data.SerializeToFile(path);
+		}
+
+		private void SaveBreakpoints()
+		{
+			var data = emulatorHandler.Machine.GetBreakpoints();
+			if (data.Count == 0) return;
+
+			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
 			data.SerializeToFile(path);
 		}
 
@@ -536,6 +569,7 @@ namespace StoicGoose
 			SaveInternalEeprom();
 			SaveRam();
 			SaveCheatList();
+			SaveBreakpoints();
 
 			emulatorHandler.Reset();
 
@@ -655,6 +689,11 @@ namespace StoicGoose
 		private void displayControllerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			imGuiHandler.GetWindow<ImGuiDisplayStatusWindow>().IsWindowOpen = true;
+		}
+
+		private void breakpointsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			emulatorHandler.Machine.BreakpointWindow.IsWindowOpen = true;
 		}
 
 		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)

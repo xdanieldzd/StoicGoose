@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
+using StoicGoose.Debugging;
 using StoicGoose.Emulation.Cartridges;
 using StoicGoose.Emulation.CPU;
 using StoicGoose.Emulation.Display;
@@ -22,6 +23,9 @@ namespace StoicGoose.Emulation.Machines
 		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
 		public const double CpuClock = MasterClock / 4.0; /* /4 = 3.072 MHz */
 
+		public Breakpoint[] Breakpoints { get; private set; } = new Breakpoint[512];
+		public BreakpointVariables BreakpointVariables { get; private set; } = default;
+
 		public event EventHandler<PollInputEventArgs> PollInput = default;
 		public void OnPollInput(PollInputEventArgs e) { PollInput?.Invoke(this, e); }
 
@@ -30,6 +34,9 @@ namespace StoicGoose.Emulation.Machines
 
 		public event EventHandler<EventArgs> EndOfFrame = default;
 		public void OnEndOfFrame(EventArgs e) { EndOfFrame?.Invoke(this, e); }
+
+		public event EventHandler<EventArgs> BreakpointHit = default;
+		public void OnBreakpointHit(EventArgs e) { BreakpointHit?.Invoke(this, e); }
 
 		public abstract int InternalRamSize { get; }
 		public uint InternalRamMask { get; protected set; } = 0;
@@ -124,10 +131,21 @@ namespace StoicGoose.Emulation.Machines
 
 		protected Cheat[] cheats = new Cheat[512];
 
+		// TODO: move out of machine, into ImGuiHandler, requires userdata writeback!
 		public ImGuiCheatWindow CheatsWindow { get; protected set; } = new();
+		public ImGuiBreakpointWindow BreakpointWindow { get; protected set; } = new();
+
+		bool waitingForBreakpointPause = false;
 
 		public virtual void Initialize()
 		{
+			BreakpointVariables = new(this);
+
+
+			//Breakpoints[0] = new Breakpoint() { Expression = "cs == 0xFE00 && ip == 0x001D && memory[0] == 0x00" };
+			//Breakpoints[0].UpdateDelegate();
+
+
 			if (InternalRamSize == -1) throw new Exception("Internal RAM size not set");
 			if (string.IsNullOrEmpty(DefaultUsername)) throw new Exception("Default username not set");
 
@@ -156,6 +174,8 @@ namespace StoicGoose.Emulation.Machines
 			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
 
 			ResetRegisters();
+
+			ClearBreakpointStates();
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine reset.");
 		}
@@ -239,11 +259,13 @@ namespace StoicGoose.Emulation.Machines
 
 		public void RunFrame()
 		{
+			if (waitingForBreakpointPause) return;
+
 			var startOfFrameEventArgs = new StartOfFrameEventArgs();
 			OnStartOfFrame(startOfFrameEventArgs);
 			if (startOfFrameEventArgs.ToggleMasterVolume) SoundController.ToggleMasterVolume();
 
-			while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame)
+			while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame && !waitingForBreakpointPause)
 				RunStep();
 
 			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
@@ -251,9 +273,50 @@ namespace StoicGoose.Emulation.Machines
 			UpdateStatusIcons();
 
 			OnEndOfFrame(EventArgs.Empty);
+
+			if (!waitingForBreakpointPause)
+				ClearBreakpointStates();
 		}
 
 		public abstract void RunStep();
+
+		protected bool HandleBreakpoints()
+		{
+			if (Program.Configuration.Debugging.EnableBreakpoints && !waitingForBreakpointPause)
+			{
+				for (var i = 0; i < Breakpoints.Length; i++)
+				{
+					if (Breakpoints[i] == null) break;
+					if (Breakpoints[i].Enabled && !Breakpoints[i].WasLastHit && Breakpoints[i].Runner(BreakpointVariables).Result)
+					{
+						Breakpoints[i].WasLastHit = true;
+
+						waitingForBreakpointPause = true;
+						OnBreakpointHit(EventArgs.Empty);
+
+						ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Breakpoint hit: ({Breakpoints[i].Expression})");
+
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		protected void ClearBreakpointStates()
+		{
+			for (var i = 0; i < Breakpoints.Length; i++)
+			{
+				if (Breakpoints[i] == null) break;
+				Breakpoints[i].WasLastHit = false;
+			}
+		}
+
+		public void ThreadHasPaused(object sender, EventArgs e)
+		{
+			waitingForBreakpointPause = false;
+		}
 
 		protected void CheckAndRaiseInterrupts()
 		{
@@ -295,6 +358,18 @@ namespace StoicGoose.Emulation.Machines
 				cheats[i] = (cheatList != null && i < cheatList.Count) ? cheatList[i] : null;
 		}
 
+		public void LoadBreakpoints(List<Breakpoint> breakpoints)
+		{
+			for (var i = 0; i < Breakpoints.Length; i++)
+			{
+				Breakpoints[i] = (breakpoints != null && i < breakpoints.Count) ? breakpoints[i] : null;
+				if (Breakpoints[i] != null && !Breakpoints[i].UpdateDelegate())
+				{
+					throw new Exception("Error loading breakpoint list, invalid expression");
+				}
+			}
+		}
+
 		public byte[] GetInternalEeprom()
 		{
 			return InternalEeprom.GetContents();
@@ -318,6 +393,11 @@ namespace StoicGoose.Emulation.Machines
 			return cheats.Where(x => x != null).ToList();
 		}
 
+		public List<Breakpoint> GetBreakpoints()
+		{
+			return Breakpoints.Where(x => x != null).ToList();
+		}
+
 		public void BeginTraceLog(string filename)
 		{
 			Cpu.InitializeTraceLogger(filename);
@@ -328,10 +408,12 @@ namespace StoicGoose.Emulation.Machines
 			Cpu.CloseTraceLogger();
 		}
 
-		public void DrawCheatsWindow()
+		public void DrawCheatsAndBreakpointWindows()
 		{
 			CheatsWindow.Draw(cheats);
+			BreakpointWindow.Draw(Breakpoints);
 		}
+
 		public abstract void UpdateStatusIcons();
 
 		public byte ReadMemory(uint address)
