@@ -50,6 +50,9 @@ namespace StoicGoose.Interface.Windows
 		readonly GCHandle clipperHandle = default;
 		readonly IntPtr clipperPointer = IntPtr.Zero;
 
+		string doModifyRegisterName = string.Empty;
+		ushort newRegisterValue = 0;
+
 		public event EventHandler<EventArgs> PauseEmulation;
 		public void OnPauseEmulation(EventArgs e) { PauseEmulation?.Invoke(this, e); }
 
@@ -99,10 +102,10 @@ namespace StoicGoose.Interface.Windows
 			if (disassembler.ReadDelegate == null) disassembler.ReadDelegate = handler.Machine.ReadMemory;
 			if (disassembler.WriteDelegate == null) disassembler.WriteDelegate = handler.Machine.WriteMemory;
 
-			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.Registers.CS)
+			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.CS)
 			{
 				instructionAddresses.Clear();
-				codeSegment = handler.Machine.Cpu.Registers.CS;
+				codeSegment = handler.Machine.Cpu.CS;
 
 				for (var i = 0; i < segmentSize;)
 				{
@@ -144,7 +147,7 @@ namespace StoicGoose.Interface.Windows
 
 						if (traceExecution || jumpToIpNext)
 						{
-							var idx = instructionAddresses.IndexOf(handler.Machine.Cpu.Registers.IP);
+							var idx = instructionAddresses.IndexOf(handler.Machine.Cpu.IP);
 							if (idx != -1)
 							{
 								centerScrollTo(idx);
@@ -188,7 +191,7 @@ namespace StoicGoose.Interface.Windows
 							{
 								var pos = ImGui.GetCursorScreenPos();
 
-								if (handler.Machine.Cpu.Registers.IP == instructionAddresses[i])
+								if (handler.Machine.Cpu.IP == instructionAddresses[i])
 									drawListDisasm.AddRectFilled(pos, new NumericsVector2(pos.X + ImGui.GetContentRegionAvail().X, pos.Y + lineHeight), HighlightColor1);
 
 								if (i == clipper.DisplayStart + (clipper.DisplayEnd - clipper.DisplayStart) / 2f)
@@ -235,7 +238,7 @@ namespace StoicGoose.Interface.Windows
 
 						if (traceExecution || jumpToSpNext)
 						{
-							var idx = stackAddresses.IndexOf(handler.Machine.Cpu.Registers.SP);
+							var idx = stackAddresses.IndexOf(handler.Machine.Cpu.SP);
 							if (idx != -1)
 							{
 								centerScrollTo(idx);
@@ -280,7 +283,7 @@ namespace StoicGoose.Interface.Windows
 							{
 								var pos = ImGui.GetCursorScreenPos();
 
-								if (handler.Machine.Cpu.Registers.SP == stackAddresses[i])
+								if (handler.Machine.Cpu.SP == stackAddresses[i])
 									drawListStack.AddRectFilled(pos, new NumericsVector2(pos.X + ImGui.GetContentRegionAvail().X, pos.Y + lineHeight), HighlightColor1);
 
 								if (i == clipper.DisplayStart + (clipper.DisplayEnd - clipper.DisplayStart) / 2f)
@@ -421,7 +424,7 @@ namespace StoicGoose.Interface.Windows
 					var pos = ImGui.GetCursorScreenPos();
 					var posStart = pos;
 
-					drawListProcessor.AddText(pos, colorText, $"IP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.IP)}"); pos.X += glyphWidth * 19f;
+					drawListProcessor.AddText(pos, colorText, $"IP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.IP)}"); pos.X += glyphWidth * 19f;
 
 					drawListProcessor.AddText(pos, colorText, "Flags:"); pos.X += glyphWidth * 6f;
 					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Carry, "CF"); pos.X += glyphWidth * 2.5f;
@@ -436,10 +439,13 @@ namespace StoicGoose.Interface.Windows
 					pos.X = posStart.X;
 					pos.Y += height * 1.5f;
 
-					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.AX, "A"); pos.Y += height;
-					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.BX, "B"); pos.Y += height;
-					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.CX, "C"); pos.Y += height;
-					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.DX, "D"); pos.Y += height;
+					if (DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.AX, "A")) { handler.Machine.Cpu.AX = newRegisterValue; }
+					pos.Y += height;
+					if (DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.BX, "B")) { handler.Machine.Cpu.BX = newRegisterValue; }
+					pos.Y += height;
+					if (DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.CX, "C")) { handler.Machine.Cpu.CX = newRegisterValue; }
+					pos.Y += height;
+					if (DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.DX, "D")) { handler.Machine.Cpu.DX = newRegisterValue; }
 					pos.Y = posStart.Y;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
@@ -448,28 +454,28 @@ namespace StoicGoose.Interface.Windows
 					pos.Y += height + lineHeight * 0.75f;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
-					drawListProcessor.AddText(pos, colorText, $"SP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SP)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SP}]"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorText, $"CS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.CS)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.CS}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"SP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SP)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"CS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.CS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.CS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
-					drawListProcessor.AddText(pos, colorText, $"BP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.BP)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.BP}]"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorText, $"DS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.DS)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.DS}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"BP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.BP)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.BP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"DS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.DS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.DS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
-					drawListProcessor.AddText(pos, colorText, $"SI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SI)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SI}]"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorText, $"SS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SS)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SS}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"SI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SI)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
-					drawListProcessor.AddText(pos, colorText, $"DI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.DI)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.DI}]"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorText, $"ES: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.ES)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.ES}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"DI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.DI)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.DI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"ES: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.ES)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.ES}]"); pos.Y += height;
 
 					ImGui.EndChild();
 				}
@@ -483,14 +489,81 @@ namespace StoicGoose.Interface.Windows
 			drawList.AddText(position, cpu.IsFlagSet(flag) ? colorText : colorDisabled, label);
 		}
 
-		private void DrawRegister(ImDrawListPtr drawList, NumericsVector2 position, V30MZ.Register16 register, string label)
+		private bool DrawRegister(ImDrawListPtr drawList, NumericsVector2 position, V30MZ.Register16 register, string label)
 		{
+			var result = false;
+
+			if (false && ImGui.Begin("Debug", ImGuiWindowFlags.AlwaysAutoResize))
+			{
+				var mousepos = ImGui.GetMousePos();
+				ImGui.Text($"pos: {position} -- mouse: {mousepos} -- hit: {ImGui.IsMouseReleased(ImGuiMouseButton.Left) && ImGuiHelpers.IsPointInsideRectangle(mousepos, position, new NumericsVector2(glyphWidth * 10f, lineHeight))}");
+				ImGui.End();
+			}
+
+			var padding = ImGui.GetStyle().ItemSpacing.Y / 2f;
+			var mousePosition = ImGui.GetMousePos();
+			var rectPos = new NumericsVector2(position.X + glyphWidth * 3f, position.Y - padding);
+			var rectSize = new NumericsVector2(glyphWidth * 14f, lineHeight + padding);
+
 			drawList.AddText(position, colorText, $"{label}X: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", register.Word)}"); position.X += glyphWidth * 10f;
 			drawList.AddText(position, colorDisabled, $"[{register.Word}]"); position.X += glyphWidth * 8f;
 			drawList.AddText(position, colorText, $"{label}L: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", register.Low)}"); position.X += glyphWidth * 8f;
 			drawList.AddText(position, colorDisabled, $"[{register.Low}]"); position.X += glyphWidth * 6f;
 			drawList.AddText(position, colorText, $"{label}H: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", register.High)}"); position.X += glyphWidth * 8f;
 			drawList.AddText(position, colorDisabled, $"[{register.High}]"); position.X += glyphWidth * 6f;
+
+			if (string.IsNullOrEmpty(doModifyRegisterName) && ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && ImGuiHelpers.IsPointInsideRectangle(mousePosition, rectPos, rectSize))
+			{
+				drawList.AddRectFilled(rectPos, rectPos + rectSize, HighlightColor1);
+				if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+				{
+					newRegisterValue = register.Word;
+					doModifyRegisterName = label;
+				}
+			}
+
+			if (!string.IsNullOrEmpty(doModifyRegisterName) && doModifyRegisterName == label)
+			{
+				ImGui.OpenPopup($"Modify {label}X##modify-reg{label}");
+
+				var viewportCenter = ImGui.GetMainViewport().GetCenter();
+				ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
+
+				var popupDummy = true;
+				if (ImGui.BeginPopupModal($"Modify {label}X##modify-reg{label}", ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
+				{
+					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
+
+					ImGuiHelpers.InputHex("New Value##modify-value", ref newRegisterValue, 4, false);
+
+					ImGui.Dummy(new NumericsVector2(0f, 2f));
+					ImGui.Separator();
+					ImGui.Dummy(new NumericsVector2(0f, 2f));
+
+					ImGui.SetItemDefaultFocus();
+					if (ImGui.Button("Apply", new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f)))
+					{
+						ImGui.CloseCurrentPopup();
+						result = true;
+						doModifyRegisterName = string.Empty;
+					}
+					ImGui.SameLine();
+					if (ImGui.Button("Cancel", new NumericsVector2(ImGui.GetContentRegionAvail().X, 0f)))
+					{
+						ImGui.CloseCurrentPopup();
+						doModifyRegisterName = string.Empty;
+					}
+
+					ImGui.PopStyleVar();
+
+					ImGui.EndPopup();
+				}
+
+				if (!popupDummy)
+					doModifyRegisterName = string.Empty;
+			}
+
+			return result;
 		}
 	}
 }

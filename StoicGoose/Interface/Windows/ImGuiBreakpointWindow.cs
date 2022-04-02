@@ -24,7 +24,7 @@ namespace StoicGoose.Interface.Windows
 
 			static void handleInvalidBreakpointMessageBox()
 			{
-				ImGuiHelpers.MessageBox("The entered expression is invalid.", invalidBreakpointMsgBoxTitleId, "Okay");
+				ImGuiHelpers.ProcessMessageBox("The entered expression is invalid.", invalidBreakpointMsgBoxTitleId, "Okay");
 			}
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
@@ -114,7 +114,7 @@ namespace StoicGoose.Interface.Windows
 					if (ImGui.Button("Add", new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f)))
 					{
 						if (!newBreakpointToAdd.UpdateDelegate())
-							ImGui.OpenPopup(invalidBreakpointMsgBoxTitleId);
+							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
 						else
 						{
 							var breakpointToAddIdx = Array.FindIndex(breakpoints, x => x == null);
@@ -200,7 +200,7 @@ namespace StoicGoose.Interface.Windows
 					ImGui.SetNextItemWidth(400f);
 					if (ImGui.InputText("Expression##edit-desc", ref breakpoints[breakpointToEditIdx].Expression, 512, ImGuiInputTextFlags.EnterReturnsTrue))
 						if (!breakpoints[breakpointToEditIdx].UpdateDelegate())
-							ImGui.OpenPopup(invalidBreakpointMsgBoxTitleId);
+							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
 					ImGui.SameLine();
 					ImGuiHelpers.HelpMarker(expressionFormatHelpText);
 

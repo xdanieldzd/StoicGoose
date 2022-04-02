@@ -75,6 +75,8 @@ namespace StoicGoose.Handlers
 
 		public List<string> AvailableShaders { get; private set; } = default;
 
+		public Texture DisplayTexture => displayTextures[lastTextureUpdate];
+
 		public GraphicsHandler(MetadataBase metadata)
 		{
 			this.metadata = metadata;
@@ -106,7 +108,7 @@ namespace StoicGoose.Handlers
 
 		private void SetInitialOpenGLState()
 		{
-			GL.ClearColor(Color.Black);
+			GL.ClearColor(Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Blend);
 			GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -313,10 +315,19 @@ namespace StoicGoose.Handlers
 			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? metadata.ScreenSize.Y : metadata.ScreenSize.X, IsVerticalOrientation ? metadata.ScreenSize.X : metadata.ScreenSize.Y);
 		}
 
-		public void DrawFrame()
+		public void ClearFrame()
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+		}
 
+		public void BindTextures()
+		{
+			for (var i = 0; i < commonBundleManifest.Samplers; i++)
+				displayTextures[i].Bind((lastTextureUpdate + i) % commonBundleManifest.Samplers);
+		}
+
+		public void DrawFrame()
+		{
 			commonShaderProgram.Bind();
 
 			renderMode.Value = (int)ShaderRenderMode.Display;
@@ -336,8 +347,7 @@ namespace StoicGoose.Handlers
 			displaySaturation.Value = Program.Configuration.Video.Saturation * 0.01f;
 			displaySaturation.SubmitToProgram(commonShaderProgram);
 
-			for (var i = 0; i < commonBundleManifest.Samplers; i++)
-				displayTextures[i].Bind((lastTextureUpdate + i) % commonBundleManifest.Samplers);
+			BindTextures();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
 			renderMode.Value = (int)ShaderRenderMode.Icons;
@@ -347,20 +357,16 @@ namespace StoicGoose.Handlers
 			iconBackgroundTexture.Bind();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
-			lock (metadata.IsStatusIconActive)
+			// TODO: verify the Clone() helps wrt collection-modified exceptions? (threading issue?)
+			var activeIcons = metadata.IsStatusIconActive.Clone().Where(x => x.Value).Select(x => x.Key);
+			if (activeIcons != null)
 			{
-				// TODO: verify this helps???
-
-				var activeIcons = metadata.IsStatusIconActive.Where(x => x.Value).Select(x => x.Key);
-				if (activeIcons != null)
+				foreach (var icon in activeIcons)
 				{
-					foreach (var icon in activeIcons)
-					{
-						iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
+					iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
 
-						iconTextures[icon].Bind();
-						commonVertexArray.Draw(PrimitiveType.Triangles);
-					}
+					iconTextures[icon].Bind();
+					commonVertexArray.Draw(PrimitiveType.Triangles);
 				}
 			}
 		}

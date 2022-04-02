@@ -17,11 +17,20 @@ namespace StoicGoose.Emulation.CPU
 
 		int pendingIntVector;
 
-		public (Register16 AX, Register16 BX, Register16 CX, Register16 DX,
-			ushort SP, ushort BP, ushort SI, ushort DI,
-			ushort CS, ushort DS, ushort SS, ushort ES,
-			ushort IP) Registers =>
-			(ax, bx, cx, dx, sp, bp, si, di, cs, ds, ss, es, ip);
+		/* Public properties for registers */
+		public Register16 AX { get => ax; set => ax = value; }
+		public Register16 BX { get => bx; set => bx = value; }
+		public Register16 CX { get => cx; set => cx = value; }
+		public Register16 DX { get => dx; set => dx = value; }
+		public ushort SP { get => sp; set => sp = value; }
+		public ushort BP { get => bp; set => bp = value; }
+		public ushort SI { get => si; set => si = value; }
+		public ushort DI { get => di; set => di = value; }
+		public ushort CS { get => cs; set => cs = value; }
+		public ushort DS { get => ds; set => ds = value; }
+		public ushort SS { get => ss; set => ss = value; }
+		public ushort ES { get => es; set => es = value; }
+		public ushort IP { get => ip; set => ip = value; }
 
 		public bool IsHalted => halted;
 

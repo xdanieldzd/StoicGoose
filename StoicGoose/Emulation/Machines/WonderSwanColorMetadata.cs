@@ -15,6 +15,7 @@ namespace StoicGoose.Emulation.Machines
 		public override double RefreshRate => DisplayControllerCommon.VerticalClock;
 
 		public override string GameControls => "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
+		public override string VerticalControlRemap => "y2=x1, y3=x2, y4=x3, y1=x4, x2=y1, x3=y2, x4=y3, x1=y4";
 		public override string HardwareControls => "volume";
 
 		public override string InternalEepromFilename => "WonderSwanColor.eep";

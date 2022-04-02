@@ -5,8 +5,6 @@ using System.Linq;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.WinForms;
 
-using ImGuiNET;
-
 using StoicGoose.WinForms;
 
 namespace StoicGoose.Handlers
@@ -15,6 +13,7 @@ namespace StoicGoose.Handlers
 	{
 		readonly INativeInput nativeInput = default;
 		readonly Dictionary<string, Keys> keyMapping = new();
+		readonly Dictionary<string, string> verticalRemapping = new();
 
 		readonly List<string> lastFramePressed = new();
 
@@ -33,41 +32,26 @@ namespace StoicGoose.Handlers
 					keyMapping.Add(key, (Keys)Enum.Parse(typeof(Keys), value));
 		}
 
-		public List<string> GetMappedKeysHeld() => keyMapping.Where(x => nativeInput.IsKeyDown(x.Value)).Select(x => x.Key).ToList();
-		public List<string> GetMappedKeysPressed() => keyMapping.Where(x => nativeInput.IsKeyDown(x.Value) && !lastFramePressed.Contains(x.Key)).Select(x => x.Key).ToList();
+		public void SetVerticalRemapping(Dictionary<string, string> remapDict)
+		{
+			verticalRemapping.Clear();
+			foreach (var (key, value) in remapDict.Where(x => !string.IsNullOrEmpty(x.Value)))
+				verticalRemapping.Add(key, value);
+		}
+
+		public List<string> GetMappedKeysHeld() => keyMapping.Where(x => nativeInput.IsKeyDown(IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]] : x.Value)).Select(x => x.Key).ToList();
+		public List<string> GetMappedKeysPressed() => keyMapping.Where(x => nativeInput.IsKeyDown(IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]] : x.Value) && !lastFramePressed.Contains(x.Key)).Select(x => x.Key).ToList();
 
 		public void PollInput(object sender, PollInputEventArgs e)
 		{
-			if (ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)) return;
-
 			e.ButtonsHeld.Clear();
 
-			if (!IsVerticalOrientation)
-			{
-				e.ButtonsHeld.AddRange(GetMappedKeysHeld());
-				e.ButtonsPressed.AddRange(GetMappedKeysPressed());
-			}
-			else
-			{
-				// TODO: more elegant way of doing vertical-orientation input?
-				// also add ButtonsPressed support?
-				if (nativeInput.IsKeyDown(keyMapping["start"])) e.ButtonsHeld.Add("start");
-				if (nativeInput.IsKeyDown(keyMapping["b"])) e.ButtonsHeld.Add("b");
-				if (nativeInput.IsKeyDown(keyMapping["a"])) e.ButtonsHeld.Add("a");
+			e.ButtonsHeld.AddRange(GetMappedKeysHeld());
+			e.ButtonsPressed.AddRange(GetMappedKeysPressed());
 
-				if (nativeInput.IsKeyDown(keyMapping["x1"])) e.ButtonsHeld.Add("y2");
-				if (nativeInput.IsKeyDown(keyMapping["x2"])) e.ButtonsHeld.Add("y3");
-				if (nativeInput.IsKeyDown(keyMapping["x3"])) e.ButtonsHeld.Add("y4");
-				if (nativeInput.IsKeyDown(keyMapping["x4"])) e.ButtonsHeld.Add("y1");
-
-				if (nativeInput.IsKeyDown(keyMapping["y1"])) e.ButtonsHeld.Add("x2");
-				if (nativeInput.IsKeyDown(keyMapping["y2"])) e.ButtonsHeld.Add("x3");
-				if (nativeInput.IsKeyDown(keyMapping["y3"])) e.ButtonsHeld.Add("x4");
-				if (nativeInput.IsKeyDown(keyMapping["y4"])) e.ButtonsHeld.Add("x1");
-
-				//if (nativeInput.IsKeyDown(keyMapping["volume"])) e.ButtonsHeld.Add("volume");
-				//if (nativeInput.IsKeyPressed(keyMapping["volume"]) && !lastFramePressed.Contains("volume")) e.ButtonsPressed.Add("volume");
-			}
+			// TODO: fix volume control
+			//if (nativeInput.IsKeyDown(keyMapping["volume"])) e.ButtonsHeld.Add("volume");
+			//if (nativeInput.IsKeyPressed(keyMapping["volume"]) && !lastFramePressed.Contains("volume")) e.ButtonsPressed.Add("volume");
 
 			lastFramePressed.Clear();
 			lastFramePressed.AddRange(e.ButtonsHeld);

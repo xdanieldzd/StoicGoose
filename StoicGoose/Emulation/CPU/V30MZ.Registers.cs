@@ -124,6 +124,9 @@ namespace StoicGoose.Emulation.CPU
 
 			[FieldOffset(0)]
 			public ushort Word;
+
+			public static implicit operator Register16(ushort value) => new() { Word = value };
+
 		}
 	}
 }

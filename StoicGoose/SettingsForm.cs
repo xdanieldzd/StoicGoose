@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 using StoicGoose.DataStorage;
 
@@ -64,6 +56,7 @@ namespace StoicGoose
 			pageInput.Attach(tvSettings);
 
 			var pageDebug = new SettingsPage(Configuration, nameof(Configuration.Debugging));
+			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.StartInDebugUI)));
 			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.EnableBreakpoints)));
 			pageDebug.Attach(tvSettings);
 		}

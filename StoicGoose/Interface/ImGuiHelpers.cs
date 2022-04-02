@@ -63,7 +63,12 @@ namespace StoicGoose.Interface
 			}
 		}
 
-		public static int MessageBox(string message, string title, params string[] buttons)
+		public static void OpenMessageBox(string title)
+		{
+			ImGui.OpenPopup(title);
+		}
+
+		public static int ProcessMessageBox(string message, string title, params string[] buttons)
 		{
 			var buttonIdx = -1;
 
@@ -71,7 +76,7 @@ namespace StoicGoose.Interface
 			ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
 
 			var popupDummy = true;
-			if (ImGui.BeginPopupModal(title, ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
+			if (ImGui.BeginPopupModal($"{title}", ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
 			{
 				ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 				ImGui.Text(message);
@@ -98,6 +103,11 @@ namespace StoicGoose.Interface
 			}
 
 			return buttonIdx;
+		}
+
+		public static bool IsPointInsideRectangle(NumericsVector2 point, NumericsVector2 rectPos, NumericsVector2 rectSize)
+		{
+			return point.X >= rectPos.X && point.X < rectPos.X + rectSize.X && point.Y >= rectPos.Y && point.Y < rectPos.Y + rectSize.Y;
 		}
 	}
 }

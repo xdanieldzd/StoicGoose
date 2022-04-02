@@ -12,6 +12,8 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
+using ImGuiNET;
+
 using StoicGoose.Debugging;
 using StoicGoose.Emulation;
 using StoicGoose.Emulation.Machines;
@@ -41,6 +43,7 @@ namespace StoicGoose
 		EmulatorHandler emulatorHandler = default;
 
 		/* Misc. runtime variables */
+		bool isInitialized = false;
 		Type machineType = default;
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
@@ -126,6 +129,8 @@ namespace StoicGoose
 
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
+
+			isInitialized = true;
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
@@ -170,10 +175,15 @@ namespace StoicGoose
 
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
+			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.Metadata.VerticalControlRemap
+				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+				.ToDictionary(x => x[0], x => x[1]));
 
 			imGuiHandler = new ImGuiHandler(renderControl);
+			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI }, () => (graphicsHandler.DisplayTexture, isVerticalOrientation));
 
-			var disassemblerWindow = new ImGuiDisassemblerWindow();
+			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI };
 			disassemblerWindow.PauseEmulation += (s, e) => { PauseEmulation(); };
 			disassemblerWindow.UnpauseEmulation += (s, e) => { UnpauseEmulation(); };
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
@@ -183,14 +193,18 @@ namespace StoicGoose
 
 			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
 			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
-			emulatorHandler.Machine.PollInput += inputHandler.PollInput;
+			emulatorHandler.Machine.PollInput += (s, e) =>
+			{
+				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
+				if ((screenWindow.IsWindowOpen && screenWindow.IsFocused) || (!screenWindow.IsWindowOpen && !ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)))
+					inputHandler.PollInput(s, e);
+			};
 			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 			emulatorHandler.Machine.BreakpointHit += (s, e) =>
 			{
 				PauseEmulation();
-				var window = imGuiHandler.GetWindow<ImGuiDisassemblerWindow>();
-				window.IsWindowOpen = true;
+				imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
 			};
 			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
 
@@ -199,7 +213,12 @@ namespace StoicGoose
 			renderControl.Paint += (s, e) =>
 			{
 				imGuiHandler.BeginFrame();
-				graphicsHandler.DrawFrame();
+
+				graphicsHandler.ClearFrame();
+
+				if (!imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen) graphicsHandler.DrawFrame();
+				else graphicsHandler.BindTextures();
+
 				emulatorHandler.Machine.DrawCheatsAndBreakpointWindows(); // TODO: refactor cheats handling
 				logWindow.Draw(null);
 				imGuiHandler.EndFrame();
@@ -233,6 +252,8 @@ namespace StoicGoose
 
 		private void SizeAndPositionWindow()
 		{
+			if (imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen && isInitialized) return;
+
 			if (WindowState == FormWindowState.Maximized)
 				WindowState = FormWindowState.Normal;
 
@@ -667,6 +688,11 @@ namespace StoicGoose
 		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
+		}
+
+		private void screenWindowToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen = true;
 		}
 
 		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)

@@ -274,7 +274,7 @@ namespace StoicGoose.Handlers
 							if ((int)cmdBuffer.TextureId == texture.Handle)
 								texture.Bind();
 							else
-								throw new NotImplementedException();
+								GL.BindTexture(TextureTarget.Texture2D, (int)cmdBuffer.TextureId);
 						}
 
 						vertexArray.DrawIndices(PrimitiveType.Triangles, (int)cmdBuffer.IdxOffset, (int)cmdBuffer.ElemCount);

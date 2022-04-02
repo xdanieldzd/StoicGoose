@@ -94,6 +94,9 @@ namespace StoicGoose.DataStorage
 
 	public sealed class DebugConfiguration : ConfigurationBase<DebugConfiguration>
 	{
+		[DisplayName("Start with Debugger UI")]
+		[Description("Starts the emulator with disassembler and screen windows open.")]
+		public bool StartInDebugUI { get; set; } = false;
 		[DisplayName("Enable Breakpoints")]
 		[Description("Toggles breakpoints globally.")]
 		public bool EnableBreakpoints { get; set; } = false;
