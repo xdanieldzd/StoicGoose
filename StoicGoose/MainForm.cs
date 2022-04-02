@@ -207,6 +207,7 @@ namespace StoicGoose
 				imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
 			};
 			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
+			emulatorHandler.ThreadHasUnpaused += emulatorHandler.Machine.ThreadHasUnpaused;
 
 			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };

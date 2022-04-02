@@ -77,7 +77,7 @@ namespace StoicGoose.Interface.Windows
 			glyphWidth = ImGui.CalcTextSize("F").X + 1f;
 			hexCellWidth = (int)(glyphWidth * 2.5f);
 
-			posDisasmAddrStart = glyphWidth * 3f;
+			posDisasmAddrStart = 0f;
 			posDisasmAddrEnd = posDisasmAddrStart + (glyphWidth * 9f);
 			posDisasmHexStart = posDisasmAddrEnd + glyphWidth;
 			posDisasmHexEnd = posDisasmHexStart + (hexCellWidth * maxOpcodeBytes);
@@ -146,7 +146,6 @@ namespace StoicGoose.Interface.Windows
 					clipper.Begin(instructionAddresses.Count, lineHeight);
 					{
 						var windowPos = ImGui.GetWindowPos();
-						drawListDisasm.AddLine(new NumericsVector2(windowPos.X + posDisasmAddrStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posDisasmAddrStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
 						drawListDisasm.AddLine(new NumericsVector2(windowPos.X + posDisasmHexStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posDisasmHexStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
 						drawListDisasm.AddLine(new NumericsVector2(windowPos.X + posDisasmMnemonicStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posDisasmMnemonicStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
 
@@ -205,9 +204,6 @@ namespace StoicGoose.Interface.Windows
 									drawListDisasm.AddRect(pos, new NumericsVector2(pos.X + ImGui.GetContentRegionAvail().X, pos.Y + lineHeight), HighlightColor2);
 
 								var (_, _, bytes, disasm, comment) = disassembler.DisassembleInstruction(codeSegment, instructionAddresses[i]);
-
-								ImGui.Dummy(NumericsVector2.One);
-								ImGui.SameLine(posDisasmAddrStart);
 
 								ImGui.TextUnformatted(string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}:{{1:{(upperCaseHex ? "X" : "x")}4}}", codeSegment, instructionAddresses[i]));
 								ImGui.SameLine(posDisasmHexStart);
@@ -399,11 +395,11 @@ namespace StoicGoose.Interface.Windows
 					if (handler.IsPaused)
 					{
 						ImGui.PushButtonRepeat(true);
-						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep();
+						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep(true);
 						ImGui.SameLine();
-						if (ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunLine();
+						if (ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunLine(true);
 						ImGui.SameLine();
-						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame();
+						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame(true);
 						ImGui.PopButtonRepeat();
 					}
 					else

@@ -176,6 +176,9 @@ namespace StoicGoose.Emulation.Machines
 
 			ResetRegisters();
 
+			lastBreakpointHit = default;
+			breakpointHitReady = false;
+
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine reset.");
 		}
 
@@ -256,7 +259,7 @@ namespace StoicGoose.Emulation.Machines
 			return data;
 		}
 
-		public void RunFrame()
+		public void RunFrame(bool isManual)
 		{
 			if (lastBreakpointHit == null)
 			{
@@ -265,7 +268,7 @@ namespace StoicGoose.Emulation.Machines
 				if (startOfFrameEventArgs.ToggleMasterVolume) SoundController.ToggleMasterVolume();
 
 				while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame && lastBreakpointHit == null)
-					RunLine();
+					RunLine(isManual);
 
 				CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
 
@@ -275,23 +278,23 @@ namespace StoicGoose.Emulation.Machines
 			}
 		}
 
-		public void RunLine()
+		public void RunLine(bool isManual)
 		{
 			if (lastBreakpointHit == null)
 			{
 				while (CurrentClockCyclesInLine < DisplayController.ClockCyclesPerLine && lastBreakpointHit == null)
-					RunStep();
+					RunStep(isManual);
 
 				CurrentClockCyclesInFrame += CurrentClockCyclesInLine;
 				CurrentClockCyclesInLine = 0;
 			}
 		}
 
-		public abstract void RunStep();
+		public abstract void RunStep(bool isManual);
 
 		protected void HandleBreakpoints()
 		{
-			if (Program.Configuration.Debugging.EnableBreakpoints)
+			if (Program.Configuration.Debugging.EnableBreakpoints && lastBreakpointHit == null)
 			{
 				for (var i = 0; i < Breakpoints.Length; i++)
 				{
@@ -318,7 +321,16 @@ namespace StoicGoose.Emulation.Machines
 
 		public void ThreadHasPaused(object sender, EventArgs e)
 		{
-			breakpointHitReady = true;
+			if (lastBreakpointHit != null)
+				breakpointHitReady = true;
+		}
+
+		public void ThreadHasUnpaused(object sender, EventArgs e)
+		{
+			RunStep(true);
+
+			lastBreakpointHit = null;
+			breakpointHitReady = false;
 		}
 
 		protected void CheckAndRaiseInterrupts()

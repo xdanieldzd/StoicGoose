@@ -58,11 +58,11 @@ namespace StoicGoose.Emulation.Machines
 			base.Shutdown();
 		}
 
-		public override void RunStep()
+		public override void RunStep(bool isManual)
 		{
 			HandleBreakpoints();
 
-			if (lastBreakpointHit == null)
+			if (lastBreakpointHit == null || isManual)
 			{
 				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 

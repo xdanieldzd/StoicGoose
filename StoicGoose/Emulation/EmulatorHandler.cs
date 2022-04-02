@@ -26,6 +26,9 @@ namespace StoicGoose.Emulation
 		public event EventHandler<EventArgs> ThreadHasPaused;
 		public void OnThreadHasPaused(EventArgs e) { ThreadHasPaused?.Invoke(this, e); }
 
+		public event EventHandler<EventArgs> ThreadHasUnpaused;
+		public void OnThreadHasUnpaused(EventArgs e) { ThreadHasUnpaused?.Invoke(this, e); }
+
 		public EmulatorHandler(Type machineType)
 		{
 			Machine = Activator.CreateInstance(machineType) as IMachine;
@@ -100,7 +103,10 @@ namespace StoicGoose.Emulation
 					threadPaused = newPauseState;
 					isPauseRequested = false;
 
-					OnThreadHasPaused(EventArgs.Empty);
+					if (threadPaused)
+						OnThreadHasPaused(EventArgs.Empty);
+					else
+						OnThreadHasUnpaused(EventArgs.Empty);
 				}
 
 				if (isFpsLimiterChangeRequested)
@@ -121,7 +127,7 @@ namespace StoicGoose.Emulation
 					else
 						lastTime = stopWatch.Elapsed.TotalMilliseconds;
 
-					Machine.RunFrame();
+					Machine.RunFrame(false);
 				}
 				else
 					lastTime = stopWatch.Elapsed.TotalMilliseconds;

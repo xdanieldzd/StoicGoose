@@ -38,11 +38,12 @@ namespace StoicGoose.Emulation.Machines
 		void Reset();
 		void Shutdown();
 
-		void RunFrame();
-		void RunLine();
-		void RunStep();
+		void RunFrame(bool isManual);
+		void RunLine(bool isManual);
+		void RunStep(bool isManual);
 
 		void ThreadHasPaused(object sender, EventArgs e);
+		void ThreadHasUnpaused(object sender, EventArgs e);
 
 		void LoadBootstrap(byte[] data);
 		bool IsBootstrapLoaded { get; }
