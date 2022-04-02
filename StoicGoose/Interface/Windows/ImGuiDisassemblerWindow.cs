@@ -103,7 +103,7 @@ namespace StoicGoose.Interface.Windows
 			if (disassembler.ReadDelegate == null) disassembler.ReadDelegate = handler.Machine.ReadMemory;
 			if (disassembler.WriteDelegate == null) disassembler.WriteDelegate = handler.Machine.WriteMemory;
 
-			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.CS)
+			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.CS || !instructionAddresses.Contains(handler.Machine.Cpu.IP))
 			{
 				var newAddresses = new List<ushort>();
 				var searchAddress = handler.Machine.Cpu.IP;
