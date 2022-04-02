@@ -4,7 +4,6 @@ using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.DMA;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.Interface.Attributes;
-using StoicGoose.Interface.Windows;
 using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
@@ -61,7 +60,9 @@ namespace StoicGoose.Emulation.Machines
 
 		public override void RunStep()
 		{
-			if (!HandleBreakpoints())
+			HandleBreakpoints();
+
+			if (lastBreakpointHit == null)
 			{
 				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 

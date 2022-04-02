@@ -20,9 +20,6 @@ namespace StoicGoose.Debugging
 		[JsonIgnore()]
 		public ScriptRunner<bool> Runner = null;
 
-		[JsonIgnore()]
-		public bool WasLastHit = false;
-
 		static Breakpoint() => lastScriptState = CSharpScript.Create<bool>(codeDummy, scriptOptions, typeof(BreakpointVariables));
 
 		public bool UpdateDelegate()

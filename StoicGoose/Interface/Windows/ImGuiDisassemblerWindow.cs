@@ -105,14 +105,20 @@ namespace StoicGoose.Interface.Windows
 
 			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.CS)
 			{
-				instructionAddresses.Clear();
-				codeSegment = handler.Machine.Cpu.CS;
+				var newAddresses = new List<ushort>();
+				var searchAddress = handler.Machine.Cpu.IP;
 
-				for (var i = 0; i < segmentSize;)
+				codeSegment = handler.Machine.Cpu.CS;
+				for (int i = 0; i < segmentSize;)
 				{
-					instructionAddresses.Add((ushort)i);
-					i += disassembler.EvaluateInstructionLength(codeSegment, (ushort)i);
+					newAddresses.Add(searchAddress);
+					var (_, _, bytes, _, _) = disassembler.DisassembleInstruction(codeSegment, searchAddress);
+					i += bytes.Length;
+					searchAddress += (ushort)bytes.Length;
 				}
+
+				instructionAddresses.Clear();
+				instructionAddresses.AddRange(newAddresses.OrderBy(x => x));
 			}
 
 			if (stackAddresses.Count == 0)

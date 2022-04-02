@@ -7,7 +7,8 @@ namespace StoicGoose.Debugging
 {
 	public partial class Disassembler
 	{
-		// TODO: lower-case hex support?
+		// TODO: maybe write new instruction length eval function?
+		//        lower-case hex support?
 
 		public MemoryReadDelegate ReadDelegate { get; set; }
 		public MemoryWriteDelegate WriteDelegate { get; set; }
@@ -23,47 +24,6 @@ namespace StoicGoose.Debugging
 		{
 			if ((nextOffset + inc) < nextOffset) nextSegment++;
 			nextOffset += inc;
-		}
-
-		public int EvaluateInstructionLength(ushort segment, ushort offset)
-		{
-			nextSegment = segment;
-			nextOffset = offset;
-
-			var bytes = ReadPrefixesAndOpcode();
-			var opcode = bytes.Last();
-			var length = bytes.Count;
-
-			if (argsEvalLength1List.Contains(opcode) || conditionalJumpOpcodeDict.ContainsKey(opcode) || registerImmediate8OpcodeDict.ContainsKey(opcode))
-				length++;
-			else if (argsEvalLength2List.Contains(opcode) || registerImmediate16OpcodeDict.ContainsKey(opcode))
-				length += 2;
-			else if (argsEvalLength3List.Contains(opcode))
-				length += 3;
-			else if (argsEvalLength4List.Contains(opcode))
-				length += 4;
-			else if (opcode == 0xF6)
-			{
-				ReadModRm();
-				if (modRm.Reg != 0x0) length++;
-				else length += 2;
-			}
-			else if (opcode == 0xF7)
-			{
-				ReadModRm();
-				if (modRm.Reg != 0x0) length++;
-				else length += 2;
-			}
-			else if (opcode == 0xFF)
-			{
-				var tempModRm = (ModRm)ReadMemory8(nextSegment, nextOffset);
-				if (tempModRm.Reg != 0x7 && !((tempModRm.Reg == 0x3 || tempModRm.Reg == 0x5) && tempModRm.Mod == ModRmModes.Register))
-					length++;
-			}
-
-			if (length == 0) throw new System.Exception("Could not evaluate length of opcode");
-
-			return length;
 		}
 
 		public (ushort, ushort, byte[], string, string) DisassembleInstruction(ushort segment, ushort offset)
