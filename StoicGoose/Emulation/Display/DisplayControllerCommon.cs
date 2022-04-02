@@ -223,6 +223,8 @@ namespace StoicGoose.Emulation.Display
 		protected bool isPackedMode => DisplayPackedFormatSet;
 		protected bool isPlanarMode => !DisplayPackedFormatSet;
 
+		public int ClockCyclesPerLine => clockCyclesPerLine;
+
 		public DisplayControllerCommon(MemoryReadDelegate memoryRead)
 		{
 			memoryReadDelegate = memoryRead;

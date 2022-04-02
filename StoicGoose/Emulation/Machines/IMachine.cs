@@ -39,6 +39,7 @@ namespace StoicGoose.Emulation.Machines
 		void Shutdown();
 
 		void RunFrame();
+		void RunLine();
 		void RunStep();
 
 		void ThreadHasPaused(object sender, EventArgs e);

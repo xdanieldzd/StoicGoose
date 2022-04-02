@@ -60,7 +60,7 @@ namespace StoicGoose.Emulation.Machines
 				if (Cartridge.Step(currentCpuClockCycles))
 					ChangeBit(ref interruptStatus, 2, true);
 
-				CurrentClockCyclesInFrame += currentCpuClockCycles;
+				CurrentClockCyclesInLine += currentCpuClockCycles;
 			}
 		}
 

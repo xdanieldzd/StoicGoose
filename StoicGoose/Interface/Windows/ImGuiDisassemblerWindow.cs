@@ -41,7 +41,7 @@ namespace StoicGoose.Interface.Windows
 		/* Sizing variables */
 		float lineHeight = 0f, glyphWidth = 0f, hexCellWidth = 0f;
 		float posDisasmAddrStart = 0f, posDisasmAddrEnd = 0f, posDisasmHexStart = 0f, posDisasmHexEnd = 0f, posDisasmMnemonicStart = 0f;
-		float posStackAddrEnd = 0f, posStackHexStart = 0f;
+		float posStackAddrEnd = 0f, posStackDivStart = 0f, posStackHexStart = 0f;
 
 		/* Functional stuffs */
 		readonly Disassembler disassembler = new();
@@ -59,7 +59,7 @@ namespace StoicGoose.Interface.Windows
 		public event EventHandler<EventArgs> UnpauseEmulation;
 		public void OnUnpauseEmulation(EventArgs e) { UnpauseEmulation?.Invoke(this, e); }
 
-		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(700f, 635f), ImGuiCond.Always)
+		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(720f, 635f), ImGuiCond.Always)
 		{
 			clipperObject = new();
 			clipperHandle = GCHandle.Alloc(clipperObject, GCHandleType.Pinned);
@@ -83,8 +83,9 @@ namespace StoicGoose.Interface.Windows
 			posDisasmHexEnd = posDisasmHexStart + (hexCellWidth * maxOpcodeBytes);
 			posDisasmMnemonicStart = posDisasmHexEnd + glyphWidth;
 
-			posStackAddrEnd = glyphWidth * 6.5f;
-			posStackHexStart = posStackAddrEnd + glyphWidth;
+			posStackAddrEnd = glyphWidth * 5.5f;
+			posStackDivStart = posStackAddrEnd + 0.75f;
+			posStackHexStart = posStackDivStart + glyphWidth;
 		}
 
 		protected override void DrawWindow(object userData)
@@ -124,11 +125,11 @@ namespace StoicGoose.Interface.Windows
 			var style = ImGui.GetStyle();
 
 			var processorHeight = style.ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 5f);
-			var stackWidth = style.ItemSpacing.X + glyphWidth * 11.5f + style.ScrollbarSize;
+			var stackWidth = style.ItemSpacing.X + glyphWidth * 13.5f + style.ScrollbarSize;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse))
 			{
-				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-stackWidth, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
+				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-(stackWidth + 1f), 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
 					var drawListDisasm = ImGui.GetWindowDrawList();
 
@@ -221,6 +222,15 @@ namespace StoicGoose.Interface.Windows
 
 				ImGui.SameLine();
 
+				if (ImGui.BeginChild("##disasm-stack-divider", new NumericsVector2(1f, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
+				{
+					var pos = ImGui.GetCursorScreenPos();
+					ImGui.GetWindowDrawList().AddLine(pos, pos + new NumericsVector2(0f, 390f), ImGui.GetColorU32(ImGuiCol.Border));
+					ImGui.EndChild();
+				}
+
+				ImGui.SameLine();
+
 				if (ImGui.BeginChild("##stack-scroll", new NumericsVector2(0f, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
 					var drawListStack = ImGui.GetWindowDrawList();
@@ -231,9 +241,6 @@ namespace StoicGoose.Interface.Windows
 					var clipper = new ImGuiListClipperPtr(clipperPointer);
 					clipper.Begin(stackAddresses.Count, lineHeight);
 					{
-						var windowPos = ImGui.GetWindowPos();
-						drawListStack.AddLine(new NumericsVector2(windowPos.X + posStackHexStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posStackHexStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
-
 						static void centerScrollTo(int idx) => ImGui.SetScrollFromPosY((idx * ImGui.GetTextLineHeight()) - ImGui.GetScrollY(), 0.5f);
 
 						if (traceExecution || jumpToSpNext)
@@ -292,6 +299,8 @@ namespace StoicGoose.Interface.Windows
 								var value = (ushort)(handler.Machine.ReadMemory((uint)(stackAddresses[i] + 1)) << 8 | handler.Machine.ReadMemory(stackAddresses[i]));
 
 								ImGui.TextUnformatted(string.Format($"0x{{0:{(upperCaseHex ? "X" : "x")}4}}", stackAddresses[i]));
+								ImGui.SameLine(posStackDivStart);
+								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), ":");
 								ImGui.SameLine(posStackHexStart);
 								ImGui.TextUnformatted(string.Format($"0x{{0:{(upperCaseHex ? "X" : "x")}4}}", value));
 							}
@@ -315,6 +324,8 @@ namespace StoicGoose.Interface.Windows
 					var contentAvailWidth = ImGui.GetContentRegionAvail().X;
 					var buttonWidth = (ImGui.GetContentRegionAvail().X - (style.ItemSpacing.X * 3f)) / 4f;
 
+					var gotoInputFlags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue | (upperCaseHex ? ImGuiInputTextFlags.CharsUppercase : ImGuiInputTextFlags.None);
+
 					if (!handler.IsPaused)
 					{
 						if (ImGui.Button("Pause", new NumericsVector2(buttonWidth, 0f))) OnPauseEmulation(EventArgs.Empty);
@@ -332,28 +343,6 @@ namespace StoicGoose.Interface.Windows
 						if (ImGui.Button("Unpause", new NumericsVector2(buttonWidth, 0f))) OnUnpauseEmulation(EventArgs.Empty);
 					}
 					ImGui.SameLine();
-					if (handler.IsPaused)
-					{
-						ImGui.PushButtonRepeat(true);
-						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep();
-						ImGui.SameLine();
-						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame();
-						ImGui.PopButtonRepeat();
-					}
-					else
-					{
-						ImGui.BeginDisabled();
-						ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f));
-						ImGui.SameLine();
-						ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f));
-						ImGui.EndDisabled();
-					}
-
-					var gotoInputFlags = ImGuiInputTextFlags.CharsHexadecimal | ImGuiInputTextFlags.EnterReturnsTrue | (upperCaseHex ? ImGuiInputTextFlags.CharsUppercase : ImGuiInputTextFlags.None);
-
-					if (ImGui.Button("Reset", new NumericsVector2(buttonWidth, 0f))) handler.Reset();
-					ImGui.SameLine();
-					ImGui.SetCursorPosX(contentAvailWidth - (buttonWidth * 2f) - style.ItemSpacing.X);
 					if (traceExecution)
 					{
 						ImGui.BeginDisabled();
@@ -374,9 +363,10 @@ namespace StoicGoose.Interface.Windows
 							disasmGotoAddr = int.Parse(disasmAddrInputBuf, System.Globalization.NumberStyles.HexNumber);
 					}
 
-					ImGui.Checkbox("Trace execution", ref traceExecution);
+					if (ImGui.Button("Reset", new NumericsVector2(buttonWidth, 0f))) handler.Reset();
 					ImGui.SameLine();
-					ImGui.SetCursorPosX(contentAvailWidth - (buttonWidth * 2f) - style.ItemSpacing.X);
+					if (ImGui.Button("Reset -> Pause", new NumericsVector2(buttonWidth, 0f))) { OnPauseEmulation(EventArgs.Empty); handler.Reset(); }
+					ImGui.SameLine();
 					if (traceExecution)
 					{
 						ImGui.BeginDisabled();
@@ -395,6 +385,30 @@ namespace StoicGoose.Interface.Windows
 						ImGui.SameLine();
 						if (ImGui.InputText("##stack-addr", ref stackAddrInputBuf, 4, gotoInputFlags))
 							stackGotoAddr = int.Parse(stackAddrInputBuf, System.Globalization.NumberStyles.HexNumber);
+					}
+
+					ImGui.Checkbox("Trace execution", ref traceExecution);
+					ImGui.SameLine();
+					ImGui.SetCursorPosX(contentAvailWidth - (buttonWidth * 3f) - (style.ItemSpacing.X * 2f));
+					if (handler.IsPaused)
+					{
+						ImGui.PushButtonRepeat(true);
+						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep();
+						ImGui.SameLine();
+						if (ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunLine();
+						ImGui.SameLine();
+						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame();
+						ImGui.PopButtonRepeat();
+					}
+					else
+					{
+						ImGui.BeginDisabled();
+						ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f));
+						ImGui.SameLine();
+						ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f));
+						ImGui.SameLine();
+						ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f));
+						ImGui.EndDisabled();
 					}
 
 					ImGui.PopStyleVar();
@@ -449,31 +463,31 @@ namespace StoicGoose.Interface.Windows
 					pos.Y = posStart.Y;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
-					drawListProcessor.AddText(pos, colorText, $"CPU Halted? {handler.Machine.Cpu.IsHalted}"); pos.X += glyphWidth * 25f;
+					drawListProcessor.AddText(pos, colorText, $"CPU Halted? {handler.Machine.Cpu.IsHalted}"); pos.X += glyphWidth * 27f;
 					drawListProcessor.AddText(pos, colorText, $"Scanline: {handler.Machine.DisplayController.LineCurrent,3}");
 					pos.Y += height + lineHeight * 0.75f;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
 					drawListProcessor.AddText(pos, colorText, $"SP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SP)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SP}]"); pos.X += glyphWidth * 11f;
 					drawListProcessor.AddText(pos, colorText, $"CS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.CS)}"); pos.X += glyphWidth * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.CS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
 					drawListProcessor.AddText(pos, colorText, $"BP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.BP)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.BP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.BP}]"); pos.X += glyphWidth * 11f;
 					drawListProcessor.AddText(pos, colorText, $"DS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.DS)}"); pos.X += glyphWidth * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.DS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
 					drawListProcessor.AddText(pos, colorText, $"SI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SI)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SI}]"); pos.X += glyphWidth * 11f;
 					drawListProcessor.AddText(pos, colorText, $"SS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.SS)}"); pos.X += glyphWidth * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.SS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphWidth * 49f;
 					drawListProcessor.AddText(pos, colorText, $"DI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.DI)}"); pos.X += glyphWidth * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.DI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.DI}]"); pos.X += glyphWidth * 11f;
 					drawListProcessor.AddText(pos, colorText, $"ES: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.ES)}"); pos.X += glyphWidth * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.ES}]"); pos.Y += height;
 

@@ -15,6 +15,8 @@ namespace StoicGoose.Interface.Windows
 
 		Breakpoint newBreakpointToAdd = default;
 		int breakpointToEditIdx = -1, breakpointToDeleteIdx = -1;
+		string newBreakpointExpression = string.Empty;
+		bool applyBreakpointEdit = false;
 
 		public ImGuiBreakpointWindow() : base("Breakpoints", new NumericsVector2(800f, 300f), ImGuiCond.FirstUseEver) { }
 
@@ -195,12 +197,14 @@ namespace StoicGoose.Interface.Windows
 				var popupDummy = true;
 				if (ImGui.BeginPopupModal("Edit Breakpoint##edit-popup", ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
 				{
+					if (string.IsNullOrEmpty(newBreakpointExpression))
+						newBreakpointExpression = breakpoints[breakpointToEditIdx].Expression;
+
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.SetNextItemWidth(400f);
-					if (ImGui.InputText("Expression##edit-desc", ref breakpoints[breakpointToEditIdx].Expression, 512, ImGuiInputTextFlags.EnterReturnsTrue))
-						if (!breakpoints[breakpointToEditIdx].UpdateDelegate())
-							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
+					if (ImGui.InputText("Expression##edit-desc", ref newBreakpointExpression, 512, ImGuiInputTextFlags.EnterReturnsTrue))
+						applyBreakpointEdit = true;
 					ImGui.SameLine();
 					ImGuiHelpers.HelpMarker(expressionFormatHelpText);
 
@@ -208,13 +212,40 @@ namespace StoicGoose.Interface.Windows
 					ImGui.Separator();
 					ImGui.Dummy(new NumericsVector2(0f, 2f));
 
+					ImGui.SetItemDefaultFocus();
+					if (ImGui.Button("Apply", new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f)))
+						applyBreakpointEdit = true;
+					ImGui.SameLine();
 					if (ImGui.Button("Close", new NumericsVector2(ImGui.GetContentRegionAvail().X, 0f)))
 					{
 						ImGui.CloseCurrentPopup();
 						breakpointToEditIdx = -1;
+						newBreakpointExpression = string.Empty;
+						applyBreakpointEdit = false;
 					}
 
 					ImGui.PopStyleVar();
+
+					if (applyBreakpointEdit && !string.IsNullOrEmpty(newBreakpointExpression))
+					{
+						var oldExpression = breakpoints[breakpointToEditIdx].Expression;
+						breakpoints[breakpointToEditIdx].Expression = newBreakpointExpression;
+
+						if (!breakpoints[breakpointToEditIdx].UpdateDelegate())
+						{
+							breakpoints[breakpointToEditIdx].Expression = oldExpression;
+							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
+
+							applyBreakpointEdit = false;
+						}
+						else
+						{
+							ImGui.CloseCurrentPopup();
+							breakpointToEditIdx = -1;
+							newBreakpointExpression = string.Empty;
+							applyBreakpointEdit = false;
+						}
+					}
 
 					handleInvalidBreakpointMessageBox();
 
@@ -222,7 +253,11 @@ namespace StoicGoose.Interface.Windows
 				}
 
 				if (!popupDummy)
+				{
 					breakpointToEditIdx = -1;
+					newBreakpointExpression = string.Empty;
+					applyBreakpointEdit = false;
+				}
 			}
 		}
 	}

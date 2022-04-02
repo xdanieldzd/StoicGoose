@@ -18,6 +18,8 @@ namespace StoicGoose.Emulation.Machines
 {
 	public abstract class MachineCommon : IMachine, IComponent
 	{
+		// TODO: tighter breakpoint hit timing, from check & init to disasm display
+
 		// http://daifukkat.su/docs/wsman/
 
 		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
@@ -53,7 +55,9 @@ namespace StoicGoose.Emulation.Machines
 		public EEPROM InternalEeprom { get; protected set; } = default;
 		public byte[] BootstrapRom { get; protected set; } = default;
 
+		public int CurrentClockCyclesInLine { get; protected set; } = 0;
 		public int CurrentClockCyclesInFrame { get; protected set; } = 0;
+
 		public int TotalClockCyclesInFrame { get; protected set; } = 0;
 
 		/* REG_HW_FLAGS */
@@ -141,11 +145,6 @@ namespace StoicGoose.Emulation.Machines
 		{
 			BreakpointVariables = new(this);
 
-
-			//Breakpoints[0] = new Breakpoint() { Expression = "cs == 0xFE00 && ip == 0x001D && memory[0] == 0x00" };
-			//Breakpoints[0].UpdateDelegate();
-
-
 			if (InternalRamSize == -1) throw new Exception("Internal RAM size not set");
 			if (string.IsNullOrEmpty(DefaultUsername)) throw new Exception("Default username not set");
 
@@ -171,6 +170,7 @@ namespace StoicGoose.Emulation.Machines
 			InternalEeprom?.Reset();
 
 			CurrentClockCyclesInFrame = 0;
+			CurrentClockCyclesInLine = 0;
 			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
 
 			ResetRegisters();
@@ -266,7 +266,7 @@ namespace StoicGoose.Emulation.Machines
 			if (startOfFrameEventArgs.ToggleMasterVolume) SoundController.ToggleMasterVolume();
 
 			while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame && !waitingForBreakpointPause)
-				RunStep();
+				RunLine();
 
 			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
 
@@ -276,6 +276,18 @@ namespace StoicGoose.Emulation.Machines
 
 			if (!waitingForBreakpointPause)
 				ClearBreakpointStates();
+		}
+
+		public void RunLine()
+		{
+			while (CurrentClockCyclesInLine < DisplayController.ClockCyclesPerLine && !waitingForBreakpointPause)
+				RunStep();
+
+			if (!waitingForBreakpointPause)
+			{
+				CurrentClockCyclesInFrame += CurrentClockCyclesInLine;
+				CurrentClockCyclesInLine = 0;
+			}
 		}
 
 		public abstract void RunStep();
@@ -358,15 +370,22 @@ namespace StoicGoose.Emulation.Machines
 				cheats[i] = (cheatList != null && i < cheatList.Count) ? cheatList[i] : null;
 		}
 
-		public void LoadBreakpoints(List<Breakpoint> breakpoints)
+		public void LoadBreakpoints(List<Breakpoint> bpList)
 		{
+			var invalidIdxs = new List<int>();
+
 			for (var i = 0; i < Breakpoints.Length; i++)
 			{
-				Breakpoints[i] = (breakpoints != null && i < breakpoints.Count) ? breakpoints[i] : null;
+				Breakpoints[i] = (bpList != null && i < bpList.Count) ? bpList[i] : null;
 				if (Breakpoints[i] != null && !Breakpoints[i].UpdateDelegate())
-				{
-					throw new Exception("Error loading breakpoint list, invalid expression");
-				}
+					invalidIdxs.Add(i);
+			}
+
+			foreach (var idx in invalidIdxs)
+			{
+				Breakpoints[idx] = null;
+				for (var i = idx; i < Breakpoints.Length - 1; i++)
+					Breakpoints[i] = Breakpoints[i + 1];
 			}
 		}
 
