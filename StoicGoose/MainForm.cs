@@ -179,7 +179,6 @@ namespace StoicGoose
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
 			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
 			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
-			imGuiHandler.RegisterWindow(new ImGuiCpuWindow(), () => emulatorHandler.Machine.Cpu);
 			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
 
 			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
@@ -676,17 +675,12 @@ namespace StoicGoose
 			imGuiHandler.GetWindow<ImGuiMemoryWindow>().IsWindowOpen = true;
 		}
 
-		private void systemToolStripMenuItem_Click(object sender, EventArgs e)
+		private void systemRegistersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			imGuiHandler.GetWindow<ImGuiMachineStatusWindow>().IsWindowOpen = true;
 		}
 
-		private void cPUToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiCpuWindow>().IsWindowOpen = true;
-		}
-
-		private void displayControllerToolStripMenuItem_Click(object sender, EventArgs e)
+		private void displayRegistersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			imGuiHandler.GetWindow<ImGuiDisplayStatusWindow>().IsWindowOpen = true;
 		}

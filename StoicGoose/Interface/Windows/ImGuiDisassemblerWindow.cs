@@ -7,6 +7,7 @@ using ImGuiNET;
 
 using StoicGoose.Debugging;
 using StoicGoose.Emulation;
+using StoicGoose.Emulation.CPU;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
@@ -35,6 +36,7 @@ namespace StoicGoose.Interface.Windows
 		bool jumpToIpNext = false, jumpToSpNext = false;
 		string disasmAddrInputBuf = new('\0', 32), stackAddrInputBuf = new('\0', 32);
 		int disasmGotoAddr = -1, stackGotoAddr = -1;
+		uint colorText = 0, colorDisabled = 0;
 
 		/* Sizing variables */
 		float lineHeight = 0f, glyphWidth = 0f, hexCellWidth = 0f;
@@ -54,7 +56,7 @@ namespace StoicGoose.Interface.Windows
 		public event EventHandler<EventArgs> UnpauseEmulation;
 		public void OnUnpauseEmulation(EventArgs e) { UnpauseEmulation?.Invoke(this, e); }
 
-		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(650, 605f), ImGuiCond.Always)
+		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(700f, 635f), ImGuiCond.Always)
 		{
 			clipperObject = new();
 			clipperHandle = GCHandle.Alloc(clipperObject, GCHandleType.Pinned);
@@ -78,7 +80,7 @@ namespace StoicGoose.Interface.Windows
 			posDisasmHexEnd = posDisasmHexStart + (hexCellWidth * maxOpcodeBytes);
 			posDisasmMnemonicStart = posDisasmHexEnd + glyphWidth;
 
-			posStackAddrEnd = glyphWidth * 4.5f;
+			posStackAddrEnd = glyphWidth * 6.5f;
 			posStackHexStart = posStackAddrEnd + glyphWidth;
 		}
 
@@ -86,10 +88,11 @@ namespace StoicGoose.Interface.Windows
 		{
 			if (userData is not EmulatorHandler handler) return;
 
-			if (HighlightColor1 == 0)
-				HighlightColor1 = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
-			if (HighlightColor2 == 0)
-				HighlightColor2 = 0x1F000000 | (ImGui.GetColorU32(ImGuiCol.Text) & 0x00FFFFFF);
+			if (HighlightColor1 == 0) HighlightColor1 = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
+			if (HighlightColor2 == 0) HighlightColor2 = 0x1F000000 | (ImGui.GetColorU32(ImGuiCol.Text) & 0x00FFFFFF);
+
+			if (colorText == 0) colorText = ImGui.GetColorU32(ImGuiCol.Text);
+			if (colorDisabled == 0) colorDisabled = ImGui.GetColorU32(ImGuiCol.TextDisabled);
 
 			CalcSizes();
 
@@ -116,12 +119,13 @@ namespace StoicGoose.Interface.Windows
 					stackAddressesAscending.Add((ushort)i);
 
 			var style = ImGui.GetStyle();
-			var footerHeight = style.ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 9f);
-			var stackWidth = style.ItemSpacing.X + glyphWidth * 9.5f + style.ScrollbarSize;
+
+			var processorHeight = style.ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 5f);
+			var stackWidth = style.ItemSpacing.X + glyphWidth * 11.5f + style.ScrollbarSize;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoResize))
 			{
-				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-stackWidth, -footerHeight), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
+				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-stackWidth, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
 					var drawListDisasm = ImGui.GetWindowDrawList();
 
@@ -195,10 +199,10 @@ namespace StoicGoose.Interface.Windows
 								ImGui.Dummy(NumericsVector2.One);
 								ImGui.SameLine(posDisasmAddrStart);
 
-								ImGui.TextUnformatted($"{codeSegment:X4}:{instructionAddresses[i]:X4}");
+								ImGui.TextUnformatted(string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}:{{1:{(upperCaseHex ? "X" : "x")}4}}", codeSegment, instructionAddresses[i]));
 								ImGui.SameLine(posDisasmHexStart);
 
-								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{string.Join(" ", bytes.Select(x => ($"{x:X2}")))}");
+								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{string.Join(" ", bytes.Select(x => $"{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", x)}"))}");
 								ImGui.SameLine(posDisasmMnemonicStart);
 
 								ImGui.TextUnformatted(disasm);
@@ -214,7 +218,7 @@ namespace StoicGoose.Interface.Windows
 
 				ImGui.SameLine();
 
-				if (ImGui.BeginChild("##stack-scroll", new NumericsVector2(0f, -footerHeight), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
+				if (ImGui.BeginChild("##stack-scroll", new NumericsVector2(0f, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
 					var drawListStack = ImGui.GetWindowDrawList();
 
@@ -284,9 +288,9 @@ namespace StoicGoose.Interface.Windows
 
 								var value = (ushort)(handler.Machine.ReadMemory((uint)(stackAddresses[i] + 1)) << 8 | handler.Machine.ReadMemory(stackAddresses[i]));
 
-								ImGui.TextUnformatted($"{stackAddresses[i]:X4}");
+								ImGui.TextUnformatted(string.Format($"0x{{0:{(upperCaseHex ? "X" : "x")}4}}", stackAddresses[i]));
 								ImGui.SameLine(posStackHexStart);
-								ImGui.TextUnformatted($"{value:X4}");
+								ImGui.TextUnformatted(string.Format($"0x{{0:{(upperCaseHex ? "X" : "x")}4}}", value));
 							}
 						}
 						clipper.End();
@@ -299,11 +303,11 @@ namespace StoicGoose.Interface.Windows
 				ImGui.Separator();
 				ImGui.Dummy(new NumericsVector2(0f, 2f));
 
-				if (ImGui.BeginChild("##controls"))
+				if (ImGui.BeginChild("##controls", new NumericsVector2(0f, -processorHeight)))
 				{
 					if (!handler.IsRunning) ImGui.BeginDisabled();
 
-					ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new NumericsVector2(12f, 12f));
+					ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new NumericsVector2(10f, 8f));
 
 					var contentAvailWidth = ImGui.GetContentRegionAvail().X;
 					var buttonWidth = (ImGui.GetContentRegionAvail().X - (style.ItemSpacing.X * 3f)) / 4f;
@@ -391,13 +395,102 @@ namespace StoicGoose.Interface.Windows
 					}
 
 					ImGui.PopStyleVar();
-					ImGui.EndChild();
 
 					if (!handler.IsRunning) ImGui.EndDisabled();
+
+					ImGui.EndChild();
+				}
+
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+				ImGui.Separator();
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+
+				if (ImGui.BeginChild("##processor", NumericsVector2.Zero))
+				{
+					// TODO: better layout?
+
+					var drawListProcessor = ImGui.GetWindowDrawList();
+
+					var height = ImGui.GetTextLineHeightWithSpacing();
+
+					var windowPos = ImGui.GetWindowPos();
+					drawListProcessor.AddLine(new NumericsVector2(windowPos.X + glyphWidth * 48f, windowPos.Y), new NumericsVector2(windowPos.X + glyphWidth * 48f, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
+					drawListProcessor.AddLine(new NumericsVector2(windowPos.X, windowPos.Y + height + 2f), new NumericsVector2(windowPos.X + glyphWidth * 47f, windowPos.Y + height + 2f), ImGui.GetColorU32(ImGuiCol.Border));
+					drawListProcessor.AddLine(new NumericsVector2(windowPos.X + glyphWidth * 49f, windowPos.Y + height + 2f), new NumericsVector2(windowPos.X + 9999, windowPos.Y + height + 2f), ImGui.GetColorU32(ImGuiCol.Border));
+
+					var pos = ImGui.GetCursorScreenPos();
+					var posStart = pos;
+
+					drawListProcessor.AddText(pos, colorText, $"IP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.IP)}"); pos.X += glyphWidth * 19f;
+
+					drawListProcessor.AddText(pos, colorText, "Flags:"); pos.X += glyphWidth * 6f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Carry, "CF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Parity, "PF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Auxiliary, "AF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Zero, "ZF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Sign, "SF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Trap, "TF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.InterruptEnable, "IF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Direction, "DF"); pos.X += glyphWidth * 2.5f;
+					DrawFlag(drawListProcessor, pos, handler.Machine.Cpu, V30MZ.Flags.Overflow, "OF"); pos.X += glyphWidth * 2.5f;
+					pos.X = posStart.X;
+					pos.Y += height * 1.5f;
+
+					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.AX, "A"); pos.Y += height;
+					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.BX, "B"); pos.Y += height;
+					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.CX, "C"); pos.Y += height;
+					DrawRegister(drawListProcessor, pos, handler.Machine.Cpu.Registers.DX, "D"); pos.Y += height;
+					pos.Y = posStart.Y;
+
+					pos.X = windowPos.X + glyphWidth * 49f;
+					drawListProcessor.AddText(pos, colorText, $"CPU Halted? {handler.Machine.Cpu.IsHalted}"); pos.X += glyphWidth * 25f;
+					drawListProcessor.AddText(pos, colorText, $"Scanline: {handler.Machine.DisplayController.LineCurrent,3}");
+					pos.Y += height + lineHeight * 0.75f;
+
+					pos.X = windowPos.X + glyphWidth * 49f;
+					drawListProcessor.AddText(pos, colorText, $"SP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SP)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"CS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.CS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.CS}]"); pos.Y += height;
+
+					pos.X = windowPos.X + glyphWidth * 49f;
+					drawListProcessor.AddText(pos, colorText, $"BP: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.BP)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.BP}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"DS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.DS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.DS}]"); pos.Y += height;
+
+					pos.X = windowPos.X + glyphWidth * 49f;
+					drawListProcessor.AddText(pos, colorText, $"SI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SI)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SS: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.SS)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.SS}]"); pos.Y += height;
+
+					pos.X = windowPos.X + glyphWidth * 49f;
+					drawListProcessor.AddText(pos, colorText, $"DI: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.DI)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.DI}]"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorText, $"ES: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", handler.Machine.Cpu.Registers.ES)}"); pos.X += glyphWidth * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{handler.Machine.Cpu.Registers.ES}]"); pos.Y += height;
+
+					ImGui.EndChild();
 				}
 
 				ImGui.End();
 			}
+		}
+
+		private void DrawFlag(ImDrawListPtr drawList, NumericsVector2 position, V30MZ cpu, V30MZ.Flags flag, string label)
+		{
+			drawList.AddText(position, cpu.IsFlagSet(flag) ? colorText : colorDisabled, label);
+		}
+
+		private void DrawRegister(ImDrawListPtr drawList, NumericsVector2 position, V30MZ.Register16 register, string label)
+		{
+			drawList.AddText(position, colorText, $"{label}X: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", register.Word)}"); position.X += glyphWidth * 10f;
+			drawList.AddText(position, colorDisabled, $"[{register.Word}]"); position.X += glyphWidth * 8f;
+			drawList.AddText(position, colorText, $"{label}L: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", register.Low)}"); position.X += glyphWidth * 8f;
+			drawList.AddText(position, colorDisabled, $"[{register.Low}]"); position.X += glyphWidth * 6f;
+			drawList.AddText(position, colorText, $"{label}H: 0x{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", register.High)}"); position.X += glyphWidth * 8f;
+			drawList.AddText(position, colorDisabled, $"[{register.High}]"); position.X += glyphWidth * 6f;
 		}
 	}
 }

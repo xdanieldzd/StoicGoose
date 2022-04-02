@@ -7,6 +7,8 @@ namespace StoicGoose.Debugging
 {
 	public partial class Disassembler
 	{
+		// TODO: lower-case hex support?
+
 		public MemoryReadDelegate ReadDelegate { get; set; }
 		public MemoryWriteDelegate WriteDelegate { get; set; }
 

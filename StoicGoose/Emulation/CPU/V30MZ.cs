@@ -23,6 +23,8 @@ namespace StoicGoose.Emulation.CPU
 			ushort IP) Registers =>
 			(ax, bx, cx, dx, sp, bp, si, di, cs, ds, ss, es, ip);
 
+		public bool IsHalted => halted;
+
 		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, RegisterReadDelegate registerRead, RegisterWriteDelegate registerWrite)
 		{
 			memoryReadDelegate = memoryRead;
