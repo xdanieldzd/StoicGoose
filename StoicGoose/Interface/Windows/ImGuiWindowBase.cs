@@ -14,8 +14,6 @@ namespace StoicGoose.Interface.Windows
 		public NumericsVector2 InitialWindowSize { get; } = NumericsVector2.Zero;
 		public ImGuiCond SizingCondition { get; } = ImGuiCond.None;
 
-		public bool IsCollapsed { get; set; } = false;
-
 		public ImGuiWindowBase(string title)
 		{
 			WindowTitle = title;
@@ -33,11 +31,8 @@ namespace StoicGoose.Interface.Windows
 			if (!isWindowOpen) return;
 
 			ImGui.SetNextWindowSize(InitialWindowSize, SizingCondition);
-			ImGui.SetNextWindowCollapsed(IsCollapsed);
 
 			DrawWindow(userData);
-
-			IsCollapsed = ImGui.IsWindowCollapsed();
 		}
 
 		protected abstract void DrawWindow(object userData);

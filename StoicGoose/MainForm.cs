@@ -191,7 +191,6 @@ namespace StoicGoose
 				PauseEmulation();
 				var window = imGuiHandler.GetWindow<ImGuiDisassemblerWindow>();
 				window.IsWindowOpen = true;
-				window.IsCollapsed = false;
 			};
 			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
 

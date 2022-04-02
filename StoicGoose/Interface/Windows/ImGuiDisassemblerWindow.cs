@@ -123,7 +123,7 @@ namespace StoicGoose.Interface.Windows
 			var processorHeight = style.ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing() + (ImGui.GetTextLineHeightWithSpacing() * 5f);
 			var stackWidth = style.ItemSpacing.X + glyphWidth * 11.5f + style.ScrollbarSize;
 
-			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoResize))
+			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse))
 			{
 				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-stackWidth, 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
