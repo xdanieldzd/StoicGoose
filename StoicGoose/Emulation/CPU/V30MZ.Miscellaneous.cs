@@ -39,5 +39,12 @@
 			while (result != 0) { bitsSet += result & 0x01; result >>= 1; }
 			return bitsSet == 0 || (bitsSet % 2) == 0;
 		}
+
+		private void Exchange(ref ushort a, ref ushort b)
+		{
+			var temp = a;
+			a = b;
+			b = temp;
+		}
 	}
 }
