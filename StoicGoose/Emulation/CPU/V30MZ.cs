@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StoicGoose.Emulation.CPU
+﻿namespace StoicGoose.Emulation.CPU
 {
 	public sealed partial class V30MZ : IComponent
 	{
@@ -14,8 +12,7 @@ namespace StoicGoose.Emulation.CPU
 		Flags flags;
 
 		bool halted;
-
-		int pendingIntVector;
+		int opCycles, intCycles;
 
 		/* Public properties for registers */
 		public Register16 AX { get => ax; set => ax = value; }
@@ -32,7 +29,7 @@ namespace StoicGoose.Emulation.CPU
 		public ushort ES { get => es; set => es = value; }
 		public ushort IP { get => ip; set => ip = value; }
 
-		public bool IsHalted => halted;
+		public bool IsHalted { get => halted; set => halted = value; }
 
 		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, RegisterReadDelegate registerRead, RegisterWriteDelegate registerWrite)
 		{
@@ -49,7 +46,7 @@ namespace StoicGoose.Emulation.CPU
 		public void Reset()
 		{
 			/* CPU reset */
-			flags = 0;
+			flags = Flags.ReservedB1 | Flags.ReservedB12 | Flags.ReservedB13 | Flags.ReservedB14 | Flags.ReservedB15;
 			ip = 0x0000;
 			cs = 0xFFFF;
 			ds = 0x0000;
@@ -67,8 +64,7 @@ namespace StoicGoose.Emulation.CPU
 
 			/* Misc variables */
 			halted = false;
-
-			pendingIntVector = -1;
+			opCycles = intCycles = 0;
 
 			ResetPrefixes();
 			modRm.Reset();
@@ -79,74 +75,81 @@ namespace StoicGoose.Emulation.CPU
 			CloseTraceLogger();
 		}
 
-		public void RaiseInterrupt(int vector)
+		public void Interrupt(int vector)
 		{
-			pendingIntVector = vector;
+			/* Resume execution */
 			halted = false;
-		}
 
-		private int CheckAndServiceInterrupt()
-		{
-			/* Interrupts enabled AND interrupt pending? */
-			if (IsFlagSet(Flags.InterruptEnable) && pendingIntVector != -1)
-			{
-				/* Service interrupt */
-				var offset = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 0));
-				var segment = ReadMemory16(0, (ushort)((pendingIntVector * 4) + 2));
+			/* Read interrupt handler's segment & offset */
+			var offset = ReadMemory16(0, (ushort)((vector * 4) + 0));
+			var segment = ReadMemory16(0, (ushort)((vector * 4) + 2));
 
-				Push((ushort)flags);
-				Push(cs);
-				Push(ip);
+			/* Push state, clear flags, etc. */
+			Push((ushort)flags);
+			Push(cs);
+			Push(ip);
 
-				cs = segment;
-				ip = offset;
+			ClearFlags(Flags.InterruptEnable);
+			ClearFlags(Flags.Trap);
 
-				ResetPrefixes();
-				modRm.Reset();
+			ResetPrefixes();
+			modRm.Reset();
 
-				ClearFlags(Flags.InterruptEnable);
+			intCycles = 32;
 
-				return 32;
-			}
-
-			pendingIntVector = -1;
-
-			return 0;
+			/* Continue with interrupt handler */
+			cs = segment;
+			ip = offset;
 		}
 
 		public int Step()
 		{
-			var csBegin = cs;
-			var ipBegin = ip;
+			var cycles = 0;
 
-			/* Do interrupt handling & service interrupt if needed */
-			var intCycles = CheckAndServiceInterrupt();
-
-			/* Is CPU halted? */
-			if (halted) return 1;
-
-			/* Read any prefixes & opcode */
-			byte opcode;
-			while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
-
-			/* If enabled, write to CPU trace logger */
-			if (isTraceLogOpen)
+			if (halted)
 			{
-				var registerStates = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
-				var segmentStates = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
+				/* CPU is halted */
+				cycles++;
+			}
+			else
+			{
+				/* If enabled, write to CPU trace logger */
+				if (isTraceLogOpen)
+				{
+					var registerStates = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
+					var segmentStates = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
+					var flagStates =
+						$"{(IsFlagSet(Flags.Carry) ? "C" : "-")}{(IsFlagSet(Flags.Parity) ? "P" : "-")}{(IsFlagSet(Flags.Auxiliary) ? "A" : "-")}{(IsFlagSet(Flags.Zero) ? "Z" : "-")}" +
+						$"{(IsFlagSet(Flags.Sign) ? "S" : "-")}{(IsFlagSet(Flags.Trap) ? "T" : "-")}{(IsFlagSet(Flags.InterruptEnable) ? "I" : "-")}{(IsFlagSet(Flags.Direction) ? "D" : "-")}" +
+						$"{(IsFlagSet(Flags.Overflow) ? "O" : "-")}";
 
-				WriteToTraceLog($"{DisassembleInstruction(csBegin, ipBegin),-96} | {registerStates} | {segmentStates}");
+					WriteToTraceLog($"{DisassembleInstruction(cs, ip),-96} | {registerStates} | {segmentStates} | {flagStates}");
+				}
+
+				/* Read any prefixes & opcode */
+				byte opcode;
+				while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
+
+				/* Execute instruction */
+				opCycles = instructions[opcode](this);
+				if (opCycles == 0)
+				{
+					/* Assume invalid opcode, raise interrupt */
+					Interrupt(6);
+					cycles = 8;
+				}
+				cycles += opCycles;
+				opCycles = 0;
 			}
 
-			/* Execute instruction */
-			var cycles = instructions[opcode](this);
-			if (cycles == 0) throw new Exception($"Cycle count for opcode 0x{opcode:X2} is zero");
+			cycles += intCycles;
+			intCycles = 0;
 
 			/* Reset state for next instruction */
 			ResetPrefixes();
 			modRm.Reset();
 
-			return cycles + intCycles;
+			return cycles;
 		}
 	}
 }

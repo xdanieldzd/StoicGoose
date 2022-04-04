@@ -7,22 +7,22 @@ namespace StoicGoose.Emulation.CPU
 		[Flags]
 		public enum Flags : ushort
 		{
-			Carry = 1 << 0, /* CF */
-			/* (reserved) */
-			Parity = 1 << 2, /* PF */
-			/* (reserved) */
-			Auxiliary = 1 << 4, /* AF */
-			/* (reserved) */
-			Zero = 1 << 6, /* ZF */
-			Sign = 1 << 7, /* SF */
-			Trap = 1 << 8, /* TF */
-			InterruptEnable = 1 << 9, /* IF */
-			Direction = 1 << 10, /* DF */
-			Overflow = 1 << 11, /* OF */
-			/* (reserved) */
-			/* (reserved) */
-			/* (reserved) */
-			/* (reserved) */
+			Carry = 1 << 0,            /* CF */
+			ReservedB1 = 1 << 1,       /* (reserved) */
+			Parity = 1 << 2,           /* PF */
+			ReservedB3 = 1 << 3,       /* (reserved) */
+			Auxiliary = 1 << 4,        /* AF */
+			ReservedB5 = 1 << 5,       /* (reserved) */
+			Zero = 1 << 6,             /* ZF */
+			Sign = 1 << 7,             /* SF */
+			Trap = 1 << 8,             /* TF */
+			InterruptEnable = 1 << 9,  /* IF */
+			Direction = 1 << 10,       /* DF */
+			Overflow = 1 << 11,        /* OF */
+			ReservedB12 = 1 << 12,     /* (reserved) */
+			ReservedB13 = 1 << 13,     /* (reserved) */
+			ReservedB14 = 1 << 14,     /* (reserved) */
+			ReservedB15 = 1 << 15      /* (reserved) */
 		}
 
 		private void SetFlags(Flags flags)

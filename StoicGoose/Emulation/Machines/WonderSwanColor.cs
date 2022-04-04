@@ -64,20 +64,20 @@ namespace StoicGoose.Emulation.Machines
 
 			if (lastBreakpointHit == null || isManual)
 			{
+				HandleInterrupts();
+
 				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 
 				var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
-				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) ChangeBit(ref interruptStatus, 4, true);
-				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) ChangeBit(ref interruptStatus, 5, true);
-				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) ChangeBit(ref interruptStatus, 6, true);
-				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) ChangeBit(ref interruptStatus, 7, true);
-
-				CheckAndRaiseInterrupts();
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) RaiseInterrupt(4);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) RaiseInterrupt(5);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) RaiseInterrupt(6);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) RaiseInterrupt(7);
 
 				SoundController.Step(currentCpuClockCycles);
 
-				if (Cartridge.Step(currentCpuClockCycles))
-					ChangeBit(ref interruptStatus, 2, true);
+				if (Cartridge.Step(currentCpuClockCycles)) RaiseInterrupt(2);
+				else LowerInterrupt(2);
 
 				CurrentClockCyclesInLine += currentCpuClockCycles;
 			}
@@ -179,8 +179,8 @@ namespace StoicGoose.Emulation.Machines
 					ChangeBit(ref retVal, 5, KeypadXEnable);
 					ChangeBit(ref retVal, 6, KeypadButtonEnable);
 
-					if (eventArgs.ButtonsHeld.Any())
-						ChangeBit(ref interruptStatus, 1, true);
+					if (eventArgs.ButtonsHeld.Count > 0)
+						RaiseInterrupt(1);
 
 					if (KeypadYEnable)
 					{

@@ -221,9 +221,9 @@
 							/* LEAVE */                     (cpu) => { cpu.sp = cpu.bp; cpu.bp = cpu.Pop(); return 1; },
 							/* RETF Iw */                   (cpu) => { var offset = cpu.ReadOpcodeIw(); cpu.ip = cpu.Pop(); cpu.cs = cpu.Pop(); cpu.sp += offset; return 8; },
 							/* RETF */                      (cpu) => { cpu.ip = cpu.Pop(); cpu.cs = cpu.Pop(); return 7; },
-			/* 0xCC */      /* INT 3 */                     (cpu) => { cpu.RaiseInterrupt(3); return 8; },
-							/* INT Ib */                    (cpu) => { cpu.RaiseInterrupt(cpu.ReadOpcodeIb()); return 9; },
-							/* INTO */                      (cpu) => { if (cpu.IsFlagSet(Flags.Overflow)) cpu.RaiseInterrupt(4); return 5; },
+			/* 0xCC */      /* INT 3 */                     (cpu) => { cpu.Interrupt(3); return 8; },
+							/* INT Ib */                    (cpu) => { cpu.Interrupt(cpu.ReadOpcodeIb()); return 9; },
+							/* INTO */                      (cpu) => { if (cpu.IsFlagSet(Flags.Overflow)) cpu.Interrupt(4); return 5; },
 							/* IRET */                      (cpu) => { cpu.ip = cpu.Pop(); cpu.cs = cpu.Pop(); cpu.flags = (Flags)cpu.Pop(); return 9; },
 
 			/* 0xD0 */      /* GRP2 Eb 1 */                 Opcode0xD0,
@@ -232,7 +232,7 @@
 							/* GRP2 Ew CL */                Opcode0xD3,
 			/* 0xD4 */      /* AAM */                       Opcode0xD4,
 							/* AAD */                       Opcode0xD5,
-							/* (Invalid) */                 (cpu) => 0,
+							/* (undocumented XLAT) */       (cpu) => { cpu.ax.Low = cpu.ReadMemory8(cpu.GetSegmentViaOverride(SegmentNumber.DS), (ushort)(cpu.bx.Word + cpu.ax.Low)); return 4; },
 							/* XLAT */                      (cpu) => { cpu.ax.Low = cpu.ReadMemory8(cpu.GetSegmentViaOverride(SegmentNumber.DS), (ushort)(cpu.bx.Word + cpu.ax.Low)); return 4; },
 			/* 0xD8 */      /* (Invalid) */                 (cpu) => 0,
 							/* (Invalid) */                 (cpu) => 0,
@@ -314,7 +314,7 @@
 			var lo = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
 			var hi = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
 			var reg = cpu.GetRegister16((RegisterNumber16)cpu.modRm.Mem);
-			if (reg < lo || reg > hi) cpu.RaiseInterrupt(5);
+			if (reg < lo || reg > hi) cpu.Interrupt(5);
 			return 12;
 		}
 
@@ -385,7 +385,7 @@
 				case 0x5: /* SUB */ cpu.WriteOpcodeEb(cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
 				case 0x6: /* XOR */ cpu.WriteOpcodeEb(cpu.Xor8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
 				case 0x7: /* CMP */ cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -405,7 +405,7 @@
 				case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
 				case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
 				case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -425,7 +425,7 @@
 				case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
 				case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
 				case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb()); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -436,7 +436,7 @@
 			cpu.ReadModRM();
 			if (cpu.modRm.Mod == ModRM.Modes.Register)
 			{
-				cpu.RaiseInterrupt(6);
+				cpu.Interrupt(6);
 				return 8;
 			}
 			cpu.WriteOpcodeGw(cpu.modRm.Offset);
@@ -612,9 +612,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -632,9 +632,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -645,7 +645,7 @@
 			cpu.ReadModRM();
 			if (cpu.modRm.Mod == ModRM.Modes.Register)
 			{
-				cpu.RaiseInterrupt(6);
+				cpu.Interrupt(6);
 				return 8;
 			}
 			cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
@@ -659,7 +659,7 @@
 			cpu.ReadModRM();
 			if (cpu.modRm.Mod == ModRM.Modes.Register)
 			{
-				cpu.RaiseInterrupt(6);
+				cpu.Interrupt(6);
 				return 8;
 			}
 			cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
@@ -699,9 +699,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -719,9 +719,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -739,9 +739,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -759,9 +759,9 @@
 				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
 				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
 				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x6: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x6: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -775,7 +775,7 @@
 			if (value == 0)
 			{
 				/* Division-by-zero exception */
-				cpu.RaiseInterrupt(0);
+				cpu.Interrupt(0);
 			}
 			else
 			{
@@ -810,14 +810,14 @@
 			switch (cpu.modRm.Reg)
 			{
 				case 0x0: /* TEST */ cpu.And8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
-				case 0x1: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x1: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x2: /* NOT */ cpu.WriteOpcodeEb((byte)~cpu.ReadOpcodeEb()); cycles = 1; break;
 				case 0x3: /* NEG */ cpu.WriteOpcodeEb(cpu.Neg8(cpu.ReadOpcodeEb())); cycles = 1; break;
 				case 0x4: /* MUL */ cpu.ax.Word = cpu.Mul8(false, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
 				case 0x5: /* IMUL */ cpu.ax.Word = cpu.Mul8(true, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
 				case 0x6: /* DIV */ cpu.ax.Word = cpu.Div8(false, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 15; break;
 				case 0x7: /* IDIV */ cpu.ax.Word = cpu.Div8(true, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 17; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -830,14 +830,14 @@
 			switch (cpu.modRm.Reg)
 			{
 				case 0x0: /* TEST */ cpu.And16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
-				case 0x1: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x1: /* --- */ cpu.Interrupt(6); cycles = 8; break;
 				case 0x2: /* NOT */ cpu.WriteOpcodeEw((ushort)~cpu.ReadOpcodeEw()); cycles = 1; break;
 				case 0x3: /* NEG */ cpu.WriteOpcodeEw(cpu.Neg16(cpu.ReadOpcodeEw())); cycles = 1; break;
 				case 0x4: /* MUL */ { var result = cpu.Mul16(false, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
 				case 0x5: /* IMUL */ { var result = cpu.Mul16(true, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
 				case 0x6: /* DIV */ { var result = cpu.Div16(false, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 23; } break;
 				case 0x7: /* IDIV */ { var result = cpu.Div16(true, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 24; } break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -851,7 +851,7 @@
 			{
 				case 0x0: /* INC */ cpu.WriteOpcodeEb(cpu.Inc8(cpu.ReadOpcodeEb())); cycles = 1; break;
 				case 0x1: /* DEC */ cpu.WriteOpcodeEb(cpu.Dec8(cpu.ReadOpcodeEb())); cycles = 1; break;
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}
@@ -877,7 +877,7 @@
 					{
 						if (cpu.modRm.Mod == ModRM.Modes.Register)
 						{
-							cpu.RaiseInterrupt(6);
+							cpu.Interrupt(6);
 							cycles = 8;
 							break;
 						}
@@ -895,7 +895,7 @@
 					{
 						if (cpu.modRm.Mod == ModRM.Modes.Register)
 						{
-							cpu.RaiseInterrupt(6);
+							cpu.Interrupt(6);
 							cycles = 8;
 							break;
 						}
@@ -905,8 +905,8 @@
 					}
 					break;
 				case 0x6: /* PUSH */ cpu.Push(cpu.ReadOpcodeEw()); cycles = 3; break;
-				case 0x7: /* --- */ cpu.RaiseInterrupt(6); cycles = 8; break; // undocumented mirror of PUSH?
-				default: cpu.RaiseInterrupt(6); cycles = 8; break;
+				case 0x7: /* --- */ cpu.Interrupt(6); cycles = 8; break; // undocumented mirror of PUSH?
+				default: cpu.Interrupt(6); cycles = 8; break;
 			}
 			return cycles;
 		}

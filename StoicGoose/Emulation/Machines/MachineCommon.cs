@@ -292,6 +292,30 @@ namespace StoicGoose.Emulation.Machines
 
 		public abstract void RunStep(bool isManual);
 
+		protected void RaiseInterrupt(int number)
+		{
+			ChangeBit(ref interruptStatus, number, true);
+		}
+
+		protected void LowerInterrupt(int number)
+		{
+			ChangeBit(ref interruptStatus, number, false);
+		}
+
+		protected void HandleInterrupts()
+		{
+			if (!Cpu.IsFlagSet(V30MZ.Flags.InterruptEnable)) return;
+
+			for (var i = 7; i >= 0; i--)
+			{
+				if (!IsBitSet(InterruptEnable, i) || !IsBitSet(interruptStatus, i)) continue;
+
+				Cpu.IsHalted = false;
+				Cpu.Interrupt((InterruptBase & 0b11111000) | i);
+				return;
+			}
+		}
+
 		protected void HandleBreakpoints()
 		{
 			if (Program.Configuration.Debugging.EnableBreakpoints && lastBreakpointHit == null)
@@ -331,16 +355,6 @@ namespace StoicGoose.Emulation.Machines
 
 			lastBreakpointHit = null;
 			breakpointHitReady = false;
-		}
-
-		protected void CheckAndRaiseInterrupts()
-		{
-			for (var i = 7; i >= 0; i--)
-			{
-				if (!IsBitSet(InterruptEnable, i) || !IsBitSet(interruptStatus, i)) continue;
-				Cpu.RaiseInterrupt(InterruptBase + i);
-				break;
-			}
 		}
 
 		public void LoadBootstrap(byte[] data)
