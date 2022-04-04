@@ -118,7 +118,7 @@
 			/* 0x68 */      /* PUSH Iw */                   (cpu) => { cpu.Push(cpu.ReadOpcodeIw()); return 1; },
 							/* IMUL Gw Ew Iw */             (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeGw((ushort)cpu.Mul16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); return 4; },
 							/* PUSH Ib */                   (cpu) => { cpu.Push((ushort)(sbyte)cpu.ReadOpcodeIb()); return 1; },
-							/* IMUL Gb Eb Ib */             (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeGw((ushort)cpu.Mul16(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); return 4; },
+							/* IMUL Gb Eb Ib */             (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeGw((ushort)cpu.Mul16(true, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); return 4; },
 			/* 0x6C */      /* INSB */                      Opcode0x6C,
 							/* INSW */                      Opcode0x6D,
 							/* OUTSB */                     Opcode0x6E,
