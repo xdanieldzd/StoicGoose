@@ -213,11 +213,16 @@ namespace StoicGoose
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
 			renderControl.Paint += (s, e) =>
 			{
+				var isScreenWindowOpen = imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen;
+
 				imGuiHandler.BeginFrame();
+
+				if (!isScreenWindowOpen) graphicsHandler.SetClearColor(Color.Black);
+				else graphicsHandler.SetClearColor(Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
 
 				graphicsHandler.ClearFrame();
 
-				if (!imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen) graphicsHandler.DrawFrame();
+				if (!isScreenWindowOpen) graphicsHandler.DrawFrame();
 				else graphicsHandler.BindTextures();
 
 				emulatorHandler.Machine.DrawCheatsAndBreakpointWindows(); // TODO: refactor cheats handling

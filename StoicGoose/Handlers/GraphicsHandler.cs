@@ -106,9 +106,15 @@ namespace StoicGoose.Handlers
 			return shaderNames;
 		}
 
+		public void SetClearColor(Color color)
+		{
+			GL.ClearColor(color);
+		}
+
 		private void SetInitialOpenGLState()
 		{
-			GL.ClearColor(Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
+			SetClearColor(Color.Black);
+
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Blend);
 			GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
