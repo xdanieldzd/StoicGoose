@@ -2,6 +2,8 @@
 {
 	public sealed partial class V30MZ : IComponent
 	{
+		// TODO: attempt prefetch emulation (Meitantei Conan - Nishi no Meitantei Saidai no Kiki; cart changes banks on startup, can no longer execute jump, execs garbage)
+
 		/* General registers */
 		Register16 ax, bx, cx, dx;
 		ushort sp, bp, si, di;

@@ -95,6 +95,17 @@ namespace StoicGoose.Emulation.Cartridges
 			Console.WriteLine($"  ROM access speed: {Metadata.RomAccessSpeed}");
 			Console.WriteLine($" RTC present: {Metadata.IsRtcPresent} [0x{Metadata.RtcPresentFlag:X2}]");
 			Console.WriteLine($" Checksum: 0x{Metadata.Checksum:X4}");
+
+			if (metadata.PublisherId == 0x01 && metadata.GameId == 0x27)
+			{
+				// HACK: Meitantei Conan - Nishi no Meitantei Saidai no Kiki, prevent crash on startup (see TODO in V30MZ, prefetching)
+				rom[0xFFFE8] = 0xEA;
+				rom[0xFFFE9] = 0x00;
+				rom[0xFFFEA] = 0x00;
+				rom[0xFFFEB] = 0x00;
+				rom[0xFFFEC] = 0x20;
+				Console.WriteLine($"~ {Ansi.Red}Conan prefetch hack enabled{Ansi.Reset} ~");
+			}
 		}
 
 		public void LoadSram(byte[] data)
