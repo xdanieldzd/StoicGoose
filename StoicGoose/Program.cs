@@ -20,6 +20,7 @@ namespace StoicGoose
 
 		const string assetsDirectoryName = "Assets";
 		const string shaderDirectoryName = "Shaders";
+		const string noIntroDatDirectoryName = "No-Intro";
 
 		readonly static string mutexName = $"{Application.ProductName}/{GetVersionDetails()}";
 
@@ -37,6 +38,7 @@ namespace StoicGoose
 		readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
 
 		public static string ShaderPath { get; } = string.Empty;
+		public static string NoIntroDatPath { get; } = string.Empty;
 
 		static Program()
 		{
@@ -49,6 +51,9 @@ namespace StoicGoose
 
 			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
 				throw new DirectoryNotFoundException("Shader directory missing");
+
+			if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
+				throw new DirectoryNotFoundException("No-Intro .dat directory missing");
 		}
 
 		[STAThread]

@@ -36,6 +36,7 @@ namespace StoicGoose
 		readonly ImGuiLogWindow logWindow = default;
 
 		/* Various handlers */
+		DatabaseHandler databaseHandler = default;
 		GraphicsHandler graphicsHandler = default;
 		SoundHandler soundHandler = default;
 		InputHandler inputHandler = default;
@@ -160,6 +161,8 @@ namespace StoicGoose
 
 		private void InitializeHandlers()
 		{
+			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
+
 			emulatorHandler = new EmulatorHandler(machineType);
 			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
 
@@ -298,14 +301,13 @@ namespace StoicGoose
 
 			titleStringBuilder.Append($"{Application.ProductName} {Program.GetVersionString(false)}");
 
-			var cartridgeId = emulatorHandler.Machine.Cartridge.Metadata?.GameIdString;
-			if (cartridgeId != null)
+			if (emulatorHandler.Machine.Cartridge.IsLoaded)
 			{
 				titleStringBuilder.Append($" - [{Path.GetFileName(Program.Configuration.General.RecentFiles.First())}]");
 
 				var statusStringBuilder = new StringBuilder();
 				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Metadata.Manufacturer} {emulatorHandler.Machine.Metadata.Model}, ");
-				statusStringBuilder.Append($"playing {cartridgeId}");
+				statusStringBuilder.Append($"playing {databaseHandler.GetGameTitle(emulatorHandler.Machine.Cartridge.Crc32, emulatorHandler.Machine.Cartridge.SizeInBytes)} ({emulatorHandler.Machine.Cartridge.Metadata.GameIdString})");
 
 				tsslStatus.Text = statusStringBuilder.ToString();
 				tsslEmulationStatus.Text = emulatorHandler.IsRunning ? (emulatorHandler.IsPaused ? "Paused" : "Running") : "Stopped";

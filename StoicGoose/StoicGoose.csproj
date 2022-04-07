@@ -100,6 +100,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\No-Intro\Bandai - WonderSwan Color.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\No-Intro\Bandai - WonderSwan.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Shaders\Dot-Matrix Color\Fragment.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -20,6 +20,10 @@ namespace StoicGoose.Emulation.Cartridges
 		/* REG_RTC_xxx -> RTC class */
 		RTC rtc = default;
 
+		public bool IsLoaded => rom?.Length > 0;
+		public int SizeInBytes => rom?.Length ?? 0;
+		public uint Crc32 { get; private set; } = default;
+
 		public Metadata Metadata => metadata;
 
 		public Cartridge()
@@ -80,6 +84,8 @@ namespace StoicGoose.Emulation.Cartridges
 				rtc = new RTC();
 			}
 
+			Crc32 = StoicGoose.Crc32.Calculate(rom);
+
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "ROM loaded.");
 			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
 			Console.WriteLine($" Publisher ID: {Metadata.PublisherCode}, {Metadata.PublisherName} [0x{Metadata.PublisherId:X2}]");
@@ -94,7 +100,9 @@ namespace StoicGoose.Emulation.Cartridges
 			Console.WriteLine($"  ROM bus width: {Metadata.RomBusWidth}");
 			Console.WriteLine($"  ROM access speed: {Metadata.RomAccessSpeed}");
 			Console.WriteLine($" RTC present: {Metadata.IsRtcPresent} [0x{Metadata.RtcPresentFlag:X2}]");
-			Console.WriteLine($" Checksum: 0x{Metadata.Checksum:X4}");
+			Console.WriteLine($" Checksum (from metadata): 0x{Metadata.Checksum:X4}");
+			Console.WriteLine($"  Checksum (calculated): 0x{Metadata.CalculatedChecksum:X4}");
+			Console.WriteLine($"  Checksum is {(metadata.IsChecksumValid ? $"{Ansi.Green}valid" : $"{Ansi.Red}invalid")}{Ansi.Reset}!");
 
 			if (metadata.PublisherId == 0x01 && metadata.GameId == 0x27)
 			{

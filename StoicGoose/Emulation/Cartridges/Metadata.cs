@@ -146,6 +146,10 @@ namespace StoicGoose.Emulation.Cartridges
 
 		public bool IsRtcPresent => RtcPresentFlag != 0;
 
+		public ushort CalculatedChecksum { get; private set; }
+
+		public bool IsChecksumValid => Checksum == CalculatedChecksum;
+
 		public Metadata(byte[] data)
 		{
 			var offset = data.Length - 10;
@@ -157,7 +161,11 @@ namespace StoicGoose.Emulation.Cartridges
 			SaveType = (SaveTypes)data[offset + 5];
 			MiscFlags = data[offset + 6];
 			RtcPresentFlag = data[offset + 7];
-			Checksum = (ushort)(data[offset + 8] << 8 | data[offset + 9]);
+			Checksum = (ushort)(data[offset + 9] << 8 | data[offset + 8]);
+
+			CalculatedChecksum = 0;
+			for (var i = 0; i < data.Length - 2; i++)
+				CalculatedChecksum += data[i + 0];
 		}
 	}
 }
