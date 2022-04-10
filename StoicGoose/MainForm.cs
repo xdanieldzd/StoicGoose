@@ -10,8 +10,6 @@ using System.Windows.Forms;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
-
 using ImGuiNET;
 
 using StoicGoose.Debugging;
@@ -242,14 +240,14 @@ namespace StoicGoose
 
 			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
 			{
-				if (!Program.Configuration.Input.GameControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.GameControls[button]))
-					Program.Configuration.Input.GameControls[button] = string.Empty;
+				if (!Program.Configuration.Input.GameControls.ContainsKey(button))
+					Program.Configuration.Input.GameControls[button] = new();
 			}
 
 			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
 			{
-				if (!Program.Configuration.Input.SystemControls.ContainsKey(button) || !Enum.IsDefined(typeof(Keys), Program.Configuration.Input.SystemControls[button]))
-					Program.Configuration.Input.SystemControls[button] = string.Empty;
+				if (!Program.Configuration.Input.SystemControls.ContainsKey(button))
+					Program.Configuration.Input.SystemControls[button] = new();
 			}
 
 			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize > maxScreenSizeFactor)

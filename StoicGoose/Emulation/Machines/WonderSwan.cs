@@ -67,20 +67,20 @@ namespace StoicGoose.Emulation.Machines
 
 		public override void UpdateStatusIcons()
 		{
-			Metadata.IsStatusIconActive["power"] = true;
-			Metadata.IsStatusIconActive["initialized"] = BuiltInSelfTestOk;
+			Metadata.IsStatusIconActive["Power"] = true;
+			Metadata.IsStatusIconActive["Initialized"] = BuiltInSelfTestOk;
 
-			Metadata.IsStatusIconActive["sleep"] = DisplayController.IconSleep;
-			Metadata.IsStatusIconActive["vertical"] = DisplayController.IconVertical;
-			Metadata.IsStatusIconActive["horizontal"] = DisplayController.IconHorizontal;
-			Metadata.IsStatusIconActive["aux1"] = DisplayController.IconAux1;
-			Metadata.IsStatusIconActive["aux2"] = DisplayController.IconAux2;
-			Metadata.IsStatusIconActive["aux3"] = DisplayController.IconAux3;
+			Metadata.IsStatusIconActive["Sleep"] = DisplayController.IconSleep;
+			Metadata.IsStatusIconActive["Vertical"] = DisplayController.IconVertical;
+			Metadata.IsStatusIconActive["Horizontal"] = DisplayController.IconHorizontal;
+			Metadata.IsStatusIconActive["Aux1"] = DisplayController.IconAux1;
+			Metadata.IsStatusIconActive["Aux2"] = DisplayController.IconAux2;
+			Metadata.IsStatusIconActive["Aux3"] = DisplayController.IconAux3;
 
-			Metadata.IsStatusIconActive["headphones"] = SoundController.HeadphonesConnected;
-			Metadata.IsStatusIconActive["volume0"] = SoundController.MasterVolume == 0;
-			Metadata.IsStatusIconActive["volume1"] = SoundController.MasterVolume == 1;
-			Metadata.IsStatusIconActive["volume2"] = SoundController.MasterVolume == 2;
+			Metadata.IsStatusIconActive["Headphones"] = SoundController.HeadphonesConnected;
+			Metadata.IsStatusIconActive["Volume0"] = SoundController.MasterVolume == 0;
+			Metadata.IsStatusIconActive["Volume1"] = SoundController.MasterVolume == 1;
+			Metadata.IsStatusIconActive["Volume2"] = SoundController.MasterVolume == 2;
 		}
 
 		public override byte ReadRegister(ushort register)
@@ -162,25 +162,25 @@ namespace StoicGoose.Emulation.Machines
 
 					if (KeypadYEnable)
 					{
-						if (eventArgs.ButtonsHeld.Contains("y1")) ChangeBit(ref retVal, 0, true);
-						if (eventArgs.ButtonsHeld.Contains("y2")) ChangeBit(ref retVal, 1, true);
-						if (eventArgs.ButtonsHeld.Contains("y3")) ChangeBit(ref retVal, 2, true);
-						if (eventArgs.ButtonsHeld.Contains("y4")) ChangeBit(ref retVal, 3, true);
+						if (eventArgs.ButtonsHeld.Contains("Y1")) ChangeBit(ref retVal, 0, true);
+						if (eventArgs.ButtonsHeld.Contains("Y2")) ChangeBit(ref retVal, 1, true);
+						if (eventArgs.ButtonsHeld.Contains("Y3")) ChangeBit(ref retVal, 2, true);
+						if (eventArgs.ButtonsHeld.Contains("Y4")) ChangeBit(ref retVal, 3, true);
 					}
 
 					if (KeypadXEnable)
 					{
-						if (eventArgs.ButtonsHeld.Contains("x1")) ChangeBit(ref retVal, 0, true);
-						if (eventArgs.ButtonsHeld.Contains("x2")) ChangeBit(ref retVal, 1, true);
-						if (eventArgs.ButtonsHeld.Contains("x3")) ChangeBit(ref retVal, 2, true);
-						if (eventArgs.ButtonsHeld.Contains("x4")) ChangeBit(ref retVal, 3, true);
+						if (eventArgs.ButtonsHeld.Contains("X1")) ChangeBit(ref retVal, 0, true);
+						if (eventArgs.ButtonsHeld.Contains("X2")) ChangeBit(ref retVal, 1, true);
+						if (eventArgs.ButtonsHeld.Contains("X3")) ChangeBit(ref retVal, 2, true);
+						if (eventArgs.ButtonsHeld.Contains("X4")) ChangeBit(ref retVal, 3, true);
 					}
 
 					if (KeypadButtonEnable)
 					{
-						if (eventArgs.ButtonsHeld.Contains("start")) ChangeBit(ref retVal, 1, true);
-						if (eventArgs.ButtonsHeld.Contains("a")) ChangeBit(ref retVal, 2, true);
-						if (eventArgs.ButtonsHeld.Contains("b")) ChangeBit(ref retVal, 3, true);
+						if (eventArgs.ButtonsHeld.Contains("Start")) ChangeBit(ref retVal, 1, true);
+						if (eventArgs.ButtonsHeld.Contains("A")) ChangeBit(ref retVal, 2, true);
+						if (eventArgs.ButtonsHeld.Contains("B")) ChangeBit(ref retVal, 3, true);
 					}
 					break;
 

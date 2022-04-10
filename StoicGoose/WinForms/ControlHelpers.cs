@@ -6,13 +6,14 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
 
 using WinKeys = System.Windows.Forms.Keys;
 using OTKKeys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
+using StoicGoose.Handlers;
 using StoicGoose.WinForms.Controls;
+using StoicGoose.XInput;
 
 namespace StoicGoose.WinForms
 {
@@ -255,52 +256,131 @@ namespace StoicGoose.WinForms
 
 		public static Control[] CreateKeyInput(object obj, string propertyName, string keyName)
 		{
-			var dict = obj.GetType().GetProperty(propertyName).GetValue(obj) as Dictionary<string, string>;
+			var dict = obj.GetType().GetProperty(propertyName).GetValue(obj) as Dictionary<string, List<string>>;
 
 			var label = new LabelEx()
 			{
 				Name = $"{dict}_{keyName}_{nameof(LabelEx)}",
-				Text = $"{char.ToUpper(keyName[0])}{keyName[1..]}:",
+				Text = keyName,
 				Dock = DockStyle.Fill,
 				TextAlign = ContentAlignment.MiddleLeft,
 				Margin = new Padding(3)
 			};
-			var textBox = new TextBox()
+			var textBoxEx = new TextBoxEx()
 			{
-				Name = $"{dict}_{keyName}_{nameof(TextBox)}",
+				Name = $"{dict}_{keyName}_{nameof(TextBoxEx)}",
 				Dock = DockStyle.Fill,
 				ReadOnly = true,
 				BackColor = SystemColors.Window,
-				TabIndex = Array.IndexOf(dict.Keys.ToArray(), keyName)
+				TabIndex = Array.IndexOf(dict.Keys.ToArray(), keyName),
+				Tag = dict[keyName]
 			};
-			textBox.KeyDown += (s, e) =>
+			textBoxEx.TimerInterval = 100;
+			textBoxEx.TimerTick += (s, e) =>
 			{
-				if (s is TextBox textBox && winToOpenTkKeyTranslator.ContainsKey(e.KeyCode))
+				if (s is TextBoxEx textBoxEx && textBoxEx.Tag is List<string> keyValues)
 				{
-					textBox.Text = $"{winToOpenTkKeyTranslator[e.KeyCode]}";
-					textBox.FindForm().SelectNextControl(textBox, true, true, true, true);
+					if (!textBoxEx.Focused) return;
+
+					for (var i = 0; i < ControllerManager.MaxControllers; i++)
+					{
+						var controller = ControllerManager.GetController(i);
+						controller.Update();
+
+						if (!controller.IsConnected) continue;
+
+						var doUpdate = false;
+
+						//ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, typeof(Controller), $"Xinput #{i} L-thumb: {controller.LeftThumbstick}");
+
+						if (controller.Buttons != Buttons.None && (((int)controller.Buttons & ((int)controller.Buttons - 1)) == 0))
+						{
+							keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{controller.Buttons}").OrderBy(x => x).Distinct().ToList();
+							doUpdate = true;
+						}
+						if (controller.LeftThumbstick != ThumbstickPosition.Zero)
+						{
+							if (controller.LeftThumbstick.X < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}Left").OrderBy(x => x).Distinct().ToList();
+							else if (controller.LeftThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbRight").OrderBy(x => x).Distinct().ToList();
+							if (controller.LeftThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbDown").OrderBy(x => x).Distinct().ToList();
+							else if (controller.LeftThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbUp").OrderBy(x => x).Distinct().ToList();
+							doUpdate = true;
+						}
+						if (controller.RightThumbstick != ThumbstickPosition.Zero)
+						{
+							if (controller.RightThumbstick.X < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbLeft").OrderBy(x => x).Distinct().ToList();
+							else if (controller.RightThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbRight").OrderBy(x => x).Distinct().ToList();
+							if (controller.RightThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbDown").OrderBy(x => x).Distinct().ToList();
+							else if (controller.RightThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbUp").OrderBy(x => x).Distinct().ToList();
+							doUpdate = true;
+						}
+						if (controller.LeftTrigger > 0.5f)
+						{
+							keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftTrigger)}").OrderBy(x => x).Distinct().ToList();
+							doUpdate = true;
+						}
+						if (controller.RightTrigger > 0.5f)
+						{
+							keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightTrigger)}").OrderBy(x => x).Distinct().ToList();
+							doUpdate = true;
+						}
+
+						if (doUpdate)
+						{
+							textBoxEx.Text = string.Join(", ", keyValues.Select(x => $"{x.Split('+')[1]} ({x.Split('+')[0]})"));
+							textBoxEx.Tag = keyValues;
+						}
+					}
 				}
 			};
-			textBox.GotFocus += (s, e) =>
+			textBoxEx.KeyDown += (s, e) =>
 			{
-				if (s is TextBox textBox)
-					textBox.SelectionStart = textBox.SelectionLength = 0;
+				if (s is TextBoxEx textBoxEx && textBoxEx.Tag is List<string> keyValues && winToOpenTkKeyTranslator.ContainsKey(e.KeyCode))
+				{
+					keyValues = keyValues.Append($"{InputHandler.KeyboardPrefix}+{winToOpenTkKeyTranslator[e.KeyCode]}").OrderBy(x => x).Distinct().ToList();
+					textBoxEx.Text = string.Join(", ", keyValues.Select(x => $"{x.Split('+')[1]} ({x.Split('+')[0]})"));
+					textBoxEx.Tag = keyValues;
+				}
+			};
+			textBoxEx.MouseDown += (s, e) =>
+			{
+				if (s is TextBoxEx textBoxEx && textBoxEx.Tag is List<string> keyValues && e.Button == MouseButtons.Middle)
+				{
+					textBoxEx.Text = string.Empty;
+					keyValues.Clear();
+				}
+			};
+			textBoxEx.GotFocus += (s, e) =>
+			{
+				if (s is TextBoxEx textBoxEx)
+				{
+					textBoxEx.StartTimer();
+					textBoxEx.SelectionStart = textBoxEx.SelectionLength = 0;
+				}
+			};
+			textBoxEx.LostFocus += (s, e) =>
+			{
+				if (s is TextBoxEx textBoxEx)
+				{
+					textBoxEx.StopTimer();
+					textBoxEx.SelectionStart = textBoxEx.SelectionLength = 0;
+				}
 			};
 
-			var binding = new Binding(nameof(TextBox.Text), obj, propertyName);
+			var binding = new Binding(nameof(TextBoxEx.Text), obj, propertyName);
 			binding.Parse += (s, e) =>
 			{
-				if (e.Value is string value)
-					dict[keyName] = value;
+				if (textBoxEx.Tag is List<string> keyValues)
+					dict[keyName] = keyValues;
 			};
 			binding.Format += (s, e) =>
 			{
-				if (e.Value is Dictionary<string, string> dict)
-					e.Value = dict[keyName];
+				if (e.Value is Dictionary<string, List<string>> dict)
+					e.Value = string.Join(", ", dict[keyName].Select(x => $"{x.Split('+')[1]} ({x.Split('+')[0]})"));
 			};
-			textBox.DataBindings.Add(binding);
+			textBoxEx.DataBindings.Add(binding);
 
-			return new Control[] { label, textBox };
+			return new Control[] { label, textBoxEx };
 		}
 
 		private static string GetDisplayName(Type type, string propertyName)

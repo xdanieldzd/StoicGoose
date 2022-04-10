@@ -14,9 +14,9 @@ namespace StoicGoose.Emulation.Machines
 		public override Vector2i ScreenSize => new(DisplayControllerCommon.ScreenWidth, DisplayControllerCommon.ScreenHeight);
 		public override double RefreshRate => DisplayControllerCommon.VerticalClock;
 
-		public override string GameControls => "start, b, a, x1, x2, x3, x4, y1, y2, y3, y4";
-		public override string VerticalControlRemap => "y2=x1, y3=x2, y4=x3, y1=x4, x2=y1, x3=y2, x4=y3, x1=y4";
-		public override string HardwareControls => "volume";
+		public override string GameControls => "Start, B, A, X1, X2, X3, X4, Y1, Y2, Y3, Y4";
+		public override string VerticalControlRemap => "Y2=X1, Y3=X2, Y4=X3, Y1=X4, X2=Y1, X3=Y2, X4=Y3, X1=Y4";
+		public override string HardwareControls => "Volume";
 
 		public override string InternalEepromFilename => "WonderSwan.eep";
 
@@ -26,19 +26,19 @@ namespace StoicGoose.Emulation.Machines
 
 		readonly static Dictionary<string, (string, Vector2i)> statusIcons = new()
 		{
-			{ "power", ("Power.png", new(0, 144)) },
-			{ "initialized", ("Initialized.png", new(18, 144)) },
-			{ "sleep", ("Sleep.png", new(50, 144)) },
-			{ "lowbatt", ("LowBattery.png", new(80, 144)) },
-			{ "volume0", ("Volume0.png", new(105, 144)) },
-			{ "volume1", ("Volume1.png", new(105, 144)) },
-			{ "volume2", ("Volume2.png", new(105, 144)) },
-			{ "headphones", ("Headphones.png", new(130, 144)) },
-			{ "horizontal", ("Horizontal.png", new(155, 144)) },
-			{ "vertical", ("Vertical.png", new(168, 144)) },
-			{ "aux1", ("Aux1.png", new(185, 144)) },
-			{ "aux2", ("Aux2.png", new(195, 144)) },
-			{ "aux3", ("Aux3.png", new(205, 144)) },
+			{ "Power", ("Power.png", new(0, 144)) },
+			{ "Initialized", ("Initialized.png", new(18, 144)) },
+			{ "Sleep", ("Sleep.png", new(50, 144)) },
+			{ "LowBattery", ("LowBattery.png", new(80, 144)) },
+			{ "Volume0", ("Volume0.png", new(105, 144)) },
+			{ "Volume1", ("Volume1.png", new(105, 144)) },
+			{ "Volume2", ("Volume2.png", new(105, 144)) },
+			{ "Headphones", ("Headphones.png", new(130, 144)) },
+			{ "Horizontal", ("Horizontal.png", new(155, 144)) },
+			{ "Vertical", ("Vertical.png", new(168, 144)) },
+			{ "Aux1", ("Aux1.png", new(185, 144)) },
+			{ "Aux2", ("Aux2.png", new(195, 144)) },
+			{ "Aux3", ("Aux3.png", new(205, 144)) },
 		};
 
 		public override Dictionary<string, (string filename, Vector2i location)> StatusIcons => statusIcons;

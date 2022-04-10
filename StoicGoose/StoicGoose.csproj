@@ -31,7 +31,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="OpenTK" Version="4.7.1" />
-    <PackageReference Include="OpenTK.WinForms.Radegast" Version="0.1.0" />
+    <PackageReference Include="OpenTK.WinForms" Version="4.0.0-pre.6" />
   </ItemGroup>
 
   <ItemGroup>

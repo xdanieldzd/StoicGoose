@@ -86,10 +86,10 @@ namespace StoicGoose.DataStorage
 	{
 		[DisplayName("Game Controls")]
 		[Description("Controls related to game input, i.e. X-/Y-pads, etc.")]
-		public Dictionary<string, string> GameControls { get; set; } = new Dictionary<string, string>();
+		public Dictionary<string, List<string>> GameControls { get; set; } = new Dictionary<string, List<string>>();
 		[DisplayName("System Controls")]
 		[Description("Controls related to hardware functions, i.e. volume button.")]
-		public Dictionary<string, string> SystemControls { get; set; } = new Dictionary<string, string>();
+		public Dictionary<string, List<string>> SystemControls { get; set; } = new Dictionary<string, List<string>>();
 	}
 
 	public sealed class DebugConfiguration : ConfigurationBase<DebugConfiguration>
