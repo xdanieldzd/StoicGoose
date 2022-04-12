@@ -152,11 +152,6 @@ namespace StoicGoose
 				soundHandler.SaveRecording(@"D:\Temp\Goose\sound.wav");
 		}
 
-		private void MainForm_Layout(object sender, LayoutEventArgs e)
-		{
-			MinimumSize = CalculateRequiredClientSize(2) + (Size - ClientSize);
-		}
-
 		private void InitializeHandlers()
 		{
 			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
@@ -264,7 +259,8 @@ namespace StoicGoose
 			if (WindowState == FormWindowState.Maximized)
 				WindowState = FormWindowState.Normal;
 
-			ClientSize = CalculateRequiredClientSize(Program.Configuration.Video.ScreenSize);
+			MinimumSize = SizeFromClientSize(CalculateRequiredClientSize(2));
+			Size = SizeFromClientSize(CalculateRequiredClientSize(Program.Configuration.Video.ScreenSize));
 
 			var screen = Screen.FromControl(this);
 			var workingArea = screen.WorkingArea;
@@ -280,17 +276,26 @@ namespace StoicGoose
 			if (emulatorHandler == null || graphicsHandler == null)
 				return ClientSize;
 
-			var screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.X;
-			var screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.Y + emulatorHandler.Machine.Metadata.StatusIconSize;
+			var statusIconsOnRight = emulatorHandler.Machine.Metadata.StatusIconsLocation.X > emulatorHandler.Machine.Metadata.StatusIconsLocation.Y;
+
+			int screenWidth, screenHeight;
 
 			if (!isVerticalOrientation)
-				return new Size(
-					screenWidth * screenSize,
-					(screenHeight * screenSize) + menuStrip.Height + statusStrip.Height);
+			{
+				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.X;
+				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.Y;
+				if (statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
+				if (!statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+			}
 			else
-				return new Size(
-					screenHeight * screenSize,
-					(screenWidth * screenSize) + menuStrip.Height + statusStrip.Height);
+			{
+				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.Y;
+				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.X;
+				if (!statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
+				if (statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+			}
+
+			return new(screenWidth * screenSize, (screenHeight * screenSize) + menuStrip.Height + statusStrip.Height);
 		}
 
 		private void SetWindowTitleAndStatus()

@@ -15,7 +15,9 @@ namespace StoicGoose.Emulation.Machines
 		public abstract string HardwareControls { get; }
 		public abstract string InternalEepromFilename { get; }
 		public abstract string RomFileFilter { get; }
+		public abstract Vector2i StatusIconsLocation { get; }
 		public abstract int StatusIconSize { get; }
+		public abstract bool StatusIconsInverted { get; }
 		public abstract Dictionary<string, (string filename, Vector2i location)> StatusIcons { get; }
 
 		public Dictionary<string, bool> IsStatusIconActive { get; } = new();

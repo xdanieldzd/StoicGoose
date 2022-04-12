@@ -38,11 +38,14 @@ namespace StoicGoose.Handlers
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
 		readonly static int maxTextureSamplerCount = 8;
 
+		readonly static float iconScale = 0.85f;
+
 		readonly MetadataBase metadata = default;
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
 		readonly IntUniform renderMode = new(nameof(renderMode));
+		readonly IntUniform invertIcons = new(nameof(invertIcons));
 
 		readonly Matrix4Uniform displayModelviewMatrix = new(defaultModelviewMatrixName);
 		readonly Matrix4Uniform iconBackgroundModelviewMatrix = new(defaultModelviewMatrixName);
@@ -215,7 +218,11 @@ namespace StoicGoose.Handlers
 
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
-				displayTextures[i] = new Texture(255, 255, 255, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+				if (!metadata.StatusIconsInverted)
+					displayTextures[i] = new Texture(255, 255, 255, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+				else
+					displayTextures[i] = new Texture(8, 8, 8, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 
@@ -259,8 +266,24 @@ namespace StoicGoose.Handlers
 		{
 			GL.Viewport(clientRect);
 
-			var screenWidth = IsVerticalOrientation ? (metadata.ScreenSize.Y + metadata.StatusIconSize) : metadata.ScreenSize.X;
-			var screenHeight = IsVerticalOrientation ? metadata.ScreenSize.X : (metadata.ScreenSize.Y + metadata.StatusIconSize);
+			var statusIconsOnRight = metadata.StatusIconsLocation.X > metadata.StatusIconsLocation.Y;
+
+			int screenWidth, screenHeight;
+
+			if (!IsVerticalOrientation)
+			{
+				screenWidth = metadata.ScreenSize.X;
+				screenHeight = metadata.ScreenSize.Y;
+				if (statusIconsOnRight) screenWidth += metadata.StatusIconSize;
+				if (!statusIconsOnRight) screenHeight += metadata.StatusIconSize;
+			}
+			else
+			{
+				screenWidth = metadata.ScreenSize.Y;
+				screenHeight = metadata.ScreenSize.X;
+				if (!statusIconsOnRight) screenWidth += metadata.StatusIconSize;
+				if (statusIconsOnRight) screenHeight += metadata.StatusIconSize;
+			}
 
 			var aspects = new Vector2(clientRect.Width / (float)screenWidth, clientRect.Height / (float)screenHeight);
 			var multiplier = (float)Math.Max(1, Math.Min(Math.Floor(aspects.X), Math.Floor(aspects.Y)));
@@ -270,15 +293,17 @@ namespace StoicGoose.Handlers
 			var adjustedX = (float)Math.Floor((clientRect.Width - adjustedWidth) / 2f);
 			var adjustedY = (float)Math.Floor((clientRect.Height - adjustedHeight) / 2f);
 
-			if (!IsVerticalOrientation) adjustedHeight -= metadata.StatusIconSize * multiplier;
+			if ((!IsVerticalOrientation && !statusIconsOnRight) || (IsVerticalOrientation && statusIconsOnRight)) adjustedHeight -= metadata.StatusIconSize * multiplier;
 			else adjustedWidth -= metadata.StatusIconSize * multiplier;
+
+			if (IsVerticalOrientation && statusIconsOnRight) adjustedY += metadata.StatusIconSize * multiplier;
 
 			displayPosition = new Vector2(adjustedX, adjustedY);
 			displaySize = new Vector2(adjustedWidth, adjustedHeight);
 
 			foreach (var (icon, _) in iconTextures)
 			{
-				var iconLocation = metadata.StatusIcons[icon].location;
+				var iconLocation = metadata.StatusIconsLocation + metadata.StatusIcons[icon].location;
 
 				float x, y;
 
@@ -290,11 +315,15 @@ namespace StoicGoose.Handlers
 				else
 				{
 					x = adjustedX + (iconLocation.Y * multiplier);
-					y = adjustedY + ((-iconLocation.X + screenHeight - metadata.StatusIconSize) * multiplier);
+					y = (!statusIconsOnRight ? adjustedY : 0) + ((-iconLocation.X + screenHeight - metadata.StatusIconSize) * multiplier);
 				}
 
+				var iconOffset = (metadata.StatusIconSize - (metadata.StatusIconSize * iconScale)) / 2f * multiplier;
+				x += iconOffset;
+				y += iconOffset;
+
 				iconModelviewMatrices[icon].Value =
-					Matrix4.CreateScale(metadata.StatusIconSize * multiplier, metadata.StatusIconSize * multiplier, 1f) *
+					Matrix4.CreateScale(metadata.StatusIconSize * multiplier * iconScale, metadata.StatusIconSize * multiplier * iconScale, 1f) *
 					Matrix4.CreateTranslation(x, y, 0f);
 			}
 
@@ -304,7 +333,7 @@ namespace StoicGoose.Handlers
 				Matrix4.Identity;
 			displayModelviewMatrix.Value = Matrix4.CreateScale(displaySize.X, displaySize.Y, 1f) * Matrix4.CreateTranslation(displayPosition.X, displayPosition.Y, 0f);
 
-			if (!IsVerticalOrientation)
+			if (!IsVerticalOrientation && !statusIconsOnRight)
 			{
 				iconBackgroundModelviewMatrix.Value =
 					Matrix4.CreateScale(adjustedWidth, metadata.StatusIconSize * multiplier, 1f) *
@@ -338,6 +367,9 @@ namespace StoicGoose.Handlers
 
 			renderMode.Value = (int)ShaderRenderMode.Display;
 			renderMode.SubmitToProgram(commonShaderProgram);
+
+			invertIcons.Value = metadata.StatusIconsInverted ? 1 : 0;
+			invertIcons.SubmitToProgram(commonShaderProgram);
 
 			projectionMatrix.SubmitToProgram(commonShaderProgram);
 			textureMatrix.SubmitToProgram(commonShaderProgram);

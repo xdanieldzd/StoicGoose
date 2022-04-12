@@ -77,6 +77,8 @@ namespace StoicGoose.Handlers
 				foreach (var (id, input) in value)
 				{
 					var controller = ControllerManager.GetController(id);
+					if (!controller.IsConnected) continue;
+
 					if (Enum.TryParse(input, out Buttons result) && (controller.Buttons & result) != Buttons.None) list.Add(keyName);
 					if (input == $"{nameof(controller.LeftThumbstick)}Left" && controller.LeftThumbstick.X < -0.5f) list.Add(keyName);
 					if (input == $"{nameof(controller.LeftThumbstick)}Right" && controller.LeftThumbstick.X > 0.5f) list.Add(keyName);

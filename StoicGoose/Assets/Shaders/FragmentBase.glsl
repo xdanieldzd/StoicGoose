@@ -8,6 +8,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform int renderMode = 0;
+uniform int invertIcons = 0;
 
 uniform sampler2D textureSamplers[8];
 
@@ -35,6 +36,7 @@ void main()
 
         case renderModeIcons:
             outputColor = renderIcons();
+            if (invertIcons != 0) outputColor = vec4(1.0 - outputColor.r, 1.0 - outputColor.g, 1.0 - outputColor.b, outputColor.a);
             break;
     }
 
