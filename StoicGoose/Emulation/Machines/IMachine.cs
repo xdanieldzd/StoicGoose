@@ -27,7 +27,7 @@ namespace StoicGoose.Emulation.Machines
 		Cartridge Cartridge { get; }
 		V30MZ Cpu { get; }
 		DisplayControllerCommon DisplayController { get; }
-		SoundController SoundController { get; }
+		SoundControllerCommon SoundController { get; }
 		EEPROM InternalEeprom { get; }
 		// TODO: Sphinx DMA controller?
 

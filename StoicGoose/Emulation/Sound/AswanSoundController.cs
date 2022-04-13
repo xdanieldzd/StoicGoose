@@ -1,165 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using StoicGoose.Emulation.Machines;
-using StoicGoose.Interface.Attributes;
-using StoicGoose.WinForms;
 
 using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.Sound
 {
-	public partial class SoundController : IComponent
+	public class AswanSoundController : SoundControllerCommon
 	{
-		/* http://daifukkat.su/docs/wsman/#hw_sound */
-
-		// TODO: split like ASWAN/SPHINX display controllers, then add SPHINX-specific stuff
-
-		const int numChannels = 4, maxMasterVolume = 2;
-
-		readonly int sampleRate, numOutputChannels;
-
-		readonly ISoundChannel[] channels = new ISoundChannel[numChannels];
-
-		readonly List<short> mixedSampleBuffer;
-		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;
-		public void OnEnqueueSamples(EnqueueSamplesEventArgs e) { EnqueueSamples?.Invoke(this, e); }
-
-		readonly double clockRate, refreshRate;
-		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
-		int cycleCount;
-
-		public int MasterVolume { get; protected set; } = 0;
-
-		int masterVolumeChange;
-
-		readonly MemoryReadDelegate memoryReadDelegate;
-
-		public delegate byte WaveTableReadDelegate(ushort address);
-
-		/* REG_SND_WAVE_BASE */
-		byte waveTableBase;
-		/* REG_SND_OUTPUT */
-		bool speakerEnable, headphoneEnable;
-
-		[ImGuiRegister(0x091, "REG_SND_OUTPUT")]
-		[ImGuiBitDescription("Are headphones connected?", 7)]
-		public bool HeadphonesConnected { get; protected set; } = false; // read-only
-
-		byte speakerVolumeShift;
+		public override int MaxMasterVolume => 2;
 
 		/* REG_SND_9697 */
-		ushort unknown9697;
+		protected ushort unknown9697;
 		/* REG_SND_9899 */
-		ushort unknown9899;
-		/* REG_SND_9E */
-		byte unknown9E;
+		protected ushort unknown9899;
 
-		public SoundController(MemoryReadDelegate memoryRead, int rate, int outChannels)
+		public AswanSoundController(MemoryReadDelegate memoryRead, int rate, int outChannels) : base(memoryRead, rate, outChannels) { }
+
+		public override void ResetRegisters()
 		{
-			memoryReadDelegate = memoryRead;
-
-			sampleRate = rate;
-			numOutputChannels = outChannels;
-
-			channels[0] = new Wave(false, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)); });
-			channels[1] = new Voice((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (1 << 4) + a)); });
-			channels[2] = new Wave(true, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)); });
-			channels[3] = new Noise((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)); });
-
-			mixedSampleBuffer = new List<short>();
-
-			clockRate = WonderSwan.CpuClock;
-			refreshRate = Display.DisplayControllerCommon.VerticalClock;
-
-			samplesPerFrame = (int)(sampleRate / refreshRate);
-			cyclesPerFrame = (int)(clockRate / refreshRate);
-			cyclesPerSample = cyclesPerFrame / samplesPerFrame;
-		}
-
-		public void Reset()
-		{
-			cycleCount = 0;
-
-			for (var i = 0; i < numChannels; i++)
-				channels[i].Reset();
-
-			FlushSamples();
-
-			MasterVolume = maxMasterVolume;
-			masterVolumeChange = -1;
-
-			ResetRegisters();
-		}
-
-		private void ResetRegisters()
-		{
-			waveTableBase = 0;
-			speakerEnable = headphoneEnable = false;
-			HeadphonesConnected = true; // for stereo sound
-			speakerVolumeShift = 0;
+			base.ResetRegisters();
 
 			unknown9697 = 0;
 			unknown9899 = 0;
 		}
 
-		public void Shutdown()
+		public override void StepChannels()
 		{
-			//
+			for (var j = 0; j < numChannels; j++)
+				channels[j].Step();
 		}
 
-		public void ToggleMasterVolume()
-		{
-			if (masterVolumeChange != -1) return;
-
-			masterVolumeChange = MasterVolume - 1;
-			if (masterVolumeChange < 0) masterVolumeChange = maxMasterVolume;
-		}
-
-		public void Step(int clockCyclesInStep)
-		{
-			cycleCount += clockCyclesInStep;
-
-			for (int i = 0; i < clockCyclesInStep; i++)
-			{
-				for (var j = 0; j < numChannels; j++)
-					channels[j].Step();
-			}
-
-			if (cycleCount >= cyclesPerSample)
-			{
-				GenerateSample();
-				cycleCount -= cyclesPerSample;
-			}
-
-			if (mixedSampleBuffer.Count >= (samplesPerFrame * numOutputChannels))
-			{
-				OnEnqueueSamples(new EnqueueSamplesEventArgs(numChannels, mixedSampleBuffer.ToArray()));
-				FlushSamples();
-
-				if (masterVolumeChange != -1)
-				{
-					MasterVolume = masterVolumeChange;
-					masterVolumeChange = -1;
-				}
-			}
-		}
-
-		private void GenerateSample()
+		public override void GenerateSample()
 		{
 			var mixedLeft = 0;
 			if (channels[0].Enable) mixedLeft += channels[0].OutputLeft;
 			if (channels[1].Enable) mixedLeft += channels[1].OutputLeft;
 			if (channels[2].Enable) mixedLeft += channels[2].OutputLeft;
 			if (channels[3].Enable) mixedLeft += channels[3].OutputLeft;
-			mixedLeft = (mixedLeft & 0x07FF) << 4;
+			mixedLeft = (mixedLeft & 0x07FF) << 5;
 
 			var mixedRight = 0;
 			if (channels[0].Enable) mixedRight += channels[0].OutputRight;
 			if (channels[1].Enable) mixedRight += channels[1].OutputRight;
 			if (channels[2].Enable) mixedRight += channels[2].OutputRight;
 			if (channels[3].Enable) mixedRight += channels[3].OutputRight;
-			mixedRight = (mixedRight & 0x07FF) << 4;
+			mixedRight = (mixedRight & 0x07FF) << 5;
 
 			if (HeadphonesConnected && !headphoneEnable && !speakerEnable)
 				/* Headphones connected but neither headphones nor speaker enabled? Don't output sound */
@@ -172,12 +56,7 @@ namespace StoicGoose.Emulation.Sound
 			mixedSampleBuffer.Add((short)(mixedRight * (MasterVolume / 2.0)));
 		}
 
-		public void FlushSamples()
-		{
-			mixedSampleBuffer.Clear();
-		}
-
-		public byte ReadRegister(ushort register)
+		public override byte ReadRegister(ushort register)
 		{
 			var retVal = (byte)0;
 
@@ -258,15 +137,21 @@ namespace StoicGoose.Emulation.Sound
 					break;
 
 				case 0x96:
+					/* REG_SND_9697 (low) */
+					retVal |= (byte)((unknown9697 >> 0) & 0b11111111);
+					break;
 				case 0x97:
-					/* REG_SND_9697 */
-					retVal |= (byte)((unknown9697 >> ((register & 0b1) * 8)) & 0xFF);
+					/* REG_SND_9697 (high) */
+					retVal |= (byte)((unknown9697 >> 8) & 0b00000011);
 					break;
 
 				case 0x98:
+					/* REG_SND_9899 (low) */
+					retVal |= (byte)((unknown9899 >> 0) & 0b11111111);
+					break;
 				case 0x99:
-					/* REG_SND_9899 */
-					retVal |= (byte)((unknown9899 >> ((register & 0b1) * 8)) & 0xFF);
+					/* REG_SND_9899 (high) */
+					retVal |= (byte)((unknown9899 >> 8) & 0b00000011);
 					break;
 
 				case 0x9A:
@@ -301,7 +186,7 @@ namespace StoicGoose.Emulation.Sound
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public override void WriteRegister(ushort register, byte value)
 		{
 			switch (register)
 			{
@@ -382,7 +267,7 @@ namespace StoicGoose.Emulation.Sound
 
 				case 0x96:
 					/* REG_SND_9697 (low) */
-					unknown9697 = (ushort)((unknown9697 & 0xFF00) | (value << 0));
+					unknown9697 = (ushort)((unknown9697 & 0x0300) | (value << 0));
 					break;
 
 				case 0x97:
@@ -392,7 +277,7 @@ namespace StoicGoose.Emulation.Sound
 
 				case 0x98:
 					/* REG_SND_9899 (low) */
-					unknown9899 = (ushort)((unknown9899 & 0xFF00) | (value << 0));
+					unknown9899 = (ushort)((unknown9899 & 0x0300) | (value << 0));
 					break;
 
 				case 0x99:

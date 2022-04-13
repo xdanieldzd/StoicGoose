@@ -51,7 +51,7 @@ namespace StoicGoose.Emulation.Machines
 		public Cartridge Cartridge { get; protected set; } = new();
 		public V30MZ Cpu { get; protected set; } = default;
 		public DisplayControllerCommon DisplayController { get; protected set; } = default;
-		public SoundController SoundController { get; protected set; } = default;    //TODO "commonize"
+		public SoundControllerCommon SoundController { get; protected set; } = default;    //TODO "commonize"
 		public EEPROM InternalEeprom { get; protected set; } = default;
 		public byte[] BootstrapRom { get; protected set; } = default;
 

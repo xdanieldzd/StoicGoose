@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using static StoicGoose.Utilities;
 
 namespace StoicGoose.Emulation.DMA
 {
-	public class SphinxDMAController : IComponent
+	public class SphinxGeneralDMAController : IComponent
 	{
 		// TODO: verify behavior!
 
@@ -22,11 +18,11 @@ namespace StoicGoose.Emulation.DMA
 		/* REG_DMA_CTRL */
 		byte dmaControl;
 
-		public bool IsActive => Utilities.IsBitSet(dmaControl, 7);
+		public bool IsActive => IsBitSet(dmaControl, 7);
 
-		bool isDecrementMode => Utilities.IsBitSet(dmaControl, 6);
+		bool isDecrementMode => IsBitSet(dmaControl, 6);
 
-		public SphinxDMAController(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite)
+		public SphinxGeneralDMAController(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite)
 		{
 			memoryReadDelegate = memoryRead;
 			memoryWriteDelegate = memoryWrite;
@@ -54,7 +50,7 @@ namespace StoicGoose.Emulation.DMA
 			if (dmaLength == 0 || ((dmaSource >> 16) & 0x0F) == 0x01)
 			{
 				/* Disable DMA if length is zero OR source is SRAM */
-				Utilities.ChangeBit(ref dmaControl, 7, false);
+				ChangeBit(ref dmaControl, 7, false);
 				return 5;
 			}
 			else

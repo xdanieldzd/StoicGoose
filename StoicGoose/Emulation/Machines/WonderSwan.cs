@@ -28,7 +28,7 @@ namespace StoicGoose.Emulation.Machines
 		public override void Initialize()
 		{
 			DisplayController = new AswanDisplayController(ReadMemory);
-			SoundController = new SoundController(ReadMemory, 44100, 2);
+			SoundController = new AswanSoundController(ReadMemory, 44100, 2);
 
 			base.Initialize();
 		}
@@ -92,11 +92,6 @@ namespace StoicGoose.Emulation.Machines
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
 					retVal = DisplayController.ReadRegister(register);
-					break;
-
-				/* Misc system registers */
-				case var n when n >= 0x60 && n < 0x80:
-					// TODO?
 					break;
 
 				/* Sound controller */
@@ -228,11 +223,6 @@ namespace StoicGoose.Emulation.Machines
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
 					DisplayController.WriteRegister(register, value);
-					break;
-
-				/* Misc system registers */
-				case var n when n >= 0x60 && n < 0x80:
-					// TODO?
 					break;
 
 				/* Sound controller */

@@ -24,15 +24,17 @@ namespace StoicGoose.Emulation.Machines
 		public override int InternalEepromSize => 1024 * 2;
 		public override int InternalEepromAddressBits => 10;
 
-		public SphinxDMAController DmaController { get; protected set; } = default;
+		public SphinxGeneralDMAController DmaController { get; protected set; } = default;
+		public SphinxSoundDMAController SoundDmaController { get; protected set; } = default;
 
 		public WonderSwanColor() : base() => Metadata = new WonderSwanColorMetadata();
 
 		public override void Initialize()
 		{
 			DisplayController = new SphinxDisplayController(ReadMemory);
-			SoundController = new SoundController(ReadMemory, 44100, 2);
-			DmaController = new SphinxDMAController(ReadMemory, WriteMemory);
+			SoundController = new SphinxSoundController(ReadMemory, 44100, 2);
+			DmaController = new SphinxGeneralDMAController(ReadMemory, WriteMemory);
+			SoundDmaController = new SphinxSoundDMAController(ReadMemory, WriteRegister);
 
 			base.Initialize();
 		}
@@ -74,6 +76,9 @@ namespace StoicGoose.Emulation.Machines
 				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) RaiseInterrupt(6);
 				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) RaiseInterrupt(7);
 
+				if (SoundDmaController.IsActive)
+					SoundDmaController.Step(currentCpuClockCycles);
+
 				SoundController.Step(currentCpuClockCycles);
 
 				if (Cartridge.Step(currentCpuClockCycles)) RaiseInterrupt(2);
@@ -99,6 +104,7 @@ namespace StoicGoose.Emulation.Machines
 			Metadata.IsStatusIconActive["Volume0"] = SoundController.MasterVolume == 0;
 			Metadata.IsStatusIconActive["Volume1"] = SoundController.MasterVolume == 1;
 			Metadata.IsStatusIconActive["Volume2"] = SoundController.MasterVolume == 2;
+			// todo volume3
 		}
 
 		public override byte ReadRegister(ushort register)
@@ -117,14 +123,20 @@ namespace StoicGoose.Emulation.Machines
 					retVal = DmaController.ReadRegister(register);
 					break;
 
-				/* Misc system registers */
-				case var n when n >= 0x60 && n < 0x80:
-					// TODO?
+				/* Sound DMA controller */
+				case var n when n >= 0x4A && n < 0x53:
+					retVal = SoundDmaController.ReadRegister(register);
 					break;
 
 				/* Sound controller */
-				case var n when n >= 0x80 && n < 0xA0:
+				case var n when (n >= 0x80 && n < 0xA0) || (n >= 0x6A && n <= 0x6B):
 					retVal = SoundController.ReadRegister(register);
+					break;
+
+				/* Misc system registers */
+				case 0x62:
+					/* REG_WSC_SYSTEM */
+					ChangeBit(ref retVal, 7, false); // not SwanCrystal
 					break;
 
 				/* System controller */
@@ -257,14 +269,23 @@ namespace StoicGoose.Emulation.Machines
 					DmaController.WriteRegister(register, value);
 					break;
 
-				/* Misc system registers */
-				case var n when n >= 0x60 && n < 0x80:
-					// TODO?
+				/* Sound DMA controller */
+				case var n when n >= 0x4A && n < 0x53:
+					SoundDmaController.WriteRegister(register, value);
 					break;
 
 				/* Sound controller */
-				case var n when n >= 0x80 && n < 0xA0:
+				case var n when (n >= 0x80 && n < 0xA0) || (n >= 0x6A && n <= 0x6B):
 					SoundController.WriteRegister(register, value);
+					break;
+
+				/* Misc system registers */
+				case 0x62:
+					/* REG_WSC_SYSTEM */
+					if (IsBitSet(value, 0))
+					{
+						// TODO: power-off bit, stop emulation?
+					}
 					break;
 
 				/* System controller */
