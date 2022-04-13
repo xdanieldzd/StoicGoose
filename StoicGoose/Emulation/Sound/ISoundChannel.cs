@@ -1,6 +1,6 @@
 ﻿namespace StoicGoose.Emulation.Sound
 {
-	interface ISoundChannel
+	public interface ISoundChannel
 	{
 		byte OutputLeft { get; set; }
 		byte OutputRight { get; set; }
