@@ -11,11 +11,14 @@ namespace StoicGoose.Emulation.Sound
 	{
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
 
-		protected const int numChannels = 4;
+		public abstract byte MaxMasterVolume { get; }
 
 		readonly int sampleRate, numOutputChannels;
 
-		protected readonly ISoundChannel[] channels = new ISoundChannel[numChannels];
+		protected readonly SoundChannel1 channel1 = default;
+		protected readonly SoundChannel2 channel2 = default;
+		protected readonly SoundChannel3 channel3 = default;
+		protected readonly SoundChannel4 channel4 = default;
 
 		protected readonly List<short> mixedSampleBuffer;
 		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;
@@ -25,15 +28,7 @@ namespace StoicGoose.Emulation.Sound
 		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
 		int cycleCount;
 
-		public int MasterVolume { get; protected set; } = 0;
-
-		public abstract int MaxMasterVolume { get; }
-
-		int masterVolumeChange;
-
 		readonly MemoryReadDelegate memoryReadDelegate;
-
-		public delegate byte WaveTableReadDelegate(ushort address);
 
 		/* REG_SND_WAVE_BASE */
 		protected byte waveTableBase;
@@ -46,8 +41,10 @@ namespace StoicGoose.Emulation.Sound
 
 		protected byte speakerVolumeShift;
 
-		/* REG_SND_9E */
-		protected byte unknown9E;
+		/* REG_SND_VOLUME */
+		protected byte masterVolume;
+
+		public byte MasterVolume => masterVolume;
 
 		public SoundControllerCommon(MemoryReadDelegate memoryRead, int rate, int outChannels)
 		{
@@ -56,10 +53,10 @@ namespace StoicGoose.Emulation.Sound
 			sampleRate = rate;
 			numOutputChannels = outChannels;
 
-			channels[0] = new Wave(false, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)); });
-			channels[1] = new Voice((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (1 << 4) + a)); });
-			channels[2] = new Wave(true, (a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)); });
-			channels[3] = new Noise((a) => { return memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)); });
+			channel1 = new SoundChannel1((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)));
+			channel2 = new SoundChannel2((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (1 << 4) + a)));
+			channel3 = new SoundChannel3((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)));
+			channel4 = new SoundChannel4((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)));
 
 			mixedSampleBuffer = new List<short>();
 
@@ -71,17 +68,16 @@ namespace StoicGoose.Emulation.Sound
 			cyclesPerSample = cyclesPerFrame / samplesPerFrame;
 		}
 
-		public void Reset()
+		public virtual void Reset()
 		{
 			cycleCount = 0;
 
-			for (var i = 0; i < numChannels; i++)
-				channels[i].Reset();
+			channel1.Reset();
+			channel2.Reset();
+			channel3.Reset();
+			channel4.Reset();
 
 			FlushSamples();
-
-			MasterVolume = MaxMasterVolume;
-			masterVolumeChange = -1;
 
 			ResetRegisters();
 		}
@@ -92,19 +88,12 @@ namespace StoicGoose.Emulation.Sound
 			speakerEnable = headphoneEnable = false;
 			HeadphonesConnected = true; // for stereo sound
 			speakerVolumeShift = 0;
+			masterVolume = MaxMasterVolume;
 		}
 
 		public void Shutdown()
 		{
 			//
-		}
-
-		public void ToggleMasterVolume()
-		{
-			if (masterVolumeChange != -1) return;
-
-			masterVolumeChange = MasterVolume - 1;
-			if (masterVolumeChange < 0) masterVolumeChange = MaxMasterVolume;
 		}
 
 		public void Step(int clockCyclesInStep)
@@ -122,18 +111,18 @@ namespace StoicGoose.Emulation.Sound
 
 			if (mixedSampleBuffer.Count >= (samplesPerFrame * numOutputChannels))
 			{
-				OnEnqueueSamples(new EnqueueSamplesEventArgs(numChannels, mixedSampleBuffer.ToArray()));
+				OnEnqueueSamples(new EnqueueSamplesEventArgs(mixedSampleBuffer.ToArray()));
 				FlushSamples();
-
-				if (masterVolumeChange != -1)
-				{
-					MasterVolume = masterVolumeChange;
-					masterVolumeChange = -1;
-				}
 			}
 		}
 
-		public abstract void StepChannels();
+		public virtual void StepChannels()
+		{
+			channel1.Step();
+			channel2.Step();
+			channel3.Step();
+			channel4.Step();
+		}
 
 		public abstract void GenerateSample();
 

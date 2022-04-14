@@ -21,7 +21,7 @@ namespace StoicGoose.Handlers
 		readonly Dictionary<string, List<(int id, string input)>> buttonMapping = new();
 		readonly Dictionary<string, string> verticalRemapping = new();
 
-		readonly List<string> lastFramePressed = new();
+		readonly List<string> lastPollHeld = new();
 
 		public bool IsVerticalOrientation { get; set; } = false;
 
@@ -65,7 +65,7 @@ namespace StoicGoose.Handlers
 		}
 
 		public List<string> GetMappedKeysHeld() => keyMapping.Where(x => IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]].Any(y => nativeInput.IsKeyDown(y)) : x.Value.Any(y => nativeInput.IsKeyDown(y))).Select(x => x.Key).ToList();
-		public List<string> GetMappedKeysPressed() => keyMapping.Where(x => IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]].Any(y => nativeInput.IsKeyDown(y)) : x.Value.Any(y => nativeInput.IsKeyDown(y)) && !lastFramePressed.Contains(x.Key)).Select(x => x.Key).ToList();
+		public List<string> GetMappedKeysPressed() => keyMapping.Where(x => IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]].Any(y => nativeInput.IsKeyDown(y)) : x.Value.Any(y => nativeInput.IsKeyDown(y)) && !lastPollHeld.Contains(x.Key)).Select(x => x.Key).ToList();
 
 		public List<string> GetMappedButtonsHeld()
 		{
@@ -115,10 +115,8 @@ namespace StoicGoose.Handlers
 			e.ButtonsHeld.AddRange(GetMappedKeysHeld().Concat(GetMappedButtonsHeld()).Distinct());
 			e.ButtonsPressed.AddRange(GetMappedKeysPressed().Concat(GetMappedButtonsPressed()).Distinct());
 
-			// TODO: fix volume control
-
-			lastFramePressed.Clear();
-			lastFramePressed.AddRange(e.ButtonsHeld);
+			lastPollHeld.Clear();
+			lastPollHeld.AddRange(e.ButtonsHeld);
 		}
 	}
 }

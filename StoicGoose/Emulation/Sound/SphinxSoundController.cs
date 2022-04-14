@@ -6,85 +6,56 @@ namespace StoicGoose.Emulation.Sound
 {
 	public class SphinxSoundController : SoundControllerCommon
 	{
-		public override int MaxMasterVolume => 3;
+		public override byte MaxMasterVolume => 3;
 
-		/* REG_HYPER_CTRL */
-		bool hyperEnable;
-		int hyperScalingMode, hyperVolume;
-		byte hyperCtrlUnknown;
-		/* REG_HYPER_CHAN_CTRL */
-		bool hyperRightEnable, hyperLeftEnable;
-		byte hyperChanCtrlUnknown;
+		readonly SoundChannelHyperVoice channelHyperVoice = default;
 
-		/* REG_SND_HYPERVOICE */
-		byte hyperVoiceData;
-
-		byte hyperVoiceOutput;
-
-		public SphinxSoundController(MemoryReadDelegate memoryRead, int rate, int outChannels) : base(memoryRead, rate, outChannels) { }
-
-		public override void ResetRegisters()
+		public SphinxSoundController(MemoryReadDelegate memoryRead, int rate, int outChannels) : base(memoryRead, rate, outChannels)
 		{
-			base.ResetRegisters();
+			channelHyperVoice = new();
+		}
 
-			hyperEnable = false;
-			hyperScalingMode = hyperVolume = 0;
-			hyperCtrlUnknown = 0;
+		public override void Reset()
+		{
+			base.Reset();
 
-			hyperRightEnable = hyperLeftEnable = false;
-			hyperChanCtrlUnknown = 0;
-
-			hyperVoiceData = 0;
-
-			hyperVoiceOutput = 0;
+			channelHyperVoice.Reset();
 		}
 
 		public override void StepChannels()
 		{
-			for (var j = 0; j < numChannels; j++)
-				channels[j].Step();
+			base.StepChannels();
 
-			StepHyperVoice();
-		}
-
-		private void StepHyperVoice()
-		{
-			switch (hyperScalingMode)
-			{
-				case 0: hyperVoiceOutput = (byte)(hyperVoiceData << 3 - hyperVolume); break;
-				case 1: hyperVoiceOutput = (byte)((hyperVoiceData << 3 - hyperVolume) | (-0x100 << 3 - hyperVolume)); break;
-				case 2: hyperVoiceOutput = (byte)(hyperVoiceData << 3 - hyperVolume); break;    // ???
-				case 3: hyperVoiceOutput = (byte)(hyperVoiceData << 3); break;
-			}
+			channelHyperVoice.Step();
 		}
 
 		public override void GenerateSample()
 		{
 			var mixedLeft = 0;
-			if (channels[0].Enable) mixedLeft += channels[0].OutputLeft;
-			if (channels[1].Enable) mixedLeft += channels[1].OutputLeft;
-			if (channels[2].Enable) mixedLeft += channels[2].OutputLeft;
-			if (channels[3].Enable) mixedLeft += channels[3].OutputLeft;
-			if (hyperLeftEnable && HeadphonesConnected) mixedLeft += hyperVoiceOutput;
+			if (channel1.IsEnabled) mixedLeft += channel1.OutputLeft;
+			if (channel2.IsEnabled) mixedLeft += channel2.OutputLeft;
+			if (channel3.IsEnabled) mixedLeft += channel3.OutputLeft;
+			if (channel4.IsEnabled) mixedLeft += channel4.OutputLeft;
+			if (channelHyperVoice.IsEnabled && HeadphonesConnected) mixedLeft += channelHyperVoice.OutputLeft;
 			mixedLeft = (mixedLeft & 0x07FF) << 5;
 
 			var mixedRight = 0;
-			if (channels[0].Enable) mixedRight += channels[0].OutputRight;
-			if (channels[1].Enable) mixedRight += channels[1].OutputRight;
-			if (channels[2].Enable) mixedRight += channels[2].OutputRight;
-			if (channels[3].Enable) mixedRight += channels[3].OutputRight;
-			if (hyperRightEnable && HeadphonesConnected) mixedRight += hyperVoiceOutput;
+			if (channel1.IsEnabled) mixedRight += channel1.OutputRight;
+			if (channel2.IsEnabled) mixedRight += channel2.OutputRight;
+			if (channel3.IsEnabled) mixedRight += channel3.OutputRight;
+			if (channel4.IsEnabled) mixedRight += channel4.OutputRight;
+			if (channelHyperVoice.IsEnabled && HeadphonesConnected) mixedRight += channelHyperVoice.OutputRight;
 			mixedRight = (mixedRight & 0x07FF) << 5;
 
 			if (HeadphonesConnected && !headphoneEnable && !speakerEnable)
 				/* Headphones connected but neither headphones nor speaker enabled? Don't output sound */
 				mixedLeft = mixedRight = 0;
 			else if (!HeadphonesConnected)
-				/* Otherwise, no headphones connected? Mix down to mono */
-				mixedLeft = mixedRight = (mixedLeft + mixedRight) / 2;
+				/* Otherwise, no headphones connected? Mix down to mono, perform volume shift */
+				mixedLeft = mixedRight = ((mixedLeft + mixedRight) / 2) >> speakerVolumeShift;
 
-			mixedSampleBuffer.Add((short)(mixedLeft * (MasterVolume / 3.0)));
-			mixedSampleBuffer.Add((short)(mixedRight * (MasterVolume / 3.0)));
+			mixedSampleBuffer.Add((short)(mixedLeft * (masterVolume / 3.0)));
+			mixedSampleBuffer.Add((short)(mixedRight * (masterVolume / 3.0)));
 		}
 
 		public override byte ReadRegister(ushort register)
@@ -95,54 +66,72 @@ namespace StoicGoose.Emulation.Sound
 			{
 				case 0x6A:
 					/* REG_HYPER_CTRL */
-					ChangeBit(ref retVal, 7, hyperEnable);
-					retVal |= (byte)((hyperCtrlUnknown << 4) & 0b111);
-					retVal |= (byte)((hyperScalingMode << 2) & 0b11);
-					retVal |= (byte)((hyperVolume << 0) & 0b11);
+					ChangeBit(ref retVal, 7, channelHyperVoice.IsEnabled);
+					retVal |= (byte)((channelHyperVoice.CtrlUnknown << 4) & 0b111);
+					retVal |= (byte)((channelHyperVoice.ScalingMode << 2) & 0b11);
+					retVal |= (byte)((channelHyperVoice.Volume << 0) & 0b11);
 					break;
 
 				case 0x6B:
 					/* REG_HYPER_CHAN_CTRL */
-					ChangeBit(ref retVal, 6, hyperRightEnable);
-					ChangeBit(ref retVal, 5, hyperLeftEnable);
-					retVal |= (byte)((hyperChanCtrlUnknown << 0) & 0b1111);
+					ChangeBit(ref retVal, 6, channelHyperVoice.RightEnable);
+					ChangeBit(ref retVal, 5, channelHyperVoice.LeftEnable);
+					retVal |= (byte)((channelHyperVoice.ChanCtrlUnknown << 0) & 0b1111);
 					break;
 
 				case 0x80:
 				case 0x81:
+					/* REG_SND_CH1_PITCH */
+					retVal |= (byte)(channel1.Pitch >> ((register & 0b1) * 8));
+					break;
 				case 0x82:
 				case 0x83:
+					/* REG_SND_CH2_PITCH */
+					retVal |= (byte)(channel2.Pitch >> ((register & 0b1) * 8));
+					break;
 				case 0x84:
 				case 0x85:
+					/* REG_SND_CH3_PITCH */
+					retVal |= (byte)(channel3.Pitch >> ((register & 0b1) * 8));
+					break;
 				case 0x86:
 				case 0x87:
-					/* REG_SND_CHx_PITCH */
-					retVal |= (byte)(channels[(register >> 1) & 0b11].Pitch >> ((register & 0b1) * 8));
+					/* REG_SND_CH4_PITCH */
+					retVal |= (byte)(channel4.Pitch >> ((register & 0b1) * 8));
 					break;
 
 				case 0x88:
+					/* REG_SND_CH1_VOL */
+					retVal |= (byte)(channel1.VolumeLeft << 4 | channel1.VolumeRight);
+					break;
 				case 0x89:
+					/* REG_SND_CH2_VOL */
+					retVal |= (byte)(channel2.VolumeLeft << 4 | channel2.VolumeRight);
+					break;
 				case 0x8A:
+					/* REG_SND_CH3_VOL */
+					retVal |= (byte)(channel3.VolumeLeft << 4 | channel3.VolumeRight);
+					break;
 				case 0x8B:
-					/* REG_SND_CHx_VOL */
-					retVal |= (byte)(channels[register & 0b1].VolumeLeft << 4 | channels[register & 0b1].VolumeRight);
+					/* REG_SND_CH4_VOL */
+					retVal |= (byte)(channel4.VolumeLeft << 4 | channel4.VolumeRight);
 					break;
 
 				case 0x8C:
 					/* REG_SND_SWEEP_VALUE */
-					retVal |= (byte)(channels[2] as Wave).SweepValue;
+					retVal |= (byte)channel3.SweepValue;
 					break;
 
 				case 0x8D:
 					/* REG_SND_SWEEP_TIME */
-					retVal |= (byte)((channels[2] as Wave).SweepTime & 0b11111);
+					retVal |= (byte)(channel3.SweepTime & 0b11111);
 					break;
 
 				case 0x8E:
 					/* REG_SND_NOISE */
-					retVal |= (byte)((channels[3] as Noise).NoiseMode & 0b111);
+					retVal |= (byte)(channel4.NoiseMode & 0b111);
 					// Noise reset (bit 3) always reads 0
-					ChangeBit(ref retVal, 4, (channels[3] as Noise).NoiseEnable);
+					ChangeBit(ref retVal, 4, channel4.NoiseEnable);
 					break;
 
 				case 0x8F:
@@ -152,11 +141,13 @@ namespace StoicGoose.Emulation.Sound
 
 				case 0x90:
 					/* REG_SND_CTRL */
-					for (var i = 0; i < numChannels; i++)
-					{
-						ChangeBit(ref retVal, i, channels[i].Enable);
-						if (i != 0) ChangeBit(ref retVal, i + 4, channels[i].Mode);
-					}
+					ChangeBit(ref retVal, 0, channel1.IsEnabled);
+					ChangeBit(ref retVal, 1, channel2.IsEnabled);
+					ChangeBit(ref retVal, 2, channel3.IsEnabled);
+					ChangeBit(ref retVal, 3, channel4.IsEnabled);
+					ChangeBit(ref retVal, 5, channel2.IsVoiceEnabled);
+					ChangeBit(ref retVal, 6, channel3.IsSweepEnabled);
+					ChangeBit(ref retVal, 7, channel4.IsNoiseEnabled);
 					break;
 
 				case 0x91:
@@ -171,20 +162,20 @@ namespace StoicGoose.Emulation.Sound
 				case 0x93:
 					/* REG_SND_RANDOM */
 					//TODO verify
-					retVal |= (byte)(((channels[3] as Noise).NoiseLfsr >> ((register & 0b1) * 8)) & 0xFF);
+					retVal |= (byte)((channel4.NoiseLfsr >> ((register & 0b1) * 8)) & 0xFF);
 					break;
 
 				case 0x94:
 					/* REG_SND_VOICE_CTRL */
-					ChangeBit(ref retVal, 0, (channels[1] as Voice).PcmRightFull);
-					ChangeBit(ref retVal, 1, (channels[1] as Voice).PcmRightHalf);
-					ChangeBit(ref retVal, 2, (channels[1] as Voice).PcmLeftFull);
-					ChangeBit(ref retVal, 3, (channels[1] as Voice).PcmLeftHalf);
+					ChangeBit(ref retVal, 0, channel2.PcmRightFull);
+					ChangeBit(ref retVal, 1, channel2.PcmRightHalf);
+					ChangeBit(ref retVal, 2, channel2.PcmLeftFull);
+					ChangeBit(ref retVal, 3, channel2.PcmLeftHalf);
 					break;
 
 				case 0x95:
 					/* REG_SND_HYPERVOICE */
-					retVal |= hyperVoiceData;
+					retVal |= channelHyperVoice.Data;
 					break;
 
 				case 0x96:
@@ -202,8 +193,8 @@ namespace StoicGoose.Emulation.Sound
 					break;
 
 				case 0x9E:
-					/* REG_SND_9E */
-					retVal |= (byte)(unknown9E & 0b11);
+					/* REG_SND_VOLUME */
+					retVal |= (byte)(masterVolume & 0b11);
 					break;
 
 				default:
@@ -219,58 +210,80 @@ namespace StoicGoose.Emulation.Sound
 			{
 				case 0x6A:
 					/* REG_HYPER_CTRL */
-					hyperEnable = IsBitSet(value, 7);
-					hyperCtrlUnknown = (byte)((value >> 4) & 0b111);
-					hyperScalingMode = (byte)((value >> 2) & 0b11);
-					hyperVolume = (byte)((value >> 0) & 0b11);
+					channelHyperVoice.IsEnabled = IsBitSet(value, 7);
+					channelHyperVoice.CtrlUnknown = (byte)((value >> 4) & 0b111);
+					channelHyperVoice.ScalingMode = (byte)((value >> 2) & 0b11);
+					channelHyperVoice.Volume = (byte)((value >> 0) & 0b11);
 					break;
 
 				case 0x6B:
 					/* REG_HYPER_CHAN_CTRL */
-					hyperRightEnable = IsBitSet(value, 6);
-					hyperLeftEnable = IsBitSet(value, 5);
-					hyperChanCtrlUnknown = (byte)((value >> 0) & 0b1111);
+					channelHyperVoice.RightEnable = IsBitSet(value, 6);
+					channelHyperVoice.LeftEnable = IsBitSet(value, 5);
+					channelHyperVoice.ChanCtrlUnknown = (byte)((value >> 0) & 0b1111);
 					break;
 
 				case 0x80:
 				case 0x81:
+					/* REG_SND_CH1_PITCH */
+					channel1.Pitch &= (ushort)((register & 0b1) != 0b1 ? 0x0700 : 0x00FF);
+					channel1.Pitch |= (ushort)(value << ((register & 0b1) * 8));
+					break;
 				case 0x82:
 				case 0x83:
+					/* REG_SND_CH2_PITCH */
+					channel2.Pitch &= (ushort)((register & 0b1) != 0b1 ? 0x0700 : 0x00FF);
+					channel2.Pitch |= (ushort)(value << ((register & 0b1) * 8));
+					break;
 				case 0x84:
 				case 0x85:
+					/* REG_SND_CH3_PITCH */
+					channel3.Pitch &= (ushort)((register & 0b1) != 0b1 ? 0x0700 : 0x00FF);
+					channel3.Pitch |= (ushort)(value << ((register & 0b1) * 8));
+					break;
 				case 0x86:
 				case 0x87:
-					/* REG_SND_CHx_PITCH */
-					var channel = (register >> 1) & 0b11;
-					var mask = (ushort)((register & 0b1) != 0b1 ? 0x0700 : 0x00FF);
-					channels[channel].Pitch &= mask;
-					channels[channel].Pitch |= (ushort)(value << ((register & 0b1) * 8));
+					/* REG_SND_CH4_PITCH */
+					channel4.Pitch &= (ushort)((register & 0b1) != 0b1 ? 0x0700 : 0x00FF);
+					channel4.Pitch |= (ushort)(value << ((register & 0b1) * 8));
 					break;
 
 				case 0x88:
+					/* REG_SND_CH1_VOL */
+					channel1.VolumeLeft = (byte)((value >> 4) & 0b1111);
+					channel1.VolumeRight = (byte)((value >> 0) & 0b1111);
+					break;
 				case 0x89:
+					/* REG_SND_CH2_VOL */
+					channel2.VolumeLeft = (byte)((value >> 4) & 0b1111);
+					channel2.VolumeRight = (byte)((value >> 0) & 0b1111);
+					break;
 				case 0x8A:
+					/* REG_SND_CH3_VOL */
+					channel3.VolumeLeft = (byte)((value >> 4) & 0b1111);
+					channel3.VolumeRight = (byte)((value >> 0) & 0b1111);
+					break;
 				case 0x8B:
-					/* REG_SND_CHx_VOL */
-					channels[register & 0b11].VolumeLeft = (byte)((value >> 4) & 0b1111);
-					channels[register & 0b11].VolumeRight = (byte)((value >> 0) & 0b1111);
+					/* REG_SND_CH4_VOL */
+					channel4.VolumeLeft = (byte)((value >> 4) & 0b1111);
+					channel4.VolumeRight = (byte)((value >> 0) & 0b1111);
 					break;
 
 				case 0x8C:
 					/* REG_SND_SWEEP_VALUE */
-					(channels[2] as Wave).SweepValue = (sbyte)value;
+					channel3.SweepValue = (sbyte)value;
 					break;
 
 				case 0x8D:
 					/* REG_SND_SWEEP_TIME */
-					(channels[2] as Wave).SweepTime = (byte)(value & 0b11111);
+					channel3.SweepTime = (byte)(value & 0b11111);
 					break;
 
 				case 0x8E:
 					/* REG_SND_NOISE */
-					(channels[3] as Noise).NoiseMode = (byte)(value & 0b111);
-					(channels[3] as Noise).NoiseReset = IsBitSet(value, 3);
-					(channels[3] as Noise).NoiseEnable = IsBitSet(value, 4);
+					channel4.NoiseMode = (byte)(value & 0b111);
+					channel4.NoiseReset = IsBitSet(value, 3);
+					channel4.NoiseEnable = IsBitSet(value, 4);
 					break;
 
 				case 0x8F:
@@ -280,11 +293,13 @@ namespace StoicGoose.Emulation.Sound
 
 				case 0x90:
 					/* REG_SND_CTRL */
-					for (var i = 0; i < numChannels; i++)
-					{
-						channels[i].Enable = IsBitSet(value, i);
-						channels[i].Mode = i != 0 && IsBitSet(value, i + 4);
-					}
+					channel1.IsEnabled = IsBitSet(value, 0);
+					channel2.IsEnabled = IsBitSet(value, 1);
+					channel3.IsEnabled = IsBitSet(value, 2);
+					channel4.IsEnabled = IsBitSet(value, 3);
+					channel2.IsVoiceEnabled = IsBitSet(value, 5);
+					channel3.IsSweepEnabled = IsBitSet(value, 6);
+					channel4.IsNoiseEnabled = IsBitSet(value, 7);
 					break;
 
 				case 0x91:
@@ -301,15 +316,15 @@ namespace StoicGoose.Emulation.Sound
 
 				case 0x94:
 					/* REG_SND_VOICE_CTRL */
-					(channels[1] as Voice).PcmRightFull = IsBitSet(value, 0);
-					(channels[1] as Voice).PcmRightHalf = IsBitSet(value, 1);
-					(channels[1] as Voice).PcmLeftFull = IsBitSet(value, 2);
-					(channels[1] as Voice).PcmLeftHalf = IsBitSet(value, 3);
+					channel2.PcmRightFull = IsBitSet(value, 0);
+					channel2.PcmRightHalf = IsBitSet(value, 1);
+					channel2.PcmLeftFull = IsBitSet(value, 2);
+					channel2.PcmLeftHalf = IsBitSet(value, 3);
 					break;
 
 				case 0x95:
 					/* REG_SND_HYPERVOICE */
-					hyperVoiceData = value;
+					channelHyperVoice.Data = value;
 					break;
 
 				case 0x96:
@@ -324,8 +339,8 @@ namespace StoicGoose.Emulation.Sound
 					break;
 
 				case 0x9E:
-					/* REG_SND_9E */
-					unknown9E = (byte)(value & 0b11);
+					/* REG_SND_VOLUME */
+					masterVolume = (byte)(value & 0b11);
 					break;
 
 				default:

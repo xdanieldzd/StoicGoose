@@ -195,12 +195,12 @@ namespace StoicGoose.Handlers
 						sampleQueue.Dequeue();
 			}
 
-			sampleQueue.Enqueue(e.MixedSamples.ToArray());
+			sampleQueue.Enqueue(e.Samples.ToArray());
 
 			if (IsRecording)
 			{
-				dataChunk.AddSampleData(e.MixedSamples);
-				waveHeader.FileLength += (uint)e.MixedSamples.Length;
+				dataChunk.AddSampleData(e.Samples);
+				waveHeader.FileLength += (uint)e.Samples.Length;
 			}
 		}
 

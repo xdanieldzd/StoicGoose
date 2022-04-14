@@ -20,7 +20,6 @@ namespace StoicGoose.Emulation.Machines
 		BreakpointVariables BreakpointVariables { get; }
 
 		event EventHandler<PollInputEventArgs> PollInput;
-		event EventHandler<StartOfFrameEventArgs> StartOfFrame;
 		event EventHandler<EventArgs> EndOfFrame;
 		event EventHandler<EventArgs> BreakpointHit;
 
@@ -37,6 +36,8 @@ namespace StoicGoose.Emulation.Machines
 		void Initialize();
 		void Reset();
 		void Shutdown();
+
+		void ChangeMasterVolume();
 
 		void RunFrame(bool isManual);
 		void RunLine(bool isManual);

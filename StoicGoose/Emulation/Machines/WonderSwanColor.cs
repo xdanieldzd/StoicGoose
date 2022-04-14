@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using StoicGoose.Emulation.Display;
+﻿using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.DMA;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.Interface.Attributes;
@@ -60,6 +58,13 @@ namespace StoicGoose.Emulation.Machines
 			base.Shutdown();
 		}
 
+		protected override void InitializeEepromToDefaults()
+		{
+			base.InitializeEepromToDefaults();
+
+			InternalEeprom.Program(0x83, (byte)(0b1 << 6 | SoundController.MaxMasterVolume & 0b11)); // Flags (high contrast, max volume)
+		}
+
 		public override void RunStep(bool isManual)
 		{
 			HandleBreakpoints();
@@ -104,7 +109,7 @@ namespace StoicGoose.Emulation.Machines
 			Metadata.IsStatusIconActive["Volume0"] = SoundController.MasterVolume == 0;
 			Metadata.IsStatusIconActive["Volume1"] = SoundController.MasterVolume == 1;
 			Metadata.IsStatusIconActive["Volume2"] = SoundController.MasterVolume == 2;
-			// todo volume3
+			Metadata.IsStatusIconActive["Volume3"] = SoundController.MasterVolume == 3;
 		}
 
 		public override byte ReadRegister(ushort register)

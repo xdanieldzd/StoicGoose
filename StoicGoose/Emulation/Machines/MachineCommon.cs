@@ -31,9 +31,6 @@ namespace StoicGoose.Emulation.Machines
 		public event EventHandler<PollInputEventArgs> PollInput = default;
 		public void OnPollInput(PollInputEventArgs e) { PollInput?.Invoke(this, e); }
 
-		public event EventHandler<StartOfFrameEventArgs> StartOfFrame = default;
-		public void OnStartOfFrame(StartOfFrameEventArgs e) { StartOfFrame?.Invoke(this, e); }
-
 		public event EventHandler<EventArgs> EndOfFrame = default;
 		public void OnEndOfFrame(EventArgs e) { EndOfFrame?.Invoke(this, e); }
 
@@ -51,7 +48,7 @@ namespace StoicGoose.Emulation.Machines
 		public Cartridge Cartridge { get; protected set; } = new();
 		public V30MZ Cpu { get; protected set; } = default;
 		public DisplayControllerCommon DisplayController { get; protected set; } = default;
-		public SoundControllerCommon SoundController { get; protected set; } = default;    //TODO "commonize"
+		public SoundControllerCommon SoundController { get; protected set; } = default;
 		public EEPROM InternalEeprom { get; protected set; } = default;
 		public byte[] BootstrapRom { get; protected set; } = default;
 
@@ -211,7 +208,7 @@ namespace StoicGoose.Emulation.Machines
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine shutdown.");
 		}
 
-		protected void InitializeEepromToDefaults()
+		protected virtual void InitializeEepromToDefaults()
 		{
 			/* Not 100% verified, same caveats as ex. ares */
 
@@ -259,14 +256,19 @@ namespace StoicGoose.Emulation.Machines
 			return data;
 		}
 
+		public void ChangeMasterVolume()
+		{
+			var newMasterVolume = SoundController.MasterVolume - 1;
+			if (newMasterVolume < 0) newMasterVolume = SoundController.MaxMasterVolume;
+			else if (newMasterVolume > SoundController.MaxMasterVolume) newMasterVolume = 0;
+
+			SoundController.WriteRegister(0x09E, (byte)newMasterVolume);
+		}
+
 		public void RunFrame(bool isManual)
 		{
 			if (lastBreakpointHit == null)
 			{
-				var startOfFrameEventArgs = new StartOfFrameEventArgs();
-				OnStartOfFrame(startOfFrameEventArgs);
-				if (startOfFrameEventArgs.ToggleMasterVolume) SoundController.ToggleMasterVolume();
-
 				while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame && lastBreakpointHit == null)
 					RunLine(isManual);
 
@@ -275,6 +277,8 @@ namespace StoicGoose.Emulation.Machines
 				UpdateStatusIcons();
 
 				OnEndOfFrame(EventArgs.Empty);
+
+				OnPollInput(new PollInputEventArgs());
 			}
 		}
 

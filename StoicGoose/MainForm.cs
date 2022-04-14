@@ -194,8 +194,10 @@ namespace StoicGoose
 				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
 				if ((screenWindow.IsWindowOpen && screenWindow.IsFocused) || (!screenWindow.IsWindowOpen && !ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)))
 					inputHandler.PollInput(s, e);
+
+				if (e.ButtonsPressed.Contains("Volume"))
+					emulatorHandler.Machine.ChangeMasterVolume();
 			};
-			emulatorHandler.Machine.StartOfFrame += (s, e) => { e.ToggleMasterVolume = inputHandler.GetMappedKeysPressed().Contains("volume"); };
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 			emulatorHandler.Machine.BreakpointHit += (s, e) =>
 			{
