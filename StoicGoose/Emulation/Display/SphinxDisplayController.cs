@@ -231,10 +231,25 @@ namespace StoicGoose.Emulation.Display
 			var offset = (uint)(paletteBase + (palette << 5) + (color << 1));
 			var pixel = (ushort)(memoryReadDelegate(offset + 1) << 8 | memoryReadDelegate(offset));
 
-			byte b = (byte)(((pixel >> 0) & 0b1111) | ((pixel >> 0) & 0b1111) << 4);
-			byte g = (byte)(((pixel >> 4) & 0b1111) | ((pixel >> 4) & 0b1111) << 4);
-			byte r = (byte)(((pixel >> 8) & 0b1111) | ((pixel >> 8) & 0b1111) << 4);
-			WriteToFramebuffer(y, x, r, g, b);
+			int b = (pixel >> 0) & 0b1111;
+			int g = (pixel >> 4) & 0b1111;
+			int r = (pixel >> 8) & 0b1111;
+
+			// TODO: get a WSC, figure out how high contrast is supposed to look?
+			if (LcdContrastHigh)
+			{
+				b = (b | b << 2) << 2;
+				g = (g | g << 2) << 2;
+				r = (r | r << 2) << 2;
+			}
+			else
+			{
+				b |= b << 4;
+				g |= g << 4;
+				r |= r << 4;
+			}
+
+			WriteToFramebuffer(y, x, (byte)r, (byte)g, (byte)b);
 		}
 
 		public override byte ReadRegister(ushort register)

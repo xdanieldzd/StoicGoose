@@ -62,7 +62,7 @@ namespace StoicGoose.Emulation.Machines
 		{
 			base.InitializeEepromToDefaults();
 
-			InternalEeprom.Program(0x83, (byte)(0b1 << 6 | SoundController.MaxMasterVolume & 0b11)); // Flags (high contrast, max volume)
+			InternalEeprom.Program(0x83, (byte)(0b0 << 6 | SoundController.MaxMasterVolume & 0b11)); // Flags (low contrast, max volume)
 		}
 
 		public override void RunStep(bool isManual)
