@@ -37,8 +37,6 @@ namespace StoicGoose.Emulation.Machines
 		void Reset();
 		void Shutdown();
 
-		void ChangeMasterVolume();
-
 		void RunFrame(bool isManual);
 		void RunLine(bool isManual);
 		void RunStep(bool isManual);

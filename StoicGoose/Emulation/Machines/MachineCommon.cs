@@ -41,7 +41,6 @@ namespace StoicGoose.Emulation.Machines
 		public uint InternalRamMask { get; protected set; } = 0;
 		public byte[] InternalRam { get; protected set; } = default;
 
-		public abstract string DefaultUsername { get; }
 		public abstract int InternalEepromSize { get; }
 		public abstract int InternalEepromAddressBits { get; }
 
@@ -144,7 +143,6 @@ namespace StoicGoose.Emulation.Machines
 			BreakpointVariables = new(this);
 
 			if (InternalRamSize == -1) throw new Exception("Internal RAM size not set");
-			if (string.IsNullOrEmpty(DefaultUsername)) throw new Exception("Default username not set");
 
 			InternalRamMask = (uint)(InternalRamSize - 1);
 			InternalRam = new byte[InternalRamSize];
@@ -210,29 +208,9 @@ namespace StoicGoose.Emulation.Machines
 
 		protected virtual void InitializeEepromToDefaults()
 		{
-			/* Not 100% verified, same caveats as ex. ares */
-
-			var data = ConvertUsernameForEeprom(DefaultUsername);
-
+			var data = ConvertUsernameForEeprom(Metadata.InternalEepromDefaultUsername);
 			for (var i = 0; i < data.Length; i++) InternalEeprom.Program(0x60 + i, data[i]); // Username (0x60-0x6F, max 16 characters)
-
-			InternalEeprom.Program(0x70, 0x19); // Year of birth [just for fun, here set to original WS release date; new systems probably had no date set?]
-			InternalEeprom.Program(0x71, 0x99); // ""
-			InternalEeprom.Program(0x72, 0x03); // Month of birth [again, WS release for fun]
-			InternalEeprom.Program(0x73, 0x04); // Day of birth [and again]
-			InternalEeprom.Program(0x74, 0x00); // Sex [set to ?]
-			InternalEeprom.Program(0x75, 0x00); // Blood type [set to ?]
-
-			InternalEeprom.Program(0x76, 0x00); // Last game played, publisher ID [set to presumably none]
-			InternalEeprom.Program(0x77, 0x00); // ""
-			InternalEeprom.Program(0x78, 0x00); // Last game played, game ID [set to presumably none]
-			InternalEeprom.Program(0x79, 0x00); // ""
-			InternalEeprom.Program(0x7A, 0x00); // (unknown)  -- Swan ID? (see Mama Mitte)
-			InternalEeprom.Program(0x7B, 0x00); // (unknown)  -- ""
-			InternalEeprom.Program(0x7C, 0x00); // Number of different games played [set to presumably none]
-			InternalEeprom.Program(0x7D, 0x00); // Number of times settings were changed [set to presumably none]
-			InternalEeprom.Program(0x7E, 0x00); // Number of times powered on [set to presumably none]
-			InternalEeprom.Program(0x7F, 0x00); // ""
+			foreach (var (address, value) in Metadata.InternalEepromDefaultData) InternalEeprom.Program(address, value);
 		}
 
 		private byte[] ConvertUsernameForEeprom(string name)
@@ -254,15 +232,6 @@ namespace StoicGoose.Emulation.Machines
 				else data[i] = 0x00;
 			}
 			return data;
-		}
-
-		public void ChangeMasterVolume()
-		{
-			var newMasterVolume = SoundController.MasterVolume - 1;
-			if (newMasterVolume < 0) newMasterVolume = SoundController.MaxMasterVolume;
-			else if (newMasterVolume > SoundController.MaxMasterVolume) newMasterVolume = 0;
-
-			SoundController.WriteRegister(0x09E, (byte)newMasterVolume);
 		}
 
 		public void RunFrame(bool isManual)

@@ -17,8 +17,6 @@ namespace StoicGoose.Emulation.Machines
 
 		public override int InternalRamSize => 64 * 1024;
 
-		public override string DefaultUsername => "WONDERSWANCOLOR";
-
 		public override int InternalEepromSize => 1024 * 2;
 		public override int InternalEepromAddressBits => 10;
 

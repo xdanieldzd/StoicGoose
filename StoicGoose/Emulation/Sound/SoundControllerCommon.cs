@@ -96,6 +96,15 @@ namespace StoicGoose.Emulation.Sound
 			//
 		}
 
+		public void ChangeMasterVolume()
+		{
+			var newMasterVolume = MasterVolume - 1;
+			if (newMasterVolume < 0) newMasterVolume = MaxMasterVolume;
+			else if (newMasterVolume > MaxMasterVolume) newMasterVolume = 0;
+
+			masterVolume = (byte)newMasterVolume;
+		}
+
 		public void Step(int clockCyclesInStep)
 		{
 			cycleCount += clockCyclesInStep;

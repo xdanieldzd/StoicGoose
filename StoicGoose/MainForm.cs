@@ -196,7 +196,7 @@ namespace StoicGoose
 					inputHandler.PollInput(s, e);
 
 				if (e.ButtonsPressed.Contains("Volume"))
-					emulatorHandler.Machine.ChangeMasterVolume();
+					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
 			};
 			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
 			emulatorHandler.Machine.BreakpointHit += (s, e) =>
@@ -688,6 +688,7 @@ namespace StoicGoose
 				}
 
 				inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
+				soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
 			}
 
 			UnpauseEmulation();

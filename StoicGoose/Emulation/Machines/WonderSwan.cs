@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using StoicGoose.Emulation.Display;
+﻿using StoicGoose.Emulation.Display;
 using StoicGoose.Emulation.Sound;
 using StoicGoose.Interface.Attributes;
 using StoicGoose.WinForms;
@@ -17,8 +15,6 @@ namespace StoicGoose.Emulation.Machines
 		public override byte InterruptBase { get; protected set; } = 0x00;
 
 		public override int InternalRamSize => 16 * 1024;
-
-		public override string DefaultUsername => "WONDERSWAN";
 
 		public override int InternalEepromSize => 64 * 2;
 		public override int InternalEepromAddressBits => 6;

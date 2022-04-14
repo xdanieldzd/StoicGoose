@@ -19,6 +19,27 @@ namespace StoicGoose.Emulation.Machines
 		public override string HardwareControls => "Volume";
 
 		public override string InternalEepromFilename => "WonderSwan.eep";
+		public override string InternalEepromDefaultUsername => "WONDERSWAN";
+		public override Dictionary<ushort, byte> InternalEepromDefaultData => new()
+		{
+			{ 0x70, 0x19 }, // Year of birth [just for fun, here set to original WS release date; new systems probably had no date set?]
+			{ 0x71, 0x99 }, // ""
+			{ 0x72, 0x03 }, // Month of birth [again, WS release for fun]
+			{ 0x73, 0x04 }, // Day of birth [and again]
+			{ 0x74, 0x00 }, // Sex [set to ?]
+			{ 0x75, 0x00 }, // Blood type [set to ?]
+
+			{ 0x76, 0x00 }, // Last game played, publisher ID [set to presumably none]
+			{ 0x77, 0x00 }, // ""
+			{ 0x78, 0x00 }, // Last game played, game ID [set to presumably none]
+			{ 0x79, 0x00 }, // ""
+			{ 0x7A, 0x00 }, // Swan ID (see Mama Mitte) -- TODO: set to valid/random value?
+			{ 0x7B, 0x00 }, // ""
+			{ 0x7C, 0x00 }, // Number of different games played [set to presumably none]
+			{ 0x7D, 0x00 }, // Number of times settings were changed [set to presumably none]
+			{ 0x7E, 0x00 }, // Number of times powered on [set to presumably none]
+			{ 0x7F, 0x00 }  // ""
+		};
 
 		public override string RomFileFilter => "WonderSwan ROMs (*.ws)|*.ws";
 
@@ -59,6 +80,27 @@ namespace StoicGoose.Emulation.Machines
 		public override string HardwareControls => "Volume";
 
 		public override string InternalEepromFilename => "WonderSwanColor.eep";
+		public override string InternalEepromDefaultUsername => "WONDERSWANCOLOR";
+		public override Dictionary<ushort, byte> InternalEepromDefaultData => new()
+		{
+			{ 0x70, 0x20 }, // Year of birth [set to WSC release date for fun]
+			{ 0x71, 0x00 }, // ""
+			{ 0x72, 0x12 }, // Month of birth [again]
+			{ 0x73, 0x09 }, // Day of birth [again]
+			{ 0x74, 0x00 }, // Sex [?]
+			{ 0x75, 0x00 }, // Blood type [?]
+
+			{ 0x76, 0x00 }, // Last game played, publisher ID [none]
+			{ 0x77, 0x00 }, // ""
+			{ 0x78, 0x00 }, // Last game played, game ID [none]
+			{ 0x79, 0x00 }, // ""
+			{ 0x7A, 0x00 }, // Swan ID (see Mama Mitte) -- TODO: set to valid/random value?
+			{ 0x7B, 0x00 }, // ""
+			{ 0x7C, 0x00 }, // Number of different games played [none]
+			{ 0x7D, 0x00 }, // Number of times settings were changed [none]
+			{ 0x7E, 0x00 }, // Number of times powered on [none]
+			{ 0x7F, 0x00 }  // ""
+		};
 
 		public override string RomFileFilter => "WonderSwan Color ROMs (*.wsc;*.ws)|*.wsc;*.ws";
 
