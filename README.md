@@ -9,21 +9,17 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.1.0
 
 ## Screenshots
-* WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:<br><br>
- ![Screenshot Bootstraps 1](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Logo.png)
- ![Screenshot Bootstraps 2](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Menu.png)<br><br>
- ![Screenshot Bootstraps 3](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Logo.png)
- ![Screenshot Bootstraps 4](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Menu.png)<br><br>
-* Various WonderSwan games, using Dot-Matrix shader:<br><br>
- ![Screenshot WS Games 1](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-DigiAnodeTamer.png)
- ![Screenshot WS Games 2](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-FinalLap2000.png)
- ![Screenshot WS Games 3](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-MedarotKabuto.png)
- ![Screenshot WS Games 4](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-RockmanForte.png)
-* Various WonderSwan Color games, using Dot-Matrix Color shader:<br><br>
- ![Screenshot WSC Games 1](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png)
- ![Screenshot WSC Games 2](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png)
- ![Screenshot WSC Games 3](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png)
- ![Screenshot WSC Games 4](https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png)
+WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
+
+<img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Logo.png" alt="Screenshot Bootstraps 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Menu.png" alt="Screenshot Bootstraps 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Logo.png" alt="Screenshot Bootstraps 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Menu.png" alt="Screenshot Bootstraps 4" width="50%">
+
+Various WonderSwan games, using Dot-Matrix shader:
+
+<img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-DigiAnodeTamer.png" alt="Screenshot WS Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-FinalLap2000.png" alt="Screenshot WS Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-MedarotKabuto.png" alt="Screenshot WS Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-RockmanForte.png" alt="Screenshot WS Games 4" width="50%">
+
+Various WonderSwan Color games, using Dot-Matrix Color shader:
+
+<img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png" alt="Screenshot WSC Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png" alt="Screenshot WSC Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png" alt="Screenshot WSC Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png" alt="Screenshot WSC Games 4" width="50%">
 
 ## Acknowledgements & Attribution
 * The XML data files in `Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
