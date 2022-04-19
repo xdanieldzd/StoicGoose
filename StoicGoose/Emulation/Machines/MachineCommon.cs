@@ -152,6 +152,8 @@ namespace StoicGoose.Emulation.Machines
 
 			InitializeEepromToDefaults();
 
+			Disassembler.Instance.ReadDelegate = ReadMemory;
+
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine initialized.");
 		}
 

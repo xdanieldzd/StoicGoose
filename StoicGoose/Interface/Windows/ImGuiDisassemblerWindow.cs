@@ -16,7 +16,6 @@ namespace StoicGoose.Interface.Windows
 	public class ImGuiDisassemblerWindow : ImGuiWindowBase
 	{
 		/* Consts, dicts, enums... */
-		const int segmentSize = 0x10000;
 		const int maxInternalRamSize = 0x10000;
 		const int maxOpcodeBytes = 8;
 
@@ -30,8 +29,9 @@ namespace StoicGoose.Interface.Windows
 		bool traceExecution = true, upperCaseHex = true;
 
 		/* Internal stuff */
+		uint lastCartridgeCrc32 = 0;
 		ushort codeSegment = 0x0000;
-		readonly List<ushort> instructionAddresses = new();
+		readonly List<Instruction> instructions = new();
 		readonly List<ushort> stackAddresses = new(), stackAddressesAscending = new();
 		bool jumpToIpNext = false, jumpToSpNext = false;
 		string disasmAddrInputBuf = new('\0', 32), stackAddrInputBuf = new('\0', 32);
@@ -44,7 +44,7 @@ namespace StoicGoose.Interface.Windows
 		float posStackAddrEnd = 0f, posStackDivStart = 0f, posStackHexStart = 0f;
 
 		/* Functional stuffs */
-		readonly Disassembler disassembler = new();
+		readonly Disassembler disassembler = Disassembler.Instance;
 
 		readonly ImGuiListClipper clipperObject = default;
 		readonly GCHandle clipperHandle = default;
@@ -100,25 +100,16 @@ namespace StoicGoose.Interface.Windows
 
 			CalcSizes();
 
-			if (disassembler.ReadDelegate == null) disassembler.ReadDelegate = handler.Machine.ReadMemory;
-			if (disassembler.WriteDelegate == null) disassembler.WriteDelegate = handler.Machine.WriteMemory;
-
-			if (instructionAddresses.Count == 0 || codeSegment != handler.Machine.Cpu.CS || !instructionAddresses.Contains(handler.Machine.Cpu.IP))
+			if (lastCartridgeCrc32 != handler.Machine.Cartridge.Crc32)
 			{
-				var newAddresses = new List<ushort>();
-				var searchAddress = handler.Machine.Cpu.IP;
+				disassembler.Reset();
+				lastCartridgeCrc32 = handler.Machine.Cartridge.Crc32;
+			}
 
-				codeSegment = handler.Machine.Cpu.CS;
-				for (int i = 0; i < segmentSize;)
-				{
-					newAddresses.Add(searchAddress);
-					var (_, _, bytes, _, _) = disassembler.DisassembleInstruction(codeSegment, searchAddress);
-					i += bytes.Length;
-					searchAddress += (ushort)bytes.Length;
-				}
-
-				instructionAddresses.Clear();
-				instructionAddresses.AddRange(newAddresses.OrderBy(x => x));
+			if (instructions.Count == 0 || codeSegment != handler.Machine.Cpu.CS)
+			{
+				instructions.Clear();
+				instructions.AddRange(disassembler.DisassembleSegment(codeSegment = handler.Machine.Cpu.CS));
 			}
 
 			if (stackAddresses.Count == 0)
@@ -143,7 +134,7 @@ namespace StoicGoose.Interface.Windows
 					ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, NumericsVector2.Zero);
 
 					var clipper = new ImGuiListClipperPtr(clipperPointer);
-					clipper.Begin(instructionAddresses.Count, lineHeight);
+					clipper.Begin(instructions.Count, lineHeight);
 					{
 						var windowPos = ImGui.GetWindowPos();
 						drawListDisasm.AddLine(new NumericsVector2(windowPos.X + posDisasmHexStart - glyphWidth, windowPos.Y), new NumericsVector2(windowPos.X + posDisasmHexStart - glyphWidth, windowPos.Y + 9999), ImGui.GetColorU32(ImGuiCol.Border));
@@ -153,19 +144,19 @@ namespace StoicGoose.Interface.Windows
 
 						if (traceExecution || jumpToIpNext)
 						{
-							var idx = instructionAddresses.IndexOf(handler.Machine.Cpu.IP);
+							var idx = instructions.FindIndex(x => x.Address == handler.Machine.Cpu.IP);
 							if (idx != -1)
 							{
 								centerScrollTo(idx);
-								disasmAddrInputBuf = string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", instructionAddresses[idx]);
+								disasmAddrInputBuf = string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", instructions[idx].Address);
 							}
 						}
 
 						if (disasmGotoAddr != -1)
 						{
-							var idx = instructionAddresses.BinarySearch((ushort)disasmGotoAddr);
+							var idx = instructions.Select(x => x.Address).ToList().BinarySearch((ushort)disasmGotoAddr);
 							if (idx < 0) idx = ~idx;
-							disasmAddrInputBuf = string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", instructionAddresses[idx]);
+							disasmAddrInputBuf = string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}", instructions[idx].Address);
 							centerScrollTo(idx);
 						}
 
@@ -190,30 +181,28 @@ namespace StoicGoose.Interface.Windows
 								else if (ImGui.IsKeyPressed(ImGuiKey.Home) && !ImGui.IsAnyItemActive())
 									ImGui.SetScrollY(0f);
 								else if (ImGui.IsKeyPressed(ImGuiKey.End) && !ImGui.IsAnyItemActive())
-									ImGui.SetScrollY(instructionAddresses.Count * clipper.ItemsHeight);
+									ImGui.SetScrollY(instructions.Count * clipper.ItemsHeight);
 							}
 
 							for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 							{
 								var pos = ImGui.GetCursorScreenPos();
 
-								if (handler.Machine.Cpu.IP == instructionAddresses[i])
+								if (handler.Machine.Cpu.IP == instructions[i].Address)
 									drawListDisasm.AddRectFilled(pos, new NumericsVector2(pos.X + ImGui.GetContentRegionAvail().X, pos.Y + lineHeight), HighlightColor1);
 
 								if (i == clipper.DisplayStart + (clipper.DisplayEnd - clipper.DisplayStart) / 2f)
 									drawListDisasm.AddRect(pos, new NumericsVector2(pos.X + ImGui.GetContentRegionAvail().X, pos.Y + lineHeight), HighlightColor2);
 
-								var (_, _, bytes, disasm, comment) = disassembler.DisassembleInstruction(codeSegment, instructionAddresses[i]);
-
-								ImGui.TextUnformatted(string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}:{{1:{(upperCaseHex ? "X" : "x")}4}}", codeSegment, instructionAddresses[i]));
+								ImGui.TextUnformatted(string.Format($"{{0:{(upperCaseHex ? "X" : "x")}4}}:{{1:{(upperCaseHex ? "X" : "x")}4}}", codeSegment, instructions[i].Address));
 								ImGui.SameLine(posDisasmHexStart);
 
-								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{string.Join(" ", bytes.Select(x => $"{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", x)}"))}");
+								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{string.Join(" ", instructions[i].Bytes.Select(x => $"{string.Format($"{{0:{(upperCaseHex ? "X" : "x")}2}}", x)}"))}");
 								ImGui.SameLine(posDisasmMnemonicStart);
 
-								ImGui.TextUnformatted(disasm);
+								ImGui.TextUnformatted($"{instructions[i].Mnemonic} {instructions[i].Operand}");
 								ImGui.SameLine();
-								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{(!string.IsNullOrEmpty(comment) ? $" ; {comment}" : string.Empty)}");
+								ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)), $"{(!string.IsNullOrEmpty(instructions[i].Comment) ? $" ; {instructions[i].Comment}" : string.Empty)}");
 							}
 						}
 						clipper.End();

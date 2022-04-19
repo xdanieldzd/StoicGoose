@@ -1,4 +1,8 @@
-﻿namespace StoicGoose.Emulation.CPU
+﻿using System.Linq;
+
+using StoicGoose.Debugging;
+
+namespace StoicGoose.Emulation.CPU
 {
 	public sealed partial class V30MZ : IComponent
 	{
@@ -39,8 +43,6 @@
 			memoryWriteDelegate = memoryWrite;
 			registerReadDelegate = registerRead;
 			registerWriteDelegate = registerWrite;
-
-			InitializeDisassembler();
 
 			Reset();
 		}
@@ -118,6 +120,9 @@
 				/* If enabled, write to CPU trace logger */
 				if (isTraceLogOpen)
 				{
+					var address = $"{cs:X4}:{ip:X4}";
+					var instruction = Disassembler.Instance.DisassembleInstruction(cs, ip);
+					var disassemblyAndComment = $"{string.Join(" ", instruction.Bytes.Select(x => ($"{x:X2}"))),-24} | {$"{instruction.Mnemonic} {instruction.Operand}",-32}{(!string.IsNullOrEmpty(instruction.Comment) ? $";{instruction.Comment}" : "")}";
 					var registerStates = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
 					var segmentStates = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
 					var flagStates =
@@ -125,7 +130,7 @@
 						$"{(IsFlagSet(Flags.Sign) ? "S" : "-")}{(IsFlagSet(Flags.Trap) ? "T" : "-")}{(IsFlagSet(Flags.InterruptEnable) ? "I" : "-")}{(IsFlagSet(Flags.Direction) ? "D" : "-")}" +
 						$"{(IsFlagSet(Flags.Overflow) ? "O" : "-")}";
 
-					WriteToTraceLog($"{DisassembleInstruction(cs, ip),-96} | {registerStates} | {segmentStates} | {flagStates}");
+					WriteToTraceLog($"{address} | {disassemblyAndComment,-84} | {registerStates} | {segmentStates} | {flagStates}");
 				}
 
 				/* Read any prefixes & opcode */
