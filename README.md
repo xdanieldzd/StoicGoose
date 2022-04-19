@@ -1,12 +1,13 @@
 # StoicGoose
 StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2019 under Windows 10 Pro 21H2, and uses .NET Framework 5.0 along with the following NuGet packages:
 
-* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.1
-* [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6
-* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.1
-* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3
-* [GitInfo](https://www.nuget.org/packages/GitInfo) 2.2.0
-* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.1.0
+* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.1 (for OpenGL rendering, OpenAL sound, etc.)
+* [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
+* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.1 (for configuration, cheats and breakpoint storage)
+* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugging UI)
+* [GitInfo](https://www.nuget.org/packages/GitInfo) 2.2.0 (for versioning information)
+* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.1.0 (for breakpoint support)
+* [Gee.External.Capstone](https://www.nuget.org/packages/Gee.External.Capstone) 2.0.2 (for x86 disassembly)
 
 ## Screenshots
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
