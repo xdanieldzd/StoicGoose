@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -64,11 +65,17 @@ namespace StoicGoose
 			{
 				GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
 				renderControl.Flags |= ContextFlags.Debug;
+
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Enabled OpenGL debugging.");
 			}
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Constructor done.");
 		}
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initializing emulator and UI...");
+
 			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
 
 			InitializeHandlers();
@@ -129,6 +136,8 @@ namespace StoicGoose
 			if (GlobalVariables.EnableAutostartLastRom)
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization done!");
+
 			isInitialized = true;
 		}
 
@@ -139,11 +148,7 @@ namespace StoicGoose
 
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			SaveInternalEeprom();
-			SaveRam();
-			SaveCheatList();
-			SaveBreakpoints();
-
+			SaveAllData();
 			emulatorHandler.Shutdown();
 
 			Program.SaveConfiguration();
@@ -480,11 +485,7 @@ namespace StoicGoose
 		{
 			if (emulatorHandler.IsRunning)
 			{
-				SaveInternalEeprom();
-				SaveRam();
-				SaveCheatList();
-				SaveBreakpoints();
-
+				SaveAllData();
 				emulatorHandler.Shutdown();
 			}
 
@@ -536,6 +537,14 @@ namespace StoicGoose
 		{
 			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
 			emulatorHandler.Machine.LoadBreakpoints(File.Exists(path) ? path.DeserializeFromFile<List<Breakpoint>>() : new List<Breakpoint>());
+		}
+
+		private void SaveAllData()
+		{
+			SaveInternalEeprom();
+			SaveRam();
+			SaveCheatList();
+			SaveBreakpoints();
 		}
 
 		private void SaveRam()
@@ -598,11 +607,7 @@ namespace StoicGoose
 
 		private void ResetEmulation()
 		{
-			SaveInternalEeprom();
-			SaveRam();
-			SaveCheatList();
-			SaveBreakpoints();
-
+			SaveAllData();
 			emulatorHandler.Reset();
 
 			Program.SaveConfiguration();
@@ -764,7 +769,18 @@ namespace StoicGoose
 		{
 			PauseEmulation();
 
-			MessageBox.Show($"{Application.ProductName} {Program.GetVersionString(true)} by {Application.CompanyName}\n\n{ThisAssembly.Git.RepositoryUrl}\n\nPrototype WIP build, should be safe to use, kinda.{(GlobalVariables.IsDebugBuild ? "\n\nThis is a HONK!ing debug build! 🔪🦢🖥, y'all!" : string.Empty)}", $"About {Application.ProductName}", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			var builder = new StringBuilder();
+			builder.AppendLine($"{Application.ProductName} {Program.GetVersionString(true)}");
+			builder.AppendLine($"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description}");
+			builder.AppendLine();
+			builder.AppendLine($"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright}");
+			builder.AppendLine($"{ThisAssembly.Git.RepositoryUrl}");
+			if (GlobalVariables.IsDebugBuild)
+			{
+				builder.AppendLine();
+				builder.AppendLine("This is a HONK!ing debug build! 🔪🦢🖥, y'all!");
+			}
+			MessageBox.Show(builder.ToString(), $"About {Application.ProductName}", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
 			UnpauseEmulation();
 		}

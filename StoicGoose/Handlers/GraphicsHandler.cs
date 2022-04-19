@@ -40,6 +40,8 @@ namespace StoicGoose.Handlers
 
 		readonly static float iconScale = 0.85f;
 
+		readonly State renderState = new();
+
 		readonly MetadataBase metadata = default;
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
@@ -106,23 +108,24 @@ namespace StoicGoose.Handlers
 			foreach (var file in new DirectoryInfo(Program.ShaderPath).EnumerateFiles("*.json", SearchOption.AllDirectories))
 				shaderNames.Add(file.Directory.Name);
 
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Found {shaderNames.Count} shader(s).");
+
 			return shaderNames;
 		}
 
 		public void SetClearColor(Color color)
 		{
-			GL.ClearColor(color);
+			renderState.SetClearColor(color);
 		}
 
 		private void SetInitialOpenGLState()
 		{
-			SetClearColor(Color.Black);
-
-			GL.Enable(EnableCap.DepthTest);
-			GL.Enable(EnableCap.Blend);
-			GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-			GL.Enable(EnableCap.CullFace);
-			GL.CullFace(CullFaceMode.Back);
+			renderState.SetClearColor(Color.Black);
+			renderState.Enable(EnableCap.DepthTest);
+			renderState.Enable(EnableCap.Blend);
+			renderState.SetBlending(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+			renderState.Enable(EnableCap.CullFace);
+			renderState.SetCullFace(CullFaceMode.Back);
 		}
 
 		private void ParseSystemIcons()
@@ -185,6 +188,8 @@ namespace StoicGoose.Handlers
 			if (shaderBundle.Samplers > maxTextureSamplerCount)
 				shaderBundle.Samplers = maxTextureSamplerCount;
 
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Loaded shader '{name}'.");
+
 			return (shaderBundle, shaderProgram);
 		}
 
@@ -226,6 +231,8 @@ namespace StoicGoose.Handlers
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Generated {commonBundleManifest.Samplers} display texture(s).");
+
 			lastTextureUpdate = 0;
 		}
 
@@ -253,6 +260,8 @@ namespace StoicGoose.Handlers
 			{
 				for (var i = 0; i < commonBundleManifest.Samplers; i++)
 					displayTextures[i].Update(e.Framebuffer);
+
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Shader changed successfully.");
 
 				wasShaderChanged = false;
 			}
@@ -352,6 +361,8 @@ namespace StoicGoose.Handlers
 
 		public void ClearFrame()
 		{
+			renderState.Submit();
+
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 		}
 
@@ -363,6 +374,8 @@ namespace StoicGoose.Handlers
 
 		public void DrawFrame()
 		{
+			renderState.Submit();
+
 			commonShaderProgram.Bind();
 
 			renderMode.Value = (int)ShaderRenderMode.Display;

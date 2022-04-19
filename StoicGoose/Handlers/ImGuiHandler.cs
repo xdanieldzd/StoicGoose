@@ -63,6 +63,8 @@ namespace StoicGoose.Handlers
 
 		readonly IntPtr imguiContext = default;
 
+		readonly State renderState = new();
+
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 
 		readonly Buffer vertexBuffer = default;
@@ -86,6 +88,10 @@ namespace StoicGoose.Handlers
 			imguiContext = ImGui.CreateContext();
 			ImGui.SetCurrentContext(imguiContext);
 			ImGui.StyleColorsDark();
+
+			renderState.Disable(EnableCap.CullFace);
+			renderState.Disable(EnableCap.DepthTest);
+			renderState.Enable(EnableCap.ScissorTest);
 
 			vertexBuffer = Buffer.CreateVertexBuffer<ColorVertex>(BufferUsageHint.StaticDraw);
 			indexBuffer = Buffer.CreateIndexBuffer<ushort>(BufferUsageHint.StaticDraw);
@@ -239,9 +245,7 @@ namespace StoicGoose.Handlers
 		{
 			if (drawData.Equals(default(ImDrawDataPtr)) || drawData.CmdListsCount == 0) return;
 
-			GL.Disable(EnableCap.CullFace);
-			GL.Disable(EnableCap.DepthTest);
-			GL.Enable(EnableCap.ScissorTest);
+			renderState.Submit();
 
 			var io = ImGui.GetIO();
 			drawData.ScaleClipRects(io.DisplayFramebufferScale);
@@ -281,10 +285,6 @@ namespace StoicGoose.Handlers
 					}
 				}
 			}
-
-			GL.Enable(EnableCap.CullFace);
-			GL.Enable(EnableCap.DepthTest);
-			GL.Disable(EnableCap.ScissorTest);
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]

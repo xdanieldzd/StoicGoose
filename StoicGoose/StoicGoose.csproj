@@ -14,7 +14,7 @@
     <Authors />
     <Company>xdaniel</Company>
     <Copyright>Written 2021-2022 by xdaniel</Copyright>
-    <Description>16-bit game handheld emulator</Description>
+    <Description>16-bit handheld game system emulator</Description>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
