@@ -59,7 +59,7 @@ namespace StoicGoose.OpenGL
 			SubmitState(EnableCap.CullFace, cullFaceEnable);
 			SubmitState(EnableCap.ScissorTest, scissorTestEnable);
 
-			lastState = this;
+			lastState = (State)MemberwiseClone();
 		}
 
 		private void SubmitState(EnableCap cap, bool value)

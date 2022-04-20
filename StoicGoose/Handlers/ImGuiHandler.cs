@@ -245,8 +245,6 @@ namespace StoicGoose.Handlers
 		{
 			if (drawData.Equals(default(ImDrawDataPtr)) || drawData.CmdListsCount == 0) return;
 
-			renderState.Submit();
-
 			var io = ImGui.GetIO();
 			drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
@@ -271,7 +269,7 @@ namespace StoicGoose.Handlers
 					else
 					{
 						var clip = cmdBuffer.ClipRect;
-						GL.Scissor((int)clip.X, (int)drawData.DisplaySize.Y - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y));
+						renderState.SetScissor(new((int)clip.X, (int)drawData.DisplaySize.Y - (int)clip.W, (int)(clip.Z - clip.X), (int)(clip.W - clip.Y)));
 
 						if (cmdBuffer.TextureId != IntPtr.Zero)
 						{
@@ -281,6 +279,7 @@ namespace StoicGoose.Handlers
 								GL.BindTexture(TextureTarget.Texture2D, (int)cmdBuffer.TextureId);
 						}
 
+						renderState.Submit();
 						vertexArray.DrawIndices(PrimitiveType.Triangles, (int)cmdBuffer.IdxOffset, (int)cmdBuffer.ElemCount);
 					}
 				}
