@@ -121,10 +121,10 @@ namespace StoicGoose.Emulation.Display
 			sprWinX0 = sprWinY0 = sprWinX1 = sprWinY1 = 0;
 			scr1ScrollX = scr1ScrollY = 0;
 			scr2ScrollX = scr2ScrollY = 0;
-			lcdActive = true;   //Final Lap 2000 depends on bootstrap doing this, otherwise LCD stays off?
+			lcdActive = true; /* NOTE: Final Lap 2000 depends on bootstrap doing this, otherwise LCD stays off? */
 			iconSleep = iconVertical = iconHorizontal = iconAux1 = iconAux2 = iconAux3 = false;
 			vtotal = VerticalTotal - 1;
-			vsync = VerticalTotal - 4; //Full usage/meaning unknown, so we're ignoring it for now
+			vsync = VerticalTotal - 4; /* NOTE: Full usage/meaning unknown, so we're ignoring it for now */
 			Array.Fill<byte>(palMonoPools, 0);
 			for (var i = 0; i < palMonoData.GetLength(0); i++) Array.Fill<byte>(palMonoData[i], 0);
 			displayPackedFormatSet = false;
@@ -134,7 +134,7 @@ namespace StoicGoose.Emulation.Display
 
 		public void Shutdown()
 		{
-			//
+			/* Nothing to do... */
 		}
 
 		public DisplayInterrupts Step(int clockCyclesInStep)
@@ -145,7 +145,7 @@ namespace StoicGoose.Emulation.Display
 
 			if (cycleCount >= HorizontalTotal)
 			{
-				// sprite fetch
+				/* Sprite fetch */
 				if (LineCurrent == VerticalDisp - 2)
 				{
 					spriteCountNextFrame = 0;
@@ -156,47 +156,47 @@ namespace StoicGoose.Emulation.Display
 					}
 				}
 
-				// render pixels
+				/* Render pixels */
 				for (var x = 0; x < HorizontalDisp; x++)
 					RenderPixel(lineCurrent, x);
 
-				// line compare interrupt
+				/* Line compare interrupt */
 				if (lineCurrent == lineCompare)
 					interrupt |= DisplayInterrupts.LineCompare;
 
-				// go to next scanline
+				/* H-timer interrupt */
+				if (hBlankTimer.Step())
+					interrupt |= DisplayInterrupts.HBlankTimer;
+
+				/* V-blank interrupt */
+				if (lineCurrent == VerticalDisp)
+				{
+					interrupt |= DisplayInterrupts.VBlank;
+
+					/* V-timer interrupt */
+					if (vBlankTimer.Step())
+						interrupt |= DisplayInterrupts.VBlankTimer;
+				}
+
+				/* Advance scanline */
 				lineCurrent++;
 
-				// is frame finished
-				if (lineCurrent >= Math.Max(VerticalDisp, vtotal) + 1)
+				/* Is frame finished? */
+				if (lineCurrent > Math.Max(VerticalDisp, vtotal))
 				{
-					lineCurrent = 0;
+					/* Transfer framebuffer */
+					OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
 
-					// copy sprite data for next frame
+					/* Copy sprite data for next frame */
 					for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
 					Array.Fill<uint>(spriteDataNextFrame, 0);
 
-					OnUpdateScreen(new UpdateScreenEventArgs(outputFramebuffer.Clone() as byte[]));
+					/* Reset variables */
+					lineCurrent = 0;
 					Array.Fill(isUsedBySCR2, false);
 				}
-				else
-				{
-					// V-blank interrupt
-					if (lineCurrent == VerticalDisp)
-					{
-						interrupt |= DisplayInterrupts.VBlank;
 
-						// V-timer interrupt
-						if (vBlankTimer.Step())
-							interrupt |= DisplayInterrupts.VBlankTimer;
-					}
-
-					// H-timer interrupt
-					if (hBlankTimer.Step())
-						interrupt |= DisplayInterrupts.HBlankTimer;
-				}
-
-				// end of scanline
+				/* End of scanline */
 				cycleCount = 0;
 			}
 
@@ -216,7 +216,7 @@ namespace StoicGoose.Emulation.Display
 			}
 			else
 			{
-				// LCD sleeping
+				/* LCD sleeping */
 				RenderSleep(y, x);
 			}
 		}
@@ -231,8 +231,8 @@ namespace StoicGoose.Emulation.Display
 
 		protected void ValidateWindowCoordinates(ref int x0, ref int x1, ref int y0, ref int y1)
 		{
-			// Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
-			// https://forum.fobby.net/index.php?t=msg&goto=6085
+			/* Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
+			 * https://forum.fobby.net/index.php?t=msg&goto=6085 */
 
 			if (x0 > x1) Swap(ref x0, ref x1);
 			if (y0 > y1) Swap(ref y0, ref y1);
@@ -434,8 +434,6 @@ namespace StoicGoose.Emulation.Display
 					ChangeBit(ref retVal, 2, vBlankTimer.Enable);
 					ChangeBit(ref retVal, 3, vBlankTimer.Repeating);
 					break;
-
-				// TODO verify timer reads
 
 				case 0xA4:
 				case 0xA5:
