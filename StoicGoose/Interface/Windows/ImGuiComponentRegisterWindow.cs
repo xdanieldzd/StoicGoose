@@ -5,7 +5,6 @@ using System.Reflection;
 
 using ImGuiNET;
 
-using StoicGoose.Emulation;
 using StoicGoose.Interface.Attributes;
 
 using NumericsVector2 = System.Numerics.Vector2;
@@ -18,7 +17,7 @@ namespace StoicGoose.Interface.Windows
 
 		readonly Type componentType = default;
 
-		readonly Dictionary<(ushort number, string name), List<RegisterParameterInformation>> registers = new();
+		readonly Dictionary<string, (List<ushort> numbers, List<RegisterParameterInformation> regInfos)> registers = new();
 
 		protected ImGuiComponentRegisterWindow(string title, Type type) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver)
 		{
@@ -28,15 +27,15 @@ namespace StoicGoose.Interface.Windows
 			{
 				if (propInfo.GetCustomAttribute<ImGuiRegisterAttribute>() is ImGuiRegisterAttribute regAttrib)
 				{
-					var key = (regAttrib.Number, regAttrib.Name);
-					if (!registers.ContainsKey(key)) registers.Add(key, new());
+					if (!registers.ContainsKey(regAttrib.Name))
+						registers.Add(regAttrib.Name, (regAttrib.Numbers, new()));
 				}
 			}
 
-			foreach (var ((number, name), list) in registers)
+			foreach (var (name, (numbers, list)) in registers)
 			{
 				foreach (var propInfo in componentType.GetProperties(getPropBindingFlags)
-					.Where(x => x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Number == number && x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Name == name)
+					.Where(x => x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Numbers.SequenceEqual(numbers) == true && x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Name == name)
 					.GroupBy(x => x.Name)
 					.Select(x => x.First()))
 				{
@@ -61,9 +60,9 @@ namespace StoicGoose.Interface.Windows
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
-				foreach (var ((number, name), list) in registers.OrderBy(x => x.Key.number))
+				foreach (var (name, (numbers, list)) in registers.OrderBy(x => x.Value.numbers.Min()))
 				{
-					if (ImGui.CollapsingHeader($"0x{number:X3} -- {name}", ImGuiTreeNodeFlags.DefaultOpen))
+					if (ImGui.CollapsingHeader($"{string.Join(", ", numbers.Select(x => $"0x{x:X3}"))} -- {name}", ImGuiTreeNodeFlags.DefaultOpen))
 					{
 						ImGui.BeginDisabled(true);
 						{

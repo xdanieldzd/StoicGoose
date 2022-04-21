@@ -9,7 +9,7 @@ namespace StoicGoose.Emulation.Machines
 {
 	public partial class WonderSwan : MachineCommon
 	{
-		[ImGuiRegister(0x0B0, "REG_INT_BASE")]
+		[ImGuiRegister("REG_INT_BASE", 0x0B0)]
 		[ImGuiBitDescription("Interrupt base address", 3, 7)]
 		[ImGuiFormat("X4", 0)]
 		public override byte InterruptBase { get; protected set; } = 0x00;

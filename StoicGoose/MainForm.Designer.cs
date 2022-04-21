@@ -60,6 +60,7 @@
 			this.memoryEditorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.systemRegistersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.displayRegistersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.soundRegistersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
 			this.enableBreakpointsToolStripMenuItem = new StoicGoose.WinForms.BindableToolStripMenuItem();
 			this.breakpointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -274,6 +275,7 @@
 			this.memoryEditorToolStripMenuItem,
 			this.systemRegistersToolStripMenuItem,
 			this.displayRegistersToolStripMenuItem,
+			this.soundRegistersToolStripMenuItem,
 			this.toolStripSeparator8,
 			this.enableBreakpointsToolStripMenuItem,
 			this.breakpointsToolStripMenuItem,
@@ -325,6 +327,13 @@
 			this.displayRegistersToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
 			this.displayRegistersToolStripMenuItem.Text = "D&isplay Registers";
 			this.displayRegistersToolStripMenuItem.Click += new System.EventHandler(this.displayRegistersToolStripMenuItem_Click);
+			// 
+			// soundRegistersToolStripMenuItem
+			// 
+			this.soundRegistersToolStripMenuItem.Name = "soundRegistersToolStripMenuItem";
+			this.soundRegistersToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.soundRegistersToolStripMenuItem.Text = "So&und Registers";
+			this.soundRegistersToolStripMenuItem.Click += new System.EventHandler(this.soundRegistersToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator8
 			// 
@@ -477,6 +486,7 @@
 		private System.Windows.Forms.ToolStripMenuItem traceLogToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem systemRegistersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem displayRegistersToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem soundRegistersToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem logWindowToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem cheatsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem cheatListToolStripMenuItem;

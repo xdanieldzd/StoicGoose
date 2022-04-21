@@ -57,68 +57,68 @@ namespace StoicGoose.Emulation.Machines
 		public int TotalClockCyclesInFrame { get; protected set; } = 0;
 
 		/* REG_HW_FLAGS */
-		[ImGuiRegister(0x0A0, "REG_HW_FLAGS")]
+		[ImGuiRegister("REG_HW_FLAGS", 0x0A0)]
 		[ImGuiBitDescription("BIOS lockout; is cartridge mapped?", 0)]
 		public bool CartEnable { get; protected set; } = false;
-		[ImGuiRegister(0x0A0, "REG_HW_FLAGS")]
+		[ImGuiRegister("REG_HW_FLAGS", 0x0A0)]
 		[ImGuiBitDescription("System type; is WSC or greater?", 1)]
 		public bool IsWSCOrGreater { get; protected set; } = false;
-		[ImGuiRegister(0x0A0, "REG_HW_FLAGS")]
+		[ImGuiRegister("REG_HW_FLAGS", 0x0A0)]
 		[ImGuiBitDescription("External bus width; is 16-bit bus?", 2)]
 		public bool Is16BitExtBus { get; protected set; } = false;
-		[ImGuiRegister(0x0A0, "REG_HW_FLAGS")]
+		[ImGuiRegister("REG_HW_FLAGS", 0x0A0)]
 		[ImGuiBitDescription("Cartridge ROM speed; is 1-cycle?", 3)]
 		public bool CartRom1CycleSpeed { get; protected set; } = false;
-		[ImGuiRegister(0x0A0, "REG_HW_FLAGS")]
+		[ImGuiRegister("REG_HW_FLAGS", 0x0A0)]
 		[ImGuiBitDescription("Built-in self test passed", 7)]
 		public bool BuiltInSelfTestOk { get; protected set; } = false;
 
 		/* REG_KEYPAD */
-		[ImGuiRegister(0x0B5, "REG_KEYPAD")]
+		[ImGuiRegister("REG_KEYPAD", 0x0B5)]
 		[ImGuiBitDescription("Y keys check enabled", 4)]
 		public bool KeypadYEnable { get; protected set; } = false;
-		[ImGuiRegister(0x0B5, "REG_KEYPAD")]
+		[ImGuiRegister("REG_KEYPAD", 0x0B5)]
 		[ImGuiBitDescription("X keys check enabled", 5)]
 		public bool KeypadXEnable { get; protected set; } = false;
-		[ImGuiRegister(0x0B5, "REG_KEYPAD")]
+		[ImGuiRegister("REG_KEYPAD", 0x0B5)]
 		[ImGuiBitDescription("Button check enabled", 6)]
 		public bool KeypadButtonEnable { get; protected set; } = false;
 
 		/* REG_INT_xxx */
-		[ImGuiRegister(0x0B0, "REG_INT_BASE")]
+		[ImGuiRegister("REG_INT_BASE", 0x0B0)]
 		public abstract byte InterruptBase { get; protected set; }
-		[ImGuiRegister(0x0B2, "REG_INT_ENABLE")]
+		[ImGuiRegister("REG_INT_ENABLE", 0x0B2)]
 		[ImGuiBitDescription("Interrupt enable bitmask", 4)]
 		[ImGuiFormat("X2")]
 		public byte InterruptEnable { get; protected set; } = 0x00;
-		[ImGuiRegister(0x0B4, "REG_INT_STATUS")]
+		[ImGuiRegister("REG_INT_STATUS", 0x0B4)]
 		[ImGuiBitDescription("Interrupt status bitmask", 4)]
 		[ImGuiFormat("X2")]
 		public byte InterruptStatus => interruptStatus;
 
 		/* REG_SER_DATA */
-		[ImGuiRegister(0x0B1, "REG_SER_DATA")]
+		[ImGuiRegister("REG_SER_DATA", 0x0B1)]
 		[ImGuiBitDescription("Serial data TX/RX")]
 		[ImGuiFormat("X2")]
 		public byte SerialData { get; protected set; } = 0x00;
 
 		/* REG_SER_STATUS */
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Serial enabled", 7)]
 		public bool SerialEnable { get; protected set; } = false;
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Baud rate; is 38400 baud?", 6)]
 		public bool SerialBaudRateSelect { get; protected set; } = false;
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Overrun reset", 5)]
 		public bool SerialOverrunReset { get; protected set; } = false;
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Serial buffer empty?", 2)]
 		public bool SerialSendBufferEmpty { get; protected set; } = false;
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Overrun", 1)]
 		public bool SerialOverrun { get; protected set; } = false;
-		[ImGuiRegister(0x0B3, "REG_SER_STATUS")]
+		[ImGuiRegister("REG_SER_STATUS", 0x0B3)]
 		[ImGuiBitDescription("Data received", 0)]
 		public bool SerialDataReceived { get; protected set; } = false;
 

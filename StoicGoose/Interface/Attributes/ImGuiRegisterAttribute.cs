@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace StoicGoose.Interface.Attributes
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class ImGuiRegisterAttribute : Attribute
 	{
-		public ushort Number { get; set; } = 0;
 		public string Name { get; set; } = string.Empty;
+		public List<ushort> Numbers { get; set; } = new();
 
-		public ImGuiRegisterAttribute(ushort number, string name)
+		public ImGuiRegisterAttribute(string name, params ushort[] numbers)
 		{
-			Number = number;
 			Name = name;
+			Numbers.AddRange(numbers);
 		}
 	}
 }
