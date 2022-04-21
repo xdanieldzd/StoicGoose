@@ -257,7 +257,7 @@ namespace StoicGoose.Emulation.Machines
 		{
 			if (lastBreakpointHit == null)
 			{
-				while (CurrentClockCyclesInLine < DisplayController.ClockCyclesPerLine && lastBreakpointHit == null)
+				while (CurrentClockCyclesInLine < DisplayControllerCommon.HorizontalTotal && lastBreakpointHit == null)
 					RunStep(isManual);
 
 				CurrentClockCyclesInFrame += CurrentClockCyclesInLine;
