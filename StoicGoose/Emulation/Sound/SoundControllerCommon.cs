@@ -14,6 +14,7 @@ namespace StoicGoose.Emulation.Sound
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
 
 		public abstract byte MaxMasterVolume { get; }
+		public abstract int NumChannels { get; }
 
 		readonly int sampleRate, numOutputChannels;
 
@@ -22,9 +23,14 @@ namespace StoicGoose.Emulation.Sound
 		protected readonly SoundChannel3 channel3 = default;
 		protected readonly SoundChannel4 channel4 = default;
 
-		protected readonly List<short> mixedSampleBuffer;
+		protected readonly List<short>[] channelSampleBuffers = default;
+		protected readonly List<short> mixedSampleBuffer = new();
+
 		public event EventHandler<EnqueueSamplesEventArgs> EnqueueSamples;
 		public void OnEnqueueSamples(EnqueueSamplesEventArgs e) { EnqueueSamples?.Invoke(this, e); }
+
+		public short[][] LastEnqueuedChannelSamples { get; private set; } = default;
+		public short[] LastEnqueuedMixedSamples { get; private set; } = Array.Empty<short>();
 
 		readonly double clockRate, refreshRate;
 		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
@@ -52,7 +58,10 @@ namespace StoicGoose.Emulation.Sound
 			channel3 = new SoundChannel3((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)));
 			channel4 = new SoundChannel4((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)));
 
-			mixedSampleBuffer = new List<short>();
+			channelSampleBuffers = new List<short>[NumChannels];
+			for (var i = 0; i < channelSampleBuffers.Length; i++) channelSampleBuffers[i] = new();
+
+			LastEnqueuedChannelSamples = new short[NumChannels][];
 
 			clockRate = MachineCommon.CpuClock;
 			refreshRate = Display.DisplayControllerCommon.VerticalClock;
@@ -114,7 +123,13 @@ namespace StoicGoose.Emulation.Sound
 
 			if (mixedSampleBuffer.Count >= (samplesPerFrame * numOutputChannels))
 			{
-				OnEnqueueSamples(new EnqueueSamplesEventArgs(mixedSampleBuffer.ToArray()));
+				var sampleArray = mixedSampleBuffer.ToArray();
+
+				LastEnqueuedMixedSamples = sampleArray;
+				for (var i = 0; i < NumChannels; i++) LastEnqueuedChannelSamples[i] = channelSampleBuffers[i].ToArray();
+
+				OnEnqueueSamples(new EnqueueSamplesEventArgs(sampleArray));
+
 				FlushSamples();
 			}
 		}
@@ -142,7 +157,13 @@ namespace StoicGoose.Emulation.Sound
 			mixedSampleBuffer.Add((short)(lrSamples[1] * (masterVolume / (double)MaxMasterVolume))); /* Right */
 		}
 
-		public void FlushSamples() => mixedSampleBuffer.Clear();
+		public void FlushSamples()
+		{
+			foreach (var buffer in channelSampleBuffers)
+				buffer.Clear();
+
+			mixedSampleBuffer.Clear();
+		}
 
 		public virtual byte ReadRegister(ushort register)
 		{

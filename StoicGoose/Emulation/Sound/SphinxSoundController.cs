@@ -5,6 +5,7 @@ namespace StoicGoose.Emulation.Sound
 	public class SphinxSoundController : SoundControllerCommon
 	{
 		public override byte MaxMasterVolume => 3;
+		public override int NumChannels => 5;
 
 		readonly SoundChannelHyperVoice channelHyperVoice = default;
 
@@ -29,6 +30,17 @@ namespace StoicGoose.Emulation.Sound
 
 		public override int[] GenerateSample()
 		{
+			channelSampleBuffers[0].Add((short)(channel1.IsEnabled ? (channel1.OutputLeft & 0x07FF) << 5 : 0));
+			channelSampleBuffers[0].Add((short)(channel1.IsEnabled ? (channel1.OutputRight & 0x07FF) << 5 : 0));
+			channelSampleBuffers[1].Add((short)(channel2.IsEnabled ? (channel2.OutputLeft & 0x07FF) << 5 : 0));
+			channelSampleBuffers[1].Add((short)(channel2.IsEnabled ? (channel2.OutputRight & 0x07FF) << 5 : 0));
+			channelSampleBuffers[2].Add((short)(channel3.IsEnabled ? (channel3.OutputLeft & 0x07FF) << 5 : 0));
+			channelSampleBuffers[2].Add((short)(channel3.IsEnabled ? (channel3.OutputRight & 0x07FF) << 5 : 0));
+			channelSampleBuffers[3].Add((short)(channel4.IsEnabled ? (channel4.OutputLeft & 0x07FF) << 5 : 0));
+			channelSampleBuffers[3].Add((short)(channel4.IsEnabled ? (channel4.OutputRight & 0x07FF) << 5 : 0));
+			channelSampleBuffers[4].Add((short)(channelHyperVoice.IsEnabled ? (channelHyperVoice.OutputLeft & 0x07FF) << 5 : 0));
+			channelSampleBuffers[4].Add((short)(channelHyperVoice.IsEnabled ? (channelHyperVoice.OutputRight & 0x07FF) << 5 : 0));
+
 			var mixedLeft = 0;
 			if (channel1.IsEnabled) mixedLeft += channel1.OutputLeft;
 			if (channel2.IsEnabled) mixedLeft += channel2.OutputLeft;

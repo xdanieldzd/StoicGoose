@@ -192,6 +192,7 @@ namespace StoicGoose
 			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
 			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
 			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
+			imGuiHandler.RegisterWindow(new ImGuiSoundVisualizerWindow() { IsWindowOpen = true }, () => emulatorHandler.Machine.SoundController);
 
 			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
 			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
