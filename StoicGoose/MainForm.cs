@@ -42,6 +42,9 @@ namespace StoicGoose
 		ImGuiHandler imGuiHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
+		/* Misc. windows */
+		SoundRecorderForm soundRecorderForm = default;
+
 		/* Misc. runtime variables */
 		bool isInitialized = false;
 		Type machineType = default;
@@ -79,6 +82,8 @@ namespace StoicGoose
 			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
 
 			InitializeHandlers();
+			InitializeWindows();
+
 			VerifyConfiguration();
 
 			SizeAndPositionWindow();
@@ -152,9 +157,6 @@ namespace StoicGoose
 			emulatorHandler.Shutdown();
 
 			Program.SaveConfiguration();
-
-			if (GlobalVariables.EnableLocalDebugIO && soundHandler.IsRecording)
-				soundHandler.SaveRecording(@"D:\Temp\Goose\sound.wav");
 		}
 
 		private void InitializeHandlers()
@@ -170,9 +172,6 @@ namespace StoicGoose
 			soundHandler.SetVolume(1.0f);
 			soundHandler.SetMute(Program.Configuration.Sound.Mute);
 			soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
-
-			if (GlobalVariables.EnableDebugSoundRecording)
-				soundHandler.BeginRecording();
 
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
@@ -236,6 +235,13 @@ namespace StoicGoose
 			};
 
 			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata.InternalEepromFilename);
+		}
+
+		private void InitializeWindows()
+		{
+			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
+
+			emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
 		}
 
 		private void VerifyConfiguration()
@@ -632,6 +638,11 @@ namespace StoicGoose
 			}
 
 			UnpauseEmulation();
+		}
+
+		private void saveWAVToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			soundRecorderForm.Show();
 		}
 
 		private void exitToolStripMenuItem_Click(object sender, EventArgs e)

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -7,7 +6,6 @@ using System.Windows.Forms;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 
-using StoicGoose.IO;
 using StoicGoose.WinForms;
 
 namespace StoicGoose.Handlers
@@ -39,10 +37,6 @@ namespace StoicGoose.Handlers
 		short[] lastSamples = new short[512];
 
 		float volume = 1.0f;
-
-		WaveFileWriter wavWriter = default;
-
-		public bool IsRecording { get; private set; }
 
 		public SoundHandler(int sampleRate, int numChannels)
 		{
@@ -110,26 +104,6 @@ namespace StoicGoose.Handlers
 			sampleQueue.Clear();
 		}
 
-		public void BeginRecording()
-		{
-			wavWriter = new(SampleRate, NumChannels);
-
-			IsRecording = true;
-		}
-
-		public void SaveRecording(string filename)
-		{
-			using var stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-			wavWriter.Save(stream);
-
-			IsRecording = false;
-		}
-
-		public void CancelRecording()
-		{
-			IsRecording = false;
-		}
-
 		private void ThreadMainLoop()
 		{
 			while (true)
@@ -185,9 +159,6 @@ namespace StoicGoose.Handlers
 			}
 
 			sampleQueue.Enqueue(e.Samples.ToArray());
-
-			if (IsRecording)
-				wavWriter.Write(e.Samples);
 		}
 
 		public void ClearSampleBuffer()

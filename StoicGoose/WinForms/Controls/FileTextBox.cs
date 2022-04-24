@@ -3,11 +3,20 @@ using System.Windows.Forms;
 
 namespace StoicGoose.WinForms.Controls
 {
+	public enum FileTextBoxDialogMode { Open, Save }
+
 	public partial class FileTextBox : UserControl
 	{
+		public FileTextBoxDialogMode DialogMode { get; set; } = FileTextBoxDialogMode.Open;
+
 		public string FileName { get; set; } = string.Empty;
 		public string InitialDirectory { get; set; } = string.Empty;
 		public string Filter { get; set; } = string.Empty;
+
+		public bool IsFileSelected => !string.IsNullOrEmpty(FileName);
+
+		public event EventHandler FileSelected;
+		public void OnFileSelected(EventArgs e) => FileSelected?.Invoke(this, e);
 
 		public FileTextBox()
 		{
@@ -22,12 +31,21 @@ namespace StoicGoose.WinForms.Controls
 
 		private void btnBrowse_Click(object sender, EventArgs e)
 		{
-			ofdOpen.FileName = FileName;
-			ofdOpen.InitialDirectory = InitialDirectory;
-			ofdOpen.Filter = Filter;
+			FileDialog fileDialog = DialogMode switch
+			{
+				FileTextBoxDialogMode.Open => ofdOpen,
+				FileTextBoxDialogMode.Save => sfdSave,
+				_ => throw new Exception("Invalid dialog mode"),
+			};
+			fileDialog.FileName = FileName;
+			fileDialog.InitialDirectory = InitialDirectory;
+			fileDialog.Filter = Filter;
 
-			if (ofdOpen.ShowDialog() == DialogResult.OK)
-				txtPath.Text = ofdOpen.FileName;
+			if (fileDialog.ShowDialog() == DialogResult.OK)
+			{
+				txtPath.Text = fileDialog.FileName;
+				OnFileSelected(EventArgs.Empty);
+			}
 		}
 	}
 }

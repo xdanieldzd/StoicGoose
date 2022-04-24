@@ -32,6 +32,7 @@ namespace StoicGoose.WinForms.Controls
 			this.txtPath = new System.Windows.Forms.TextBox();
 			this.btnBrowse = new System.Windows.Forms.Button();
 			this.ofdOpen = new System.Windows.Forms.OpenFileDialog();
+			this.sfdSave = new System.Windows.Forms.SaveFileDialog();
 			this.SuspendLayout();
 			// 
 			// txtPath
@@ -78,5 +79,6 @@ namespace StoicGoose.WinForms.Controls
 		private System.Windows.Forms.TextBox txtPath;
 		private System.Windows.Forms.Button btnBrowse;
 		private System.Windows.Forms.OpenFileDialog ofdOpen;
+		private System.Windows.Forms.SaveFileDialog sfdSave;
 	}
 }

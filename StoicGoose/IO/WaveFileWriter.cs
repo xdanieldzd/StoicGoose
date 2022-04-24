@@ -6,29 +6,48 @@ using System.Text;
 
 namespace StoicGoose.IO
 {
-	public sealed class WaveFileWriter
+	public sealed class WaveFileWriter : IDisposable
 	{
+		readonly Stream outStream = default;
+
 		readonly WaveHeader waveHeader = default;
 		readonly FormatChunk formatChunk = default;
 		readonly DataChunk dataChunk = default;
 
-		public WaveFileWriter(int sampleRate, int numChannels)
+		public WaveFileWriter(string filename, int sampleRate, int numChannels)
 		{
+			outStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+
 			waveHeader = new();
 			formatChunk = new FormatChunk(sampleRate, numChannels);
 			dataChunk = new();
 		}
 
+		~WaveFileWriter()
+		{
+			Dispose();
+		}
+
+		public void Dispose()
+		{
+			outStream.Flush();
+			outStream.Dispose();
+
+			GC.SuppressFinalize(this);
+		}
+
 		public void Write(short[] samples) => dataChunk.Write(samples);
 
-		public void Save(Stream stream)
+		public void Save()
 		{
 			waveHeader.FileLength += formatChunk.ChunkSize + 8;
 			waveHeader.FileLength += dataChunk.ChunkSize + 8;
 
-			stream.Write(waveHeader.Bytes);
-			stream.Write(formatChunk.Bytes);
-			stream.Write(dataChunk.Bytes);
+			outStream.Write(waveHeader.Bytes);
+			outStream.Write(formatChunk.Bytes);
+			outStream.Write(dataChunk.Bytes);
+
+			outStream.Flush();
 		}
 
 		private class WaveHeader
