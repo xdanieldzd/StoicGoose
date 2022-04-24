@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 
 using ImGuiNET;
 
-using StoicGoose.Emulation.Sound;
+using StoicGoose.Core.Sound;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

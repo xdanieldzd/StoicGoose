@@ -1,4 +1,4 @@
-﻿using StoicGoose.Emulation.Machines;
+﻿using StoicGoose.Core.Machines;
 
 namespace StoicGoose.Debugging
 {

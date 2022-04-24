@@ -14,17 +14,19 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using ImGuiNET;
 
 using StoicGoose.Debugging;
+using StoicGoose.Core.Machines;
 using StoicGoose.Emulation;
-using StoicGoose.Emulation.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 using StoicGoose.Interface.Windows;
 using StoicGoose.OpenGL;
 
-using CartridgeMetadata = StoicGoose.Emulation.Cartridges.Metadata;
+using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
 namespace StoicGoose
 {
+	// TODO restore cheats, breakpoints
+
 	public partial class MainForm : Form
 	{
 		/* Constants */
@@ -193,25 +195,23 @@ namespace StoicGoose
 			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
 			imGuiHandler.RegisterWindow(new ImGuiSoundVisualizerWindow() { IsWindowOpen = true }, () => emulatorHandler.Machine.SoundController);
 
-			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
-			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
-			emulatorHandler.Machine.PollInput += (s, e) =>
+			emulatorHandler.Machine.DisplayController.SendFramebuffer = graphicsHandler.UpdateScreen;
+			emulatorHandler.Machine.SoundController.SendSamples = soundHandler.EnqueueSamples;
+
+			emulatorHandler.Machine.ReceiveInput += () =>
 			{
+				var buttonsPressed = new List<string>();
+				var buttonsHeld = new List<string>();
+
 				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
 				if ((screenWindow.IsWindowOpen && screenWindow.IsFocused) || (!screenWindow.IsWindowOpen && !ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)))
-					inputHandler.PollInput(s, e);
+					inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
 
-				if (e.ButtonsPressed.Contains("Volume"))
+				if (buttonsPressed.Contains("Volume"))
 					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
+
+				return (buttonsPressed, buttonsHeld);
 			};
-			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
-			emulatorHandler.Machine.BreakpointHit += (s, e) =>
-			{
-				PauseEmulation();
-				imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
-			};
-			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
-			emulatorHandler.ThreadHasUnpaused += emulatorHandler.Machine.ThreadHasUnpaused;
 
 			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
@@ -229,7 +229,6 @@ namespace StoicGoose
 				if (!isScreenWindowOpen) graphicsHandler.DrawFrame();
 				else graphicsHandler.BindTextures();
 
-				emulatorHandler.Machine.DrawCheatsAndBreakpointWindows(); // TODO: refactor cheats handling
 				logWindow.Draw(null);
 				imGuiHandler.EndFrame();
 			};
@@ -241,7 +240,7 @@ namespace StoicGoose
 		{
 			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
 
-			emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
+			//emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
 		}
 
 		private void VerifyConfiguration()
@@ -509,8 +508,6 @@ namespace StoicGoose
 			CreateRecentFilesMenu();
 
 			LoadRam();
-			LoadCheatList();
-			LoadBreakpoints();
 
 			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
@@ -535,24 +532,10 @@ namespace StoicGoose
 				emulatorHandler.Machine.LoadSaveData(data);
 		}
 
-		private void LoadCheatList()
-		{
-			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
-			emulatorHandler.Machine.LoadCheatList(File.Exists(path) ? path.DeserializeFromFile<List<MachineCommon.Cheat>>() : new List<MachineCommon.Cheat>());
-		}
-
-		private void LoadBreakpoints()
-		{
-			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
-			emulatorHandler.Machine.LoadBreakpoints(File.Exists(path) ? path.DeserializeFromFile<List<Breakpoint>>() : new List<Breakpoint>());
-		}
-
 		private void SaveAllData()
 		{
 			SaveInternalEeprom();
 			SaveRam();
-			SaveCheatList();
-			SaveBreakpoints();
 		}
 
 		private void SaveRam()
@@ -564,24 +547,6 @@ namespace StoicGoose
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
-		}
-
-		private void SaveCheatList()
-		{
-			var data = emulatorHandler.Machine.GetCheatList();
-			if (data.Count == 0) return;
-
-			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
-			data.SerializeToFile(path);
-		}
-
-		private void SaveBreakpoints()
-		{
-			var data = emulatorHandler.Machine.GetBreakpoints();
-			if (data.Count == 0) return;
-
-			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
-			data.SerializeToFile(path);
 		}
 
 		private void SaveInternalEeprom()
@@ -714,7 +679,7 @@ namespace StoicGoose
 
 		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.CheatsWindow.IsWindowOpen = true;
+			//
 		}
 
 		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -749,7 +714,7 @@ namespace StoicGoose
 
 		private void breakpointsToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.BreakpointWindow.IsWindowOpen = true;
+			//
 		}
 
 		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)

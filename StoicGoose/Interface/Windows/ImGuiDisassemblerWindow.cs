@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 
 using ImGuiNET;
 
-using StoicGoose.Debugging;
+using StoicGoose.Core.CPU;
 using StoicGoose.Emulation;
-using StoicGoose.Emulation.CPU;
+using StoicGoose.Debugging;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
@@ -384,11 +384,11 @@ namespace StoicGoose.Interface.Windows
 					if (handler.IsPaused)
 					{
 						ImGui.PushButtonRepeat(true);
-						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep(true);
+						if (ImGui.Button("Step Instruction", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunStep();
 						ImGui.SameLine();
-						if (ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunLine(true);
+						if (ImGui.Button("Step Scanline", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunLine();
 						ImGui.SameLine();
-						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame(true);
+						if (ImGui.Button("Step Frame", new NumericsVector2(buttonWidth, 0f))) handler.Machine.RunFrame();
 						ImGui.PopButtonRepeat();
 					}
 					else

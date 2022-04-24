@@ -95,6 +95,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\StoicGoose.Common\StoicGoose.Common.csproj" />
+    <ProjectReference Include="..\StoicGoose.Core\StoicGoose.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

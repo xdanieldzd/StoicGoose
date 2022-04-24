@@ -1,5 +1,5 @@
-﻿using StoicGoose.Emulation.CPU;
-using StoicGoose.Emulation.Machines;
+﻿using StoicGoose.Core.CPU;
+using StoicGoose.Core.Machines;
 
 namespace StoicGoose.Debugging
 {

@@ -148,7 +148,7 @@ namespace StoicGoose.Handlers
 			AL.Source(source, ALSourcei.EfxDirectFilter, enable ? filter : 0);
 		}
 
-		public void EnqueueSamples(object sender, EnqueueSamplesEventArgs e)
+		public void EnqueueSamples(short[] samples)
 		{
 			if (sampleQueue.Count > MaxQueueLength)
 			{
@@ -158,7 +158,7 @@ namespace StoicGoose.Handlers
 						sampleQueue.Dequeue();
 			}
 
-			sampleQueue.Enqueue(e.Samples.ToArray());
+			sampleQueue.Enqueue(samples.ToArray());
 		}
 
 		public void ClearSampleBuffer()

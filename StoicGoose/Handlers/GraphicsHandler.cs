@@ -7,14 +7,13 @@ using System.Linq;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using StoicGoose.Emulation.Machines;
+using StoicGoose.Core.Machines;
 using StoicGoose.Extensions;
 using StoicGoose.OpenGL;
 using StoicGoose.OpenGL.Shaders;
 using StoicGoose.OpenGL.Shaders.Bundles;
 using StoicGoose.OpenGL.Uniforms;
 using StoicGoose.OpenGL.Vertices;
-using StoicGoose.WinForms;
 
 using Buffer = StoicGoose.OpenGL.Buffer;
 using ShaderProgram = StoicGoose.OpenGL.Shaders.Program;
@@ -254,19 +253,19 @@ namespace StoicGoose.Handlers
 			}
 		}
 
-		public void UpdateScreen(object sender, UpdateScreenEventArgs e)
+		public void UpdateScreen(byte[] framebuffer)
 		{
 			if (wasShaderChanged)
 			{
 				for (var i = 0; i < commonBundleManifest.Samplers; i++)
-					displayTextures[i].Update(e.Framebuffer);
+					displayTextures[i].Update(framebuffer);
 
 				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Shader changed successfully.");
 
 				wasShaderChanged = false;
 			}
 			else
-				displayTextures[lastTextureUpdate].Update(e.Framebuffer);
+				displayTextures[lastTextureUpdate].Update(framebuffer);
 
 			lastTextureUpdate = (lastTextureUpdate + 1) % commonBundleManifest.Samplers;
 		}

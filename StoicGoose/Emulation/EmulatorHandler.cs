@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 
-using StoicGoose.Emulation.Machines;
+using StoicGoose.Core.Machines;
 
 namespace StoicGoose.Emulation
 {
@@ -127,7 +127,7 @@ namespace StoicGoose.Emulation
 					else
 						lastTime = stopWatch.Elapsed.TotalMilliseconds;
 
-					Machine.RunFrame(false);
+					Machine.RunFrame();
 				}
 				else
 					lastTime = stopWatch.Elapsed.TotalMilliseconds;
