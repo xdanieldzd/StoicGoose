@@ -1,4 +1,4 @@
-﻿using static StoicGoose.Common.Utilities;
+﻿using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.Core.Display
 {
@@ -30,7 +30,7 @@ namespace StoicGoose.Core.Display
 
 			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
 
-			if (color != 0 || (color == 0 && !IsBitSet(tilePal, 2)))
+			if (color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2)))
 				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
 		}
 
@@ -48,7 +48,7 @@ namespace StoicGoose.Core.Display
 
 			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
 
-			if (color != 0 || (color == 0 && !IsBitSet(tilePal, 2)))
+			if (color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2)))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
@@ -87,7 +87,7 @@ namespace StoicGoose.Core.Display
 
 					var color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
 
-					if ((color != 0 || (color == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
+					if ((color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 							WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
@@ -134,12 +134,12 @@ namespace StoicGoose.Core.Display
 
 				case 0x14:
 					/* REG_LCD_CTRL */
-					ChangeBit(ref retVal, 0, lcdActive);
+					BitHandling.ChangeBit(ref retVal, 0, lcdActive);
 					break;
 
 				case 0x60:
 					/* REG_DISP_MODE */
-					ChangeBit(ref retVal, 5, displayPackedFormatSet);
+					BitHandling.ChangeBit(ref retVal, 5, displayPackedFormatSet);
 					break;
 
 				default:
@@ -173,12 +173,12 @@ namespace StoicGoose.Core.Display
 
 				case 0x14:
 					/* REG_LCD_CTRL */
-					lcdActive = IsBitSet(value, 0);
+					lcdActive = BitHandling.IsBitSet(value, 0);
 					break;
 
 				case 0x60:
 					/* REG_DISP_MODE */
-					displayPackedFormatSet = IsBitSet(value, 5);
+					displayPackedFormatSet = BitHandling.IsBitSet(value, 5);
 					break;
 
 				default:

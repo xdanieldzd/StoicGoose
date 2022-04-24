@@ -9,7 +9,7 @@ using StoicGoose.Core.Sound;
 
 using StoicGoose.Common;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Machines
 {

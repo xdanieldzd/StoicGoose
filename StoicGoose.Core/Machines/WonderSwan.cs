@@ -1,7 +1,7 @@
 ﻿using StoicGoose.Core.Display;
 using StoicGoose.Core.Sound;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Machines
 {
@@ -129,38 +129,39 @@ namespace StoicGoose.Core.Machines
 
 				case 0xB5:
 					/* REG_KEYPAD */
-
-					/* Get input from UI */
-					var buttonsHeld = ReceiveInput?.Invoke().buttonsHeld;
-
 					ChangeBit(ref retVal, 4, KeypadYEnable);
 					ChangeBit(ref retVal, 5, KeypadXEnable);
 					ChangeBit(ref retVal, 6, KeypadButtonEnable);
 
-					if (buttonsHeld.Count > 0)
-						RaiseInterrupt(1);
-
-					if (KeypadYEnable)
+					/* Get input from UI */
+					var buttonsHeld = ReceiveInput?.Invoke().buttonsHeld;
+					if (buttonsHeld != null)
 					{
-						if (buttonsHeld.Contains("Y1")) ChangeBit(ref retVal, 0, true);
-						if (buttonsHeld.Contains("Y2")) ChangeBit(ref retVal, 1, true);
-						if (buttonsHeld.Contains("Y3")) ChangeBit(ref retVal, 2, true);
-						if (buttonsHeld.Contains("Y4")) ChangeBit(ref retVal, 3, true);
-					}
+						if (buttonsHeld.Count > 0)
+							RaiseInterrupt(1);
 
-					if (KeypadXEnable)
-					{
-						if (buttonsHeld.Contains("X1")) ChangeBit(ref retVal, 0, true);
-						if (buttonsHeld.Contains("X2")) ChangeBit(ref retVal, 1, true);
-						if (buttonsHeld.Contains("X3")) ChangeBit(ref retVal, 2, true);
-						if (buttonsHeld.Contains("X4")) ChangeBit(ref retVal, 3, true);
-					}
+						if (KeypadYEnable)
+						{
+							if (buttonsHeld.Contains("Y1")) ChangeBit(ref retVal, 0, true);
+							if (buttonsHeld.Contains("Y2")) ChangeBit(ref retVal, 1, true);
+							if (buttonsHeld.Contains("Y3")) ChangeBit(ref retVal, 2, true);
+							if (buttonsHeld.Contains("Y4")) ChangeBit(ref retVal, 3, true);
+						}
 
-					if (KeypadButtonEnable)
-					{
-						if (buttonsHeld.Contains("Start")) ChangeBit(ref retVal, 1, true);
-						if (buttonsHeld.Contains("A")) ChangeBit(ref retVal, 2, true);
-						if (buttonsHeld.Contains("B")) ChangeBit(ref retVal, 3, true);
+						if (KeypadXEnable)
+						{
+							if (buttonsHeld.Contains("X1")) ChangeBit(ref retVal, 0, true);
+							if (buttonsHeld.Contains("X2")) ChangeBit(ref retVal, 1, true);
+							if (buttonsHeld.Contains("X3")) ChangeBit(ref retVal, 2, true);
+							if (buttonsHeld.Contains("X4")) ChangeBit(ref retVal, 3, true);
+						}
+
+						if (KeypadButtonEnable)
+						{
+							if (buttonsHeld.Contains("Start")) ChangeBit(ref retVal, 1, true);
+							if (buttonsHeld.Contains("A")) ChangeBit(ref retVal, 2, true);
+							if (buttonsHeld.Contains("B")) ChangeBit(ref retVal, 3, true);
+						}
 					}
 					break;
 

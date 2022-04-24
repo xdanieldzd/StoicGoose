@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using StoicGoose.Common;
+using OpenTK.Mathematics;
 
 using StoicGoose.Core.Display;
 

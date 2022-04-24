@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using StoicGoose.Core.Machines;
+using StoicGoose.Common.Utilities;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Cartridges
 {
@@ -125,7 +126,7 @@ namespace StoicGoose.Core.Cartridges
 				else if (!intFE && !intME && intAE)
 				{
 					/* Alarm interrupt output */
-					if (alarmTime.pm == isPm && BcdToDecimal(alarmTime.hour) == hour && BcdToDecimal(alarmTime.minute) == minute)
+					if (alarmTime.pm == isPm && Bcd.BcdToDecimal(alarmTime.hour) == hour && Bcd.BcdToDecimal(alarmTime.minute) == minute)
 						interrupt = true;
 				}
 
@@ -218,26 +219,26 @@ namespace StoicGoose.Core.Cartridges
 						wsData = 0;
 						switch (payloadIndex)
 						{
-							case 0: wsData = (byte)DecimalToBcd(year); break;
-							case 1: wsData = (byte)DecimalToBcd(month); break;
-							case 2: wsData = (byte)DecimalToBcd(day); break;
-							case 3: wsData = (byte)DecimalToBcd(dayOfWeek); break;
-							case 4: wsData = (byte)DecimalToBcd(hour); ChangeBit(ref wsData, 7, isPm); break;
-							case 5: wsData = (byte)DecimalToBcd(minute); break;
-							case 6: wsData = (byte)DecimalToBcd(second); ChangeBit(ref wsData, 7, isTestModeActive); break;
+							case 0: wsData = (byte)Bcd.DecimalToBcd(year); break;
+							case 1: wsData = (byte)Bcd.DecimalToBcd(month); break;
+							case 2: wsData = (byte)Bcd.DecimalToBcd(day); break;
+							case 3: wsData = (byte)Bcd.DecimalToBcd(dayOfWeek); break;
+							case 4: wsData = (byte)Bcd.DecimalToBcd(hour); ChangeBit(ref wsData, 7, isPm); break;
+							case 5: wsData = (byte)Bcd.DecimalToBcd(minute); break;
+							case 6: wsData = (byte)Bcd.DecimalToBcd(second); ChangeBit(ref wsData, 7, isTestModeActive); break;
 						}
 					}
 					else
 					{
 						switch (payloadIndex)
 						{
-							case 0: year = (byte)BcdToDecimal(wsData); break;
-							case 1: month = (byte)BcdToDecimal(wsData); break;
-							case 2: day = (byte)BcdToDecimal(wsData); break;
-							case 3: dayOfWeek = (byte)BcdToDecimal(wsData); break;
-							case 4: hour = (byte)(BcdToDecimal(wsData) & 0b01111111); isPm = IsBitSet(wsData, 7); break;
-							case 5: minute = (byte)BcdToDecimal(wsData); break;
-							case 6: second = (byte)(BcdToDecimal(wsData) & 0b01111111); isTestModeActive = IsBitSet(wsData, 7); break;
+							case 0: year = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 1: month = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 2: day = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 3: dayOfWeek = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 4: hour = (byte)(Bcd.BcdToDecimal(wsData) & 0b01111111); isPm = IsBitSet(wsData, 7); break;
+							case 5: minute = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 6: second = (byte)(Bcd.BcdToDecimal(wsData) & 0b01111111); isTestModeActive = IsBitSet(wsData, 7); break;
 						}
 					}
 					break;
@@ -249,18 +250,18 @@ namespace StoicGoose.Core.Cartridges
 						wsData = 0;
 						switch (payloadIndex)
 						{
-							case 0: wsData = (byte)DecimalToBcd(hour); ChangeBit(ref wsData, 7, isPm); break;
-							case 1: wsData = (byte)DecimalToBcd(minute); break;
-							case 2: wsData = (byte)DecimalToBcd(second); ChangeBit(ref wsData, 7, isTestModeActive); break;
+							case 0: wsData = (byte)Bcd.DecimalToBcd(hour); ChangeBit(ref wsData, 7, isPm); break;
+							case 1: wsData = (byte)Bcd.DecimalToBcd(minute); break;
+							case 2: wsData = (byte)Bcd.DecimalToBcd(second); ChangeBit(ref wsData, 7, isTestModeActive); break;
 						}
 					}
 					else
 					{
 						switch (payloadIndex)
 						{
-							case 0: hour = (byte)(BcdToDecimal(wsData) & 0b01111111); isPm = IsBitSet(wsData, 7); break;
-							case 1: minute = (byte)BcdToDecimal(wsData); break;
-							case 2: second = (byte)(BcdToDecimal(wsData) & 0b01111111); isTestModeActive = IsBitSet(wsData, 7); break;
+							case 0: hour = (byte)(Bcd.BcdToDecimal(wsData) & 0b01111111); isPm = IsBitSet(wsData, 7); break;
+							case 1: minute = (byte)Bcd.BcdToDecimal(wsData); break;
+							case 2: second = (byte)(Bcd.BcdToDecimal(wsData) & 0b01111111); isTestModeActive = IsBitSet(wsData, 7); break;
 						}
 					}
 					break;

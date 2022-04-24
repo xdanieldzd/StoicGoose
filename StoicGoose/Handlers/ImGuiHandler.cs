@@ -10,16 +10,17 @@ using OpenTK.WinForms;
 
 using ImGuiNET;
 
+using StoicGoose.Common;
 using StoicGoose.Interface.Windows;
-using StoicGoose.OpenGL;
-using StoicGoose.OpenGL.Shaders;
-using StoicGoose.OpenGL.Uniforms;
-using StoicGoose.OpenGL.Vertices;
+using StoicGoose.Common.OpenGL;
+using StoicGoose.Common.OpenGL.Shaders;
+using StoicGoose.Common.OpenGL.Uniforms;
+using StoicGoose.Common.OpenGL.Vertices;
 
 using NumericsVector2 = System.Numerics.Vector2;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
-using Buffer = StoicGoose.OpenGL.Buffer;
-using ShaderProgram = StoicGoose.OpenGL.Shaders.Program;
+using Buffer = StoicGoose.Common.OpenGL.Buffer;
+using ShaderProgram = StoicGoose.Common.OpenGL.Shaders.Program;
 
 namespace StoicGoose.Handlers
 {

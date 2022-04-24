@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
+using StoicGoose.Common;
+
 namespace StoicGoose.Handlers
 {
 	public sealed class DatabaseHandler

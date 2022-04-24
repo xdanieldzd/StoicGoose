@@ -7,18 +7,18 @@ using System.Linq;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
+using StoicGoose.Common;
+using StoicGoose.Common.Extensions;
+using StoicGoose.Common.OpenGL;
+using StoicGoose.Common.OpenGL.Shaders;
+using StoicGoose.Common.OpenGL.Shaders.Bundles;
+using StoicGoose.Common.OpenGL.Uniforms;
+using StoicGoose.Common.OpenGL.Vertices;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
-using StoicGoose.Extensions;
-using StoicGoose.OpenGL;
-using StoicGoose.OpenGL.Shaders;
-using StoicGoose.OpenGL.Shaders.Bundles;
-using StoicGoose.OpenGL.Uniforms;
-using StoicGoose.OpenGL.Vertices;
 
-using Buffer = StoicGoose.OpenGL.Buffer;
-using ShaderProgram = StoicGoose.OpenGL.Shaders.Program;
-
-using static StoicGoose.Utilities;
+using Buffer = StoicGoose.Common.OpenGL.Buffer;
+using ShaderProgram = StoicGoose.Common.OpenGL.Shaders.Program;
 
 namespace StoicGoose.Handlers
 {
@@ -81,7 +81,7 @@ namespace StoicGoose.Handlers
 
 		public Texture DisplayTexture => displayTextures[lastTextureUpdate];
 
-		public GraphicsHandler(MetadataBase metadata)
+		public GraphicsHandler(MetadataBase metadata, string initialShaderName)
 		{
 			this.metadata = metadata;
 
@@ -94,14 +94,14 @@ namespace StoicGoose.Handlers
 			InitializeVertexArray();
 			InitializeBaseShaders();
 
-			ChangeShader(Program.Configuration.Video.Shader);
+			ChangeShader(initialShaderName);
 		}
 
 		private List<string> EnumerateShaders()
 		{
 			var shaderNames = new List<string>();
 
-			if (!string.IsNullOrEmpty(GetEmbeddedShaderBundleManifest(DefaultShaderName)))
+			if (!string.IsNullOrEmpty(Resources.GetEmbeddedShaderFile($"{DefaultShaderName}.{DefaultManifestFilename}")))
 				shaderNames.Add(DefaultShaderName);
 
 			foreach (var file in new DirectoryInfo(Program.ShaderPath).EnumerateFiles("*.json", SearchOption.AllDirectories))
@@ -131,7 +131,7 @@ namespace StoicGoose.Handlers
 		{
 			foreach (var (name, (filename, _)) in metadata.StatusIcons)
 			{
-				iconTextures.Add(name, new Texture(GetEmbeddedSystemIcon(filename), TextureMinFilter.Linear, TextureMagFilter.Linear));
+				iconTextures.Add(name, new Texture(Resources.GetEmbeddedSystemIcon(filename), TextureMinFilter.Linear, TextureMagFilter.Linear));
 				iconModelviewMatrices.Add(name, new Matrix4Uniform(defaultModelviewMatrixName));
 			}
 		}
@@ -156,16 +156,16 @@ namespace StoicGoose.Handlers
 
 		private void InitializeBaseShaders()
 		{
-			commonVertexShaderSource = GetEmbeddedShaderSource("Vertex.glsl");
-			commonFragmentShaderBaseSource = GetEmbeddedShaderSource("FragmentBase.glsl");
+			commonVertexShaderSource = Resources.GetEmbeddedShaderFile("Vertex.glsl");
+			commonFragmentShaderBaseSource = Resources.GetEmbeddedShaderFile("FragmentBase.glsl");
 		}
 
 		private (BundleManifest, ShaderProgram) LoadShaderBundle(string name)
 		{
 			string manifestJson, fragmentSource;
 
-			if (!string.IsNullOrEmpty(manifestJson = GetEmbeddedShaderBundleManifest(name)))
-				fragmentSource = GetEmbeddedShaderBundleSource(name);
+			if (!string.IsNullOrEmpty(manifestJson = Resources.GetEmbeddedShaderFile($"{name}.{DefaultManifestFilename}")))
+				fragmentSource = Resources.GetEmbeddedShaderFile($"{name}.{DefaultSourceFilename}");
 			else
 			{
 				var externalManifestFile = Path.Combine(Program.ShaderPath, name, DefaultManifestFilename);

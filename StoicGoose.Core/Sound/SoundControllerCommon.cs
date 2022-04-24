@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using StoicGoose.Core.Machines;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Sound
 {

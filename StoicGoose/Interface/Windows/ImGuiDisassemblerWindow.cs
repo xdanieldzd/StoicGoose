@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 
 using StoicGoose.Core.CPU;
-using StoicGoose.Emulation;
+using StoicGoose.Handlers;
 using StoicGoose.Debugging;
 
 using NumericsVector2 = System.Numerics.Vector2;

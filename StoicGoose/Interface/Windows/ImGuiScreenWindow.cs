@@ -2,7 +2,7 @@
 
 using ImGuiNET;
 
-using StoicGoose.OpenGL;
+using StoicGoose.Common.OpenGL;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

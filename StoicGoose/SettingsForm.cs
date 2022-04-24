@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-using StoicGoose.DataStorage;
+using StoicGoose.Common;
 
 using static StoicGoose.WinForms.ControlHelpers;
 
@@ -18,7 +18,7 @@ namespace StoicGoose
 
 			InitializePages();
 
-			pbBackground.BackgroundImage = Utilities.GetEmbeddedBitmap("Assets.Goose.png");
+			pbBackground.BackgroundImage = Common.Utilities.Resources.GetEmbeddedBitmap("Assets.Goose.png");
 			pbBackground.BackgroundImageLayout = ImageLayout.Zoom;
 		}
 

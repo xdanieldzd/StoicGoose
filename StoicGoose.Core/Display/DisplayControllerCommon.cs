@@ -2,7 +2,7 @@
 
 using StoicGoose.Core.Machines;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Display
 {
@@ -231,8 +231,19 @@ namespace StoicGoose.Core.Display
 			/* Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
 			 * https://forum.fobby.net/index.php?t=msg&goto=6085 */
 
-			if (x0 > x1) Swap(ref x0, ref x1);
-			if (y0 > y1) Swap(ref y0, ref y1);
+			if (x0 > x1)
+			{
+				var tmp = x0;
+				x0 = x1;
+				x1 = tmp;
+			}
+
+			if (y0 > y1)
+			{
+				var tmp = y0;
+				y0 = y1;
+				y1 = tmp;
+			}
 		}
 
 		protected bool IsInsideSCR2Window(int y, int x)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-using static StoicGoose.Common.Utilities;
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.EEPROMs
 {

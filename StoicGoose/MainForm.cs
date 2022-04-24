@@ -13,13 +13,13 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using ImGuiNET;
 
-using StoicGoose.Debugging;
+using StoicGoose.Common;
 using StoicGoose.Core.Machines;
-using StoicGoose.Emulation;
+using StoicGoose.Debugging;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 using StoicGoose.Interface.Windows;
-using StoicGoose.OpenGL;
+using StoicGoose.Common.OpenGL;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
@@ -83,10 +83,10 @@ namespace StoicGoose
 
 			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
 
-			InitializeHandlers();
-			InitializeWindows();
-
+			InitializeEmulatorHandler();
 			VerifyConfiguration();
+			InitializeOtherHandlers();
+			InitializeWindows();
 
 			SizeAndPositionWindow();
 			SetWindowTitleAndStatus();
@@ -161,14 +161,40 @@ namespace StoicGoose
 			Program.SaveConfiguration();
 		}
 
-		private void InitializeHandlers()
+		private void InitializeEmulatorHandler()
+		{
+			emulatorHandler = new EmulatorHandler(machineType);
+			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
+		}
+
+		private void VerifyConfiguration()
+		{
+			var metadata = emulatorHandler.Machine.Metadata;
+
+			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
+			{
+				if (!Program.Configuration.Input.GameControls.ContainsKey(button))
+					Program.Configuration.Input.GameControls[button] = new();
+			}
+
+			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
+			{
+				if (!Program.Configuration.Input.SystemControls.ContainsKey(button))
+					Program.Configuration.Input.SystemControls[button] = new();
+			}
+
+			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize > maxScreenSizeFactor)
+				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
+
+			if (string.IsNullOrEmpty(Program.Configuration.Video.Shader) || (graphicsHandler != null && !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader)))
+				Program.Configuration.Video.Shader = GraphicsHandler.DefaultShaderName;
+		}
+
+		private void InitializeOtherHandlers()
 		{
 			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
 
-			emulatorHandler = new EmulatorHandler(machineType);
-			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
-
-			graphicsHandler = new GraphicsHandler(emulatorHandler.Machine.Metadata) { IsVerticalOrientation = isVerticalOrientation };
+			graphicsHandler = new GraphicsHandler(emulatorHandler.Machine.Metadata, Program.Configuration.Video.Shader) { IsVerticalOrientation = isVerticalOrientation };
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
@@ -241,29 +267,6 @@ namespace StoicGoose
 			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
 
 			//emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
-		}
-
-		private void VerifyConfiguration()
-		{
-			var metadata = emulatorHandler.Machine.Metadata;
-
-			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
-			{
-				if (!Program.Configuration.Input.GameControls.ContainsKey(button))
-					Program.Configuration.Input.GameControls[button] = new();
-			}
-
-			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
-			{
-				if (!Program.Configuration.Input.SystemControls.ContainsKey(button))
-					Program.Configuration.Input.SystemControls[button] = new();
-			}
-
-			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize > maxScreenSizeFactor)
-				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
-
-			if (Program.Configuration.Video.Shader == string.Empty || !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader))
-				Program.Configuration.Video.Shader = GraphicsHandler.DefaultShaderName;
 		}
 
 		private void SizeAndPositionWindow()
