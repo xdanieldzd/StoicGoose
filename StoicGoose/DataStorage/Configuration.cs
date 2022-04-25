@@ -2,7 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
-namespace StoicGoose.Common
+using StoicGoose.Common;
+
+namespace StoicGoose.DataStorage
 {
 	public sealed class Configuration : ConfigurationBase<Configuration>
 	{

@@ -22,7 +22,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		protected override void DrawWindow(object userData)
 		{
-			if (userData is not (Texture texture, bool vertical, float fps)) return;
+			if (userData is not (Texture texture, bool vertical)) return;
 
 			var textureSize = new NumericsVector2(
 				!vertical ? texture.Size.X : texture.Size.Y,
@@ -69,8 +69,6 @@ namespace StoicGoose.GLWindow.Interface
 					new IntPtr(texture.Handle),
 					pos[0], pos[1], pos[2], pos[3],
 					uvs[0], uvs[1], uvs[2], uvs[3]);
-
-				ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.Text)), $"{fps:0.00} fps");
 
 				if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
 					ImGui.OpenPopup("context");

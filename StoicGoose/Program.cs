@@ -6,6 +6,7 @@ using System.Windows.Forms;
 
 using StoicGoose.Common;
 using StoicGoose.Common.Extensions;
+using StoicGoose.DataStorage;
 
 namespace StoicGoose
 {

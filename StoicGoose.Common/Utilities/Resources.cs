@@ -8,7 +8,7 @@ namespace StoicGoose.Common.Utilities
 	{
 		private static Stream GetEmbeddedResourceStream(string name)
 		{
-			var assembly = Assembly.GetExecutingAssembly();
+			var assembly = Assembly.GetEntryAssembly();
 			name = $"{assembly.GetName().Name}.{name}";
 			return assembly.GetManifestResourceStream(name);
 		}

@@ -16,6 +16,7 @@ namespace StoicGoose.Common.OpenGL
 		CullFaceMode cullFaceMode = CullFaceMode.Back;
 		Vector4i scissorBox = Vector4i.Zero;
 		Color clearColor = Color.Black;
+		Vector4i viewport = Vector4i.Zero;
 
 		public void Enable(EnableCap cap) => SetCap(cap, true);
 		public void Disable(EnableCap cap) => SetCap(cap, false);
@@ -23,7 +24,10 @@ namespace StoicGoose.Common.OpenGL
 		public void SetBlending(BlendingFactor source, BlendingFactor dest) { blendSource = source; blendDest = dest; }
 		public void SetCullFace(CullFaceMode mode) => cullFaceMode = mode;
 		public void SetScissor(Vector4i box) => scissorBox = box;
+		public void SetScissor(int x, int y, int width, int height) => scissorBox = new(x, y, width, height);
 		public void SetClearColor(Color color) => clearColor = color;
+		public void SetViewport(Vector4i vp) => viewport = vp;
+		public void SetViewport(int x, int y, int width, int height) => viewport = new(x, y, width, height);
 
 		private void SetCap(EnableCap cap, bool value)
 		{
@@ -58,6 +62,9 @@ namespace StoicGoose.Common.OpenGL
 			SubmitState(EnableCap.Blend, blendEnable);
 			SubmitState(EnableCap.CullFace, cullFaceEnable);
 			SubmitState(EnableCap.ScissorTest, scissorTestEnable);
+
+			if (lastState?.viewport != viewport)
+				GL.Viewport(viewport.X, viewport.Y, viewport.Z, viewport.W);
 
 			lastState = (State)MemberwiseClone();
 		}

@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-using StoicGoose.Common;
+using StoicGoose.DataStorage;
 
 using static StoicGoose.WinForms.ControlHelpers;
 

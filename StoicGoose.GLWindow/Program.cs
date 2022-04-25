@@ -16,14 +16,8 @@ namespace StoicGoose.GLWindow
 	{
 		const string jsonConfigFileName = "Config.json";
 
-		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
-		const string cheatDataDirectoryName = "Cheats";
 		const string debuggingDataDirectoryName = "Debugging";
-
-		const string assetsDirectoryName = "Assets";
-		const string shaderDirectoryName = "Shaders";
-		const string noIntroDatDirectoryName = "No-Intro";
 
 		readonly static FileVersionInfo assemblyVersionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
 
@@ -41,26 +35,12 @@ namespace StoicGoose.GLWindow
 		public static string CheatsDataPath { get; } = string.Empty;
 		public static string DebuggingDataPath { get; } = string.Empty;
 
-		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-		readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
-
-		public static string ShaderPath { get; } = string.Empty;
-		public static string NoIntroDatPath { get; } = string.Empty;
-
 		static Program()
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
-			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
-			Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
-
-			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
-				throw new DirectoryNotFoundException("Shader directory missing");
-
-			if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
-				throw new DirectoryNotFoundException("No-Intro .dat directory missing");
 		}
 
 		static void Main(string[] _)

@@ -87,9 +87,9 @@ namespace StoicGoose.GLWindow
 			gameWindow = window;
 			gameWindow.TextInput += (e) => pressedChars.Add((char)e.Unicode);
 
-			imguiContext = ImGuiNET.ImGui.CreateContext();
-			ImGuiNET.ImGui.SetCurrentContext(imguiContext);
-			ImGuiNET.ImGui.StyleColorsDark();
+			imguiContext = ImGui.CreateContext();
+			ImGui.SetCurrentContext(imguiContext);
+			ImGui.StyleColorsDark();
 
 			renderState.Disable(EnableCap.CullFace);
 			renderState.Disable(EnableCap.DepthTest);
@@ -103,7 +103,7 @@ namespace StoicGoose.GLWindow
 				ShaderFactory.FromSource(ShaderType.VertexShader, vertexShaderSource),
 				ShaderFactory.FromSource(ShaderType.FragmentShader, fragmentShaderSource));
 
-			var io = ImGuiNET.ImGui.GetIO();
+			var io = ImGui.GetIO();
 			io.Fonts.AddFontDefault();
 			io.Fonts.AddFontDefault();// TODO jpn font
 
@@ -140,7 +140,7 @@ namespace StoicGoose.GLWindow
 
 		public void Dispose()
 		{
-			ImGuiNET.ImGui.DestroyContext(imguiContext);
+			ImGui.DestroyContext(imguiContext);
 
 			vertexBuffer?.Dispose();
 			indexBuffer?.Dispose();
@@ -154,7 +154,9 @@ namespace StoicGoose.GLWindow
 
 		public void Resize(int width, int height)
 		{
-			var io = ImGuiNET.ImGui.GetIO();
+			renderState.SetViewport(0, 0, width, height);
+
+			var io = ImGui.GetIO();
 			io.DisplaySize = new NumericsVector2(width, height);
 
 			projectionMatrix.Value = Matrix4.CreateOrthographicOffCenter(0f, io.DisplaySize.X, io.DisplaySize.Y, 0f, -1f, 1f);
@@ -168,7 +170,7 @@ namespace StoicGoose.GLWindow
 			var mouseState = gameWindow.MouseState;
 			var keyboardState = gameWindow.KeyboardState;
 
-			var io = ImGuiNET.ImGui.GetIO();
+			var io = ImGui.GetIO();
 			io.MouseDown[0] = mouseState[MouseButton.Left];
 			io.MouseDown[1] = mouseState[MouseButton.Right];
 			io.MouseDown[2] = mouseState[MouseButton.Middle];
@@ -218,7 +220,7 @@ namespace StoicGoose.GLWindow
 
 			UpdateInputState();
 
-			ImGuiNET.ImGui.NewFrame();
+			ImGui.NewFrame();
 
 			wasFrameBegun = true;
 		}
@@ -230,8 +232,8 @@ namespace StoicGoose.GLWindow
 			foreach (var (window, getUserDataFunc) in windowList)
 				window.Draw(getUserDataFunc());
 
-			ImGuiNET.ImGui.Render();
-			RenderDrawData(ImGuiNET.ImGui.GetDrawData());
+			ImGui.Render();
+			RenderDrawData(ImGui.GetDrawData());
 
 			wasFrameBegun = false;
 		}
@@ -240,7 +242,7 @@ namespace StoicGoose.GLWindow
 		{
 			if (drawData.Equals(default(ImDrawDataPtr)) || drawData.CmdListsCount == 0) return;
 
-			var io = ImGuiNET.ImGui.GetIO();
+			var io = ImGui.GetIO();
 			drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
 			shaderProgram.Bind();

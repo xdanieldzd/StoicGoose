@@ -36,12 +36,13 @@ namespace StoicGoose.GLWindow.Interface
 				ImGui.Separator();
 			else
 			{
-				if (menuItem.Action == null || menuItem.SubItems.Length > 0)
+				if (menuItem.ClickAction == null || menuItem.SubItems.Length > 0)
 					DrawSubMenus(menuItem);
 				else
 				{
-					if (ImGui.MenuItem(menuItem.Label) && menuItem.Action != null)
-						menuItem.Action();
+					menuItem.UpdateAction?.Invoke(menuItem);
+					if (ImGui.MenuItem(menuItem.Label, null, menuItem.IsChecked, menuItem.IsEnabled) && menuItem.ClickAction != null)
+						menuItem.ClickAction(menuItem);
 				}
 			}
 		}
@@ -61,13 +62,17 @@ namespace StoicGoose.GLWindow.Interface
 	public class MenuItem
 	{
 		public string Label { get; set; } = string.Empty;
-		public Action Action { get; set; } = default;
+		public Action<MenuItem> ClickAction { get; set; } = default;
+		public Action<MenuItem> UpdateAction { get; set; } = default;
 		public MenuItem[] SubItems { get; set; } = Array.Empty<MenuItem>();
+		public bool IsEnabled { get; set; } = true;
+		public bool IsChecked { get; set; } = false;
 
-		public MenuItem(string label, Action action = null)
+		public MenuItem(string label, Action<MenuItem> clickAction = null, Action<MenuItem> updateAction = null)
 		{
 			Label = label;
-			Action = action;
+			ClickAction = clickAction;
+			UpdateAction = updateAction;
 		}
 	}
 }

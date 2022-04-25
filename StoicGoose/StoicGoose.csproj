@@ -27,6 +27,56 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Goose.png" />
+    <None Remove="Assets\Icons\Aux1.png" />
+    <None Remove="Assets\Icons\Aux2.png" />
+    <None Remove="Assets\Icons\Aux3.png" />
+    <None Remove="Assets\Icons\Headphones.png" />
+    <None Remove="Assets\Icons\Horizontal.png" />
+    <None Remove="Assets\Icons\Initialized.png" />
+    <None Remove="Assets\Icons\LowBattery.png" />
+    <None Remove="Assets\Icons\Power.png" />
+    <None Remove="Assets\Icons\Sleep.png" />
+    <None Remove="Assets\Icons\Vertical.png" />
+    <None Remove="Assets\Icons\VolumeA0.png" />
+    <None Remove="Assets\Icons\VolumeA1.png" />
+    <None Remove="Assets\Icons\VolumeA2.png" />
+    <None Remove="Assets\Icons\VolumeS0.png" />
+    <None Remove="Assets\Icons\VolumeS1.png" />
+    <None Remove="Assets\Icons\VolumeS2.png" />
+    <None Remove="Assets\Icons\VolumeS3.png" />
+    <None Remove="Assets\Shaders\Basic\Fragment.glsl" />
+    <None Remove="Assets\Shaders\Basic\Manifest.json" />
+    <None Remove="Assets\Shaders\FragmentBase.glsl" />
+    <None Remove="Assets\Shaders\Vertex.glsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Goose.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux1.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux2.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux3.png" />
+    <EmbeddedResource Include="Assets\Icons\Headphones.png" />
+    <EmbeddedResource Include="Assets\Icons\Horizontal.png" />
+    <EmbeddedResource Include="Assets\Icons\Initialized.png" />
+    <EmbeddedResource Include="Assets\Icons\LowBattery.png" />
+    <EmbeddedResource Include="Assets\Icons\Power.png" />
+    <EmbeddedResource Include="Assets\Icons\Sleep.png" />
+    <EmbeddedResource Include="Assets\Icons\Vertical.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA0.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA1.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA2.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeS0.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeS1.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeS2.png" />
+    <EmbeddedResource Include="Assets\Icons\VolumeS3.png" />
+    <EmbeddedResource Include="Assets\Shaders\Basic\Fragment.glsl" />
+    <EmbeddedResource Include="Assets\Shaders\Basic\Manifest.json" />
+    <EmbeddedResource Include="Assets\Shaders\FragmentBase.glsl" />
+    <EmbeddedResource Include="Assets\Shaders\Vertex.glsl" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Gee.External.Capstone" Version="2.0.2" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="ImGui.NET" Version="1.87.3" />
@@ -61,6 +111,27 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\No-Intro\Bandai - WonderSwan Color.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\No-Intro\Bandai - WonderSwan.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix Color\Fragment.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix Color\Manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix\Fragment.glsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Shaders\Dot-Matrix\Manifest.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
