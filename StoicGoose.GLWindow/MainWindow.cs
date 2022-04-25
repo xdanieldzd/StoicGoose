@@ -17,25 +17,30 @@ namespace StoicGoose.GLWindow
 {
 	public class MainWindow : GameWindow
 	{
+		/* UI */
 		readonly MenuItem fileMenu = default, emulationMenu = default, optionsMenu = default, helpMenu = default;
 		readonly MessageBox aboutBox = default;
 		readonly StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
-
-		readonly State renderState = new();
-
-		IMachine machine = default;
-		Texture displayTexture = default;
-
-		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default;
-
 		ImGuiHandler imGuiHandler = default;
-
 		ImGuiMenuHandler imGuiMenuHandler = default;
 		ImGuiMessageBoxHandler imGuiMessageBoxHandler = default;
 		ImGuiStatusBarHandler imGuiStatusBarHandler = default;
 
+		/* Graphics */
+		readonly State renderState = new();
+
+		/* Sound */
+		readonly SoundHandler soundHandler = new(44100, 2);
+
+		/* Emulation */
+		IMachine machine = default;
+		Texture displayTexture = default;
+		double frameTimeElapsed = 0.0;
+
+		/* Misc. runtime variables */
+		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default;
 		bool isRunning = false, isVerticalOrientation = false;
-		float framesPerSecond = 0f;
+		double framesPerSecond = 0.0;
 
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
@@ -53,7 +58,7 @@ namespace StoicGoose.GLWindow
 						// TODO: imgui file dialog
 						LoadAndRunCartridge(@"D:\Temp\Goose\Digimon Adventure 02 - D1 Tamers (Japan).wsc");
 					}),
-					new("-", null),
+					new("-"),
 					new("Exit", (_) => { Close(); })
 				}
 			};
@@ -66,7 +71,7 @@ namespace StoicGoose.GLWindow
 				}
 			};
 
-			optionsMenu = new("Option")
+			optionsMenu = new("Options")
 			{
 				SubItems = new MenuItem[]
 				{
@@ -75,13 +80,20 @@ namespace StoicGoose.GLWindow
 						SubItems = new MenuItem[]
 						{
 							new("WonderSwan",
-							(s) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
+							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
 							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
 							new("WonderSwan Color",
-							(s) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
+							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
 							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwanColor).FullName; })
 						}
-					}
+					},
+					new("-"),
+					new("Limit FPS",
+					(_) => { Program.Configuration.LimitFps = !Program.Configuration.LimitFps; },
+					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
+					new("Mute",
+					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
+					(s) => { s.IsChecked = Program.Configuration.Mute; })
 				}
 			};
 
@@ -109,19 +121,21 @@ namespace StoicGoose.GLWindow
 
 		protected override void OnLoad()
 		{
-			renderState.SetClearColor(System.Drawing.Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
-
-			CreateMachine(Program.Configuration.PreferredSystem);
-
 			imGuiHandler = new(this);
-			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize },
-				() => (displayTexture, isVerticalOrientation));
-
+			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize }, () => (displayTexture, isVerticalOrientation));
 			imGuiMenuHandler = new(fileMenu, emulationMenu, optionsMenu, helpMenu);
 			imGuiMessageBoxHandler = new(aboutBox);
 			imGuiStatusBarHandler = new();
 
 			statusMessageItem.Label = $"{Program.ProductName} {Program.GetVersionString(true)} ready!";
+
+			renderState.SetClearColor(System.Drawing.Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
+			renderState.Enable(EnableCap.Blend);
+			renderState.SetBlending(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+			soundHandler.SetMute(Program.Configuration.Mute);
+
+			CreateMachine(Program.Configuration.PreferredSystem);
 
 			base.OnLoad();
 		}
@@ -129,6 +143,8 @@ namespace StoicGoose.GLWindow
 		protected override void OnUnload()
 		{
 			Program.SaveConfiguration();
+
+			soundHandler.Dispose();
 
 			base.OnUnload();
 		}
@@ -152,7 +168,17 @@ namespace StoicGoose.GLWindow
 			statusRunningItem.Label = isRunning ? "Running" : "Stopped";
 			statusFpsItem.Label = $"{framesPerSecond:0} fps";
 
-			machine.RunFrame();
+			frameTimeElapsed += args.Time;
+
+			if (frameTimeElapsed >= 1.0 / machine.Metadata.RefreshRate || !Program.Configuration.LimitFps)
+			{
+				machine.RunFrame();
+				soundHandler.Update();
+
+				framesPerSecond = 1.0 / frameTimeElapsed;
+
+				frameTimeElapsed = 0.0;
+			}
 
 			base.OnUpdateFrame(args);
 		}
@@ -162,8 +188,6 @@ namespace StoicGoose.GLWindow
 			renderState.Submit();
 
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-
-			framesPerSecond = 1f / (float)args.Time;
 
 			imGuiHandler.BeginFrame();
 			{
@@ -188,6 +212,7 @@ namespace StoicGoose.GLWindow
 			machine = Activator.CreateInstance(Type.GetType($"{typeName}, {Assembly.GetAssembly(typeof(IMachine))}")) as IMachine;
 			machine.Initialize();
 			machine.DisplayController.SendFramebuffer = (fb) => { displayTexture?.Update(fb); };
+			machine.SoundController.SendSamples = (s) => { soundHandler?.EnqueueSamples(s); };
 
 			displayTexture = new Texture(0, 0, 0, 255, machine.Metadata.ScreenSize.X, machine.Metadata.ScreenSize.Y);
 

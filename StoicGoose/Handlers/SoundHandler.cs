@@ -6,8 +6,6 @@ using System.Windows.Forms;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 
-using StoicGoose.WinForms;
-
 namespace StoicGoose.Handlers
 {
 	public class SoundHandler
