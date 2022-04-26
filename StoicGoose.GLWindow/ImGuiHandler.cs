@@ -214,11 +214,14 @@ namespace StoicGoose.GLWindow
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Deregistered all {typeof(T).Name}.");
 		}
 
-		public void BeginFrame()
+		public void BeginFrame(float deltaTime)
 		{
 			if (wasFrameBegun) throw new Exception("Cannot begin new ImGui frame, last frame still in progress");
 
 			UpdateInputState();
+
+			var io = ImGui.GetIO();
+			io.DeltaTime = deltaTime;
 
 			ImGui.NewFrame();
 

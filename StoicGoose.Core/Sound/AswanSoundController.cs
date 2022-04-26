@@ -113,13 +113,13 @@ namespace StoicGoose.Core.Sound
 			}
 		}
 
-		[ImGuiRegister("REG_SND_9697", 0x096, 0x097)]
-		[ImGuiBitDescription("Unknown data", 0, 9)]
-		[ImGuiFormat("X4")]
+		[Register("REG_SND_9697", 0x096, 0x097)]
+		[BitDescription("Unknown data", 0, 9)]
+		[Format("X4")]
 		public ushort Unknown9697 => unknown9697;
-		[ImGuiRegister("REG_SND_9899", 0x098, 0x099)]
-		[ImGuiBitDescription("Unknown data", 0, 9)]
-		[ImGuiFormat("X4")]
+		[Register("REG_SND_9899", 0x098, 0x099)]
+		[BitDescription("Unknown data", 0, 9)]
+		[Format("X4")]
 		public ushort Unknown9899 => unknown9899;
 	}
 }

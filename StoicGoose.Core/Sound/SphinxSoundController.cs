@@ -151,31 +151,31 @@ namespace StoicGoose.Core.Sound
 			}
 		}
 
-		[ImGuiRegister("REG_HYPER_CTRL", 0x06A)]
-		[ImGuiBitDescription("Is HyperVoice enabled?", 7)]
+		[Register("REG_HYPER_CTRL", 0x06A)]
+		[BitDescription("Is HyperVoice enabled?", 7)]
 		public bool ChannelHyperVoiceIsEnable => channelHyperVoice.IsEnabled;
-		[ImGuiRegister("REG_HYPER_CTRL", 0x06A)]
-		[ImGuiBitDescription("HyperVoice control unknown", 4, 6)]
+		[Register("REG_HYPER_CTRL", 0x06A)]
+		[BitDescription("HyperVoice control unknown", 4, 6)]
 		public byte ChannelHyperVoiceCtrlUnknown => channelHyperVoice.CtrlUnknown;
-		[ImGuiRegister("REG_HYPER_CTRL", 0x06A)]
-		[ImGuiBitDescription("HyperVoice scaling mode", 2, 3)]
+		[Register("REG_HYPER_CTRL", 0x06A)]
+		[BitDescription("HyperVoice scaling mode", 2, 3)]
 		public int ChannelHyperVoiceScalingMode => channelHyperVoice.ScalingMode;
-		[ImGuiRegister("REG_HYPER_CTRL", 0x06A)]
-		[ImGuiBitDescription("HyperVoice volume", 0, 1)]
+		[Register("REG_HYPER_CTRL", 0x06A)]
+		[BitDescription("HyperVoice volume", 0, 1)]
 		public int ChannelHyperVoiceVolume => channelHyperVoice.Volume;
 
-		[ImGuiRegister("REG_HYPER_CHAN_CTRL", 0x06B)]
-		[ImGuiBitDescription("Is HyperVoice right channel enabled?", 6)]
+		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[BitDescription("Is HyperVoice right channel enabled?", 6)]
 		public bool ChannelHyperVoiceChanRightEnable => channelHyperVoice.RightEnable;
-		[ImGuiRegister("REG_HYPER_CHAN_CTRL", 0x06B)]
-		[ImGuiBitDescription("Is HyperVoice left channel enabled?", 5)]
+		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[BitDescription("Is HyperVoice left channel enabled?", 5)]
 		public bool ChannelHyperVoiceChanLeftEnable => channelHyperVoice.LeftEnable;
-		[ImGuiRegister("REG_HYPER_CHAN_CTRL", 0x06B)]
-		[ImGuiBitDescription("HyperVoice channel control unknown", 0, 3)]
+		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[BitDescription("HyperVoice channel control unknown", 0, 3)]
 		public byte ChannelHyperVoiceChanCtrlUnknown => channelHyperVoice.ChanCtrlUnknown;
 
-		[ImGuiRegister("REG_SND_HYPERVOICE", 0x095)]
-		[ImGuiBitDescription("HyperVoice channel working sample")]
+		[Register("REG_SND_HYPERVOICE", 0x095)]
+		[BitDescription("HyperVoice channel working sample")]
 		public byte ChannelHyperVoiceData => channelHyperVoice.Data;
 	}
 }

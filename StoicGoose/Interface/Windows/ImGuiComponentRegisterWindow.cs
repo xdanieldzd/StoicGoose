@@ -25,7 +25,7 @@ namespace StoicGoose.Interface.Windows
 
 			foreach (var propInfo in componentType.GetProperties(getPropBindingFlags).Where(x => !x.GetGetMethod().IsAbstract))
 			{
-				if (propInfo.GetCustomAttribute<ImGuiRegisterAttribute>() is ImGuiRegisterAttribute regAttrib)
+				if (propInfo.GetCustomAttribute<RegisterAttribute>() is RegisterAttribute regAttrib)
 				{
 					if (!registers.ContainsKey(regAttrib.Name))
 						registers.Add(regAttrib.Name, (regAttrib.Numbers, new()));
@@ -35,12 +35,12 @@ namespace StoicGoose.Interface.Windows
 			foreach (var (name, (numbers, list)) in registers)
 			{
 				foreach (var propInfo in componentType.GetProperties(getPropBindingFlags)
-					.Where(x => x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Numbers.SequenceEqual(numbers) == true && x.GetCustomAttribute<ImGuiRegisterAttribute>()?.Name == name)
+					.Where(x => x.GetCustomAttribute<RegisterAttribute>()?.Numbers.SequenceEqual(numbers) == true && x.GetCustomAttribute<RegisterAttribute>()?.Name == name)
 					.GroupBy(x => x.Name)
 					.Select(x => x.First()))
 				{
-					var descAttrib = propInfo.GetCustomAttribute<ImGuiBitDescriptionAttribute>();
-					var formatAttrib = propInfo.GetCustomAttribute<ImGuiFormatAttribute>();
+					var descAttrib = propInfo.GetCustomAttribute<BitDescriptionAttribute>();
+					var formatAttrib = propInfo.GetCustomAttribute<FormatAttribute>();
 
 					list.Add(new RegisterParameterInformation()
 					{

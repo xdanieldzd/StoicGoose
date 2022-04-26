@@ -273,32 +273,32 @@ namespace StoicGoose.Core.Display
 			}
 		}
 
-		[ImGuiRegister("REG_BACK_COLOR", 0x001)]
-		[ImGuiBitDescription("Background color index", 0, 3)]
+		[Register("REG_BACK_COLOR", 0x001)]
+		[BitDescription("Background color index", 0, 3)]
 		public override byte BackColorIndex => backColorIndex;
-		[ImGuiRegister("REG_BACK_COLOR", 0x001)]
-		[ImGuiBitDescription("Background color palette", 4, 7)]
+		[Register("REG_BACK_COLOR", 0x001)]
+		[BitDescription("Background color palette", 4, 7)]
 		public byte BackColorPalette => backColorPalette;
-		[ImGuiRegister("REG_SPR_BASE", 0x004)]
-		[ImGuiBitDescription("Sprite table base address", 0, 5)]
-		[ImGuiFormat("X4", 9)]
+		[Register("REG_SPR_BASE", 0x004)]
+		[BitDescription("Sprite table base address", 0, 5)]
+		[Format("X4", 9)]
 		public override int SprBase => sprBase;
-		[ImGuiRegister("REG_MAP_BASE", 0x007)]
-		[ImGuiBitDescription("SCR1 base address", 0, 3)]
-		[ImGuiFormat("X4", 11)]
+		[Register("REG_MAP_BASE", 0x007)]
+		[BitDescription("SCR1 base address", 0, 3)]
+		[Format("X4", 11)]
 		public override int Scr1Base => scr1Base;
-		[ImGuiRegister("REG_MAP_BASE", 0x007)]
-		[ImGuiBitDescription("SCR2 base address", 4, 7)]
-		[ImGuiFormat("X4", 11)]
+		[Register("REG_MAP_BASE", 0x007)]
+		[BitDescription("SCR2 base address", 4, 7)]
+		[Format("X4", 11)]
 		public override int Scr2Base => scr2Base;
-		[ImGuiRegister("REG_LCD_CTRL", 0x014)]
-		[ImGuiBitDescription("LCD contrast setting; high contrast?", 1)]
+		[Register("REG_LCD_CTRL", 0x014)]
+		[BitDescription("LCD contrast setting; high contrast?", 1)]
 		public bool LcdContrastHigh => lcdContrastHigh;
-		[ImGuiRegister("REG_DISP_MODE", 0x060)]
-		[ImGuiBitDescription("Display color mode; is color?", 6)]
+		[Register("REG_DISP_MODE", 0x060)]
+		[BitDescription("Display color mode; is color?", 6)]
 		public bool DisplayColorFlagSet => displayColorFlagSet;
-		[ImGuiRegister("REG_DISP_MODE", 0x060)]
-		[ImGuiBitDescription("Tile bits-per-pixel; is 4bpp?", 7)]
+		[Register("REG_DISP_MODE", 0x060)]
+		[BitDescription("Tile bits-per-pixel; is 4bpp?", 7)]
 		public bool Display4bppFlagSet => display4bppFlagSet;
 	}
 }

@@ -12,6 +12,7 @@ using OpenTK.Windowing.Desktop;
 using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Machines;
+using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
@@ -150,9 +151,14 @@ namespace StoicGoose.GLWindow
 
 		protected override void OnLoad()
 		{
+			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = true };
+			disassemblerWindow.PauseEmulation += (s, e) => isPaused = true;
+			disassemblerWindow.UnpauseEmulation += (s, e) => isPaused = false;
+
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize }, () => (displayTexture, isVerticalOrientation));
+			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));
 			imGuiMenuHandler = new(fileMenu, emulationMenu, optionsMenu, helpMenu);
 			imGuiMessageBoxHandler = new(aboutBox);
 			imGuiStatusBarHandler = new();
@@ -221,7 +227,10 @@ namespace StoicGoose.GLWindow
 			}
 
 			statusRunningItem.Label = isPaused ? "Paused" : (isRunning ? "Running" : "Stopped");
+			statusRunningItem.IsEnabled = isRunning && !isPaused;
+
 			statusFpsItem.Label = $"{framesPerSecond:0} fps";
+			statusFpsItem.IsEnabled = isRunning && !isPaused;
 
 			base.OnUpdateFrame(args);
 		}
@@ -232,7 +241,7 @@ namespace StoicGoose.GLWindow
 
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-			imGuiHandler.BeginFrame();
+			imGuiHandler.BeginFrame((float)args.Time);
 			{
 				imGuiMenuHandler.Draw();
 				imGuiMessageBoxHandler.Draw();
@@ -281,6 +290,8 @@ namespace StoicGoose.GLWindow
 
 			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);
+
+			Disassembler.Instance.ReadDelegate = machine.ReadMemory;
 		}
 
 		private void DestroyMachine()

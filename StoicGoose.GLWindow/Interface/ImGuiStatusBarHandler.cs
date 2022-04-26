@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using ImGuiNET;
 
@@ -69,11 +65,16 @@ namespace StoicGoose.GLWindow.Interface
 							else if (item.TextAlignment == StatusBarItemTextAlign.Center)
 								ImGui.SetCursorPosX(cursorPos + (itemWidth / 2f - labelWidth / 2f));
 
-							ImGui.Text(item.Label);
+							if (item.IsEnabled) ImGui.Text(item.Label);
+							else ImGui.TextDisabled(item.Label);
+
 							ImGui.SetCursorPosX(cursorPos);
 						}
 						else
-							ImGui.Text(item.Label);
+						{
+							if (item.IsEnabled) ImGui.Text(item.Label);
+							else ImGui.TextDisabled(item.Label);
+						}
 					}
 
 					ImGui.EndMenuBar();
@@ -92,6 +93,7 @@ namespace StoicGoose.GLWindow.Interface
 		public StatusBarItemAlign ItemAlignment { get; set; } = StatusBarItemAlign.Left;
 		public StatusBarItemTextAlign TextAlignment { get; set; } = StatusBarItemTextAlign.Left;
 		public bool ShowSeparator { get; set; } = true;
+		public bool IsEnabled { get; set; } = true;
 
 		public StatusBarItem(string label) => Label = label;
 	}

@@ -11,6 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Interface\jm21gfp2.htk~" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gee.External.Capstone" Version="2.0.2" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="ImGui.NET" Version="1.87.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

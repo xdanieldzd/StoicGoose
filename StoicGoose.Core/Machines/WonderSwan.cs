@@ -286,9 +286,9 @@ namespace StoicGoose.Core.Machines
 			}
 		}
 
-		[ImGuiRegister("REG_INT_BASE", 0x0B0)]
-		[ImGuiBitDescription("Interrupt base address", 3, 7)]
-		[ImGuiFormat("X4", 0)]
+		[Register("REG_INT_BASE", 0x0B0)]
+		[BitDescription("Interrupt base address", 3, 7)]
+		[Format("X4", 0)]
 		public override byte InterruptBase => interruptBase;
 	}
 }
