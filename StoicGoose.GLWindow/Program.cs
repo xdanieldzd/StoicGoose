@@ -55,7 +55,7 @@ namespace StoicGoose.GLWindow
 			}, new()
 			{
 				Size = new(1280, 720),
-				Title = assemblyVersionInfo.ProductName,
+				Title = $"{assemblyVersionInfo.ProductName} {GetVersionString(false)}",
 				Flags = ContextFlags.Default,
 				API = ContextAPI.OpenGL,
 				APIVersion = new(4, 6, 0)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace StoicGoose.Extensions
+namespace StoicGoose.Common.Extensions
 {
 	public static class StringExtensionMethods
 	{

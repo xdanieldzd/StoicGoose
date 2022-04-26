@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using OpenTK.Graphics.OpenGL4;
@@ -7,6 +9,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
 
+using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Interface;
@@ -21,6 +24,7 @@ namespace StoicGoose.GLWindow
 		readonly MenuItem fileMenu = default, emulationMenu = default, optionsMenu = default, helpMenu = default;
 		readonly MessageBox aboutBox = default;
 		readonly StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
+		ImGuiLogWindow logWindow = default;
 		ImGuiHandler imGuiHandler = default;
 		ImGuiMenuHandler imGuiMenuHandler = default;
 		ImGuiMessageBoxHandler imGuiMessageBoxHandler = default;
@@ -28,9 +32,13 @@ namespace StoicGoose.GLWindow
 
 		/* Graphics */
 		readonly State renderState = new();
+		byte[] initialScreenImage = default;
 
 		/* Sound */
 		readonly SoundHandler soundHandler = new(44100, 2);
+
+		/* Input */
+		readonly InputHandler inputHandler = new();
 
 		/* Emulation */
 		IMachine machine = default;
@@ -39,11 +47,19 @@ namespace StoicGoose.GLWindow
 
 		/* Misc. runtime variables */
 		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default;
-		bool isRunning = false, isVerticalOrientation = false;
+		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
+			if ((logWindow = new() { IsWindowOpen = true }) != null)
+			{
+				Console.SetOut(logWindow.TextWriter);
+				var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
+				Console.WriteLine($"{Ansi.Green}{message}");
+				Console.WriteLine(new string('-', message.Length));
+			}
+
 			// TODO
 			Program.Configuration.UseBootstrap = true;
 			Program.Configuration.BootstrapFiles[typeof(WonderSwan).FullName] = @"D:\Temp\Goose\WonderSwan Boot ROM.rom";
@@ -67,7 +83,16 @@ namespace StoicGoose.GLWindow
 			{
 				SubItems = new MenuItem[]
 				{
-					new("Reset", (_) => { if (isRunning) { machine?.Reset(); } })
+					new("Pause",
+					(_) => { isPaused = !isPaused; },
+					(s) => { s.IsEnabled = isRunning; s.IsChecked = isPaused; }),
+					new("Reset",
+					(_) => { if (isRunning) { SaveEepromAndCartridgeRam(); machine?.Reset(); } },
+					(s) => { s.IsEnabled = isRunning; }),
+					new("-"),
+					new("Shutdown",
+					(_) => { if (isRunning) { SaveEepromAndCartridgeRam(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); isRunning = false; } },
+					(s) => { s.IsEnabled = isRunning; })
 				}
 			};
 
@@ -93,7 +118,11 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
 					new("Mute",
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; })
+					(s) => { s.IsChecked = Program.Configuration.Mute; }),
+					new("-"),
+					new("Show Log",
+					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
 				}
 			};
 
@@ -122,6 +151,7 @@ namespace StoicGoose.GLWindow
 		protected override void OnLoad()
 		{
 			imGuiHandler = new(this);
+			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize }, () => (displayTexture, isVerticalOrientation));
 			imGuiMenuHandler = new(fileMenu, emulationMenu, optionsMenu, helpMenu);
 			imGuiMessageBoxHandler = new(aboutBox);
@@ -133,9 +163,17 @@ namespace StoicGoose.GLWindow
 			renderState.Enable(EnableCap.Blend);
 			renderState.SetBlending(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
+			initialScreenImage = new byte[244 * 144 * 4];
+			for (var i = 0; i < initialScreenImage.Length; i += 4) initialScreenImage[i + 3] = 0xFF;
+
 			soundHandler.SetMute(Program.Configuration.Mute);
 
+			inputHandler.SetGameWindow(this);
+			inputHandler.SetKeyMapping(Program.Configuration.GameControls, Program.Configuration.SystemControls);
+
 			CreateMachine(Program.Configuration.PreferredSystem);
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnLoad)} override finished.");
 
 			base.OnLoad();
 		}
@@ -145,6 +183,8 @@ namespace StoicGoose.GLWindow
 			Program.SaveConfiguration();
 
 			soundHandler.Dispose();
+
+			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnUnload)} override finished.");
 
 			base.OnUnload();
 		}
@@ -163,22 +203,25 @@ namespace StoicGoose.GLWindow
 			var keyState = KeyboardState.GetSnapshot();
 			if (keyState.IsKeyDown(Keys.Escape)) Close();
 
-			Title = $"{Program.ProductName} {Program.GetVersionString(false)}";
-
-			statusRunningItem.Label = isRunning ? "Running" : "Stopped";
-			statusFpsItem.Label = $"{framesPerSecond:0} fps";
-
 			frameTimeElapsed += args.Time;
 
 			if (frameTimeElapsed >= 1.0 / machine.Metadata.RefreshRate || !Program.Configuration.LimitFps)
 			{
-				machine.RunFrame();
-				soundHandler.Update();
+				if (isRunning && !isPaused)
+				{
+					machine.RunFrame();
+					soundHandler.Update();
 
-				framesPerSecond = 1.0 / frameTimeElapsed;
+					framesPerSecond = 1.0 / frameTimeElapsed;
+				}
+				else if (!isRunning)
+					framesPerSecond = 0.0;
 
 				frameTimeElapsed = 0.0;
 			}
+
+			statusRunningItem.Label = isPaused ? "Paused" : (isRunning ? "Running" : "Stopped");
+			statusFpsItem.Label = $"{framesPerSecond:0} fps";
 
 			base.OnUpdateFrame(args);
 		}
@@ -213,8 +256,28 @@ namespace StoicGoose.GLWindow
 			machine.Initialize();
 			machine.DisplayController.SendFramebuffer = (fb) => { displayTexture?.Update(fb); };
 			machine.SoundController.SendSamples = (s) => { soundHandler?.EnqueueSamples(s); };
+			machine.ReceiveInput = () =>
+			{
+				var buttonsPressed = new List<string>();
+				var buttonsHeld = new List<string>();
 
-			displayTexture = new Texture(0, 0, 0, 255, machine.Metadata.ScreenSize.X, machine.Metadata.ScreenSize.Y);
+				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
+				if (screenWindow.IsWindowOpen && screenWindow.IsFocused)
+					inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
+
+				if (buttonsPressed.Contains("Volume"))
+					machine.SoundController.ChangeMasterVolume();
+
+				return (buttonsPressed, buttonsHeld);
+			};
+
+			inputHandler.SetVerticalRemapping(machine.Metadata.VerticalControlRemap
+				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+				.ToDictionary(x => x[0], x => x[1]));
+
+			displayTexture = new Texture(machine.Metadata.ScreenSize.X, machine.Metadata.ScreenSize.Y);
+			displayTexture.Update(initialScreenImage);
 
 			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);

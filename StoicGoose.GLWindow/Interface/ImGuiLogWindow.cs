@@ -11,7 +11,7 @@ using StoicGoose.Common.Extensions;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.Interface.Windows
+namespace StoicGoose.GLWindow.Interface
 {
 	public class ImGuiLogWindow : ImGuiWindowBase
 	{

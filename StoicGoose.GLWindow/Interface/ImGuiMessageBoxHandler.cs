@@ -32,8 +32,7 @@ namespace StoicGoose.GLWindow.Interface
 				var viewportCenter = ImGui.GetMainViewport().GetCenter();
 				ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
 
-				var popupDummy = true;
-				if (ImGui.BeginPopupModal(messageBoxes[i].Title, ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
+				if (ImGui.BeginPopupModal(messageBoxes[i].Title, ref messageBoxes[i].IsOpen, ImGuiWindowFlags.AlwaysAutoResize))
 				{
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 					ImGui.Text(messageBoxes[i].Message);
@@ -68,8 +67,9 @@ namespace StoicGoose.GLWindow.Interface
 		public string Title { get; set; } = string.Empty;
 		public string Message { get; set; } = string.Empty;
 		public string[] Buttons { get; set; } = Array.Empty<string>();
-		public bool IsOpen { get; set; } = false;
 		public int ReturnValue { get; set; } = -1;
+
+		public bool IsOpen = false;
 
 		public MessageBox(string title, string message, params string[] buttons)
 		{
