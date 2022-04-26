@@ -1,6 +1,6 @@
 ﻿using System;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Console;
 
 using StoicGoose.Core.EEPROMs;
 
@@ -86,7 +86,7 @@ namespace StoicGoose.Core.Cartridges
 				rtc = new RTC();
 			}
 
-			Crc32 = Common.Crc32.Calculate(rom);
+			Crc32 = Common.Utilities.Crc32.Calculate(rom);
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "ROM loaded.");
 			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");

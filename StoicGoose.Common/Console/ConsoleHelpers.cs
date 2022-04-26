@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace StoicGoose.Common
+namespace StoicGoose.Common.Console
 {
 	public enum ConsoleLogSeverity { Success, Information, Warning, Error }
 
@@ -17,7 +16,7 @@ namespace StoicGoose.Common
 
 		public static void WriteLog(ConsoleLogSeverity severity, object source, string message)
 		{
-			Console.WriteLine($"{logSeverityAnsiColors[severity]}[{source.GetType().Name}]{Ansi.Reset}: {message}");
+			System.Console.WriteLine($"{logSeverityAnsiColors[severity]}[{source.GetType().Name}]{Ansi.Reset}: {message}");
 		}
 	}
 }

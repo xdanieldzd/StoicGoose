@@ -1,4 +1,4 @@
-﻿namespace StoicGoose.Common
+﻿namespace StoicGoose.Common.Console
 {
 	public static class Ansi
 	{

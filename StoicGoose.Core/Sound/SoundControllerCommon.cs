@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using StoicGoose.Common.Attributes;
+
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -387,35 +389,97 @@ namespace StoicGoose.Core.Sound
 			}
 		}
 
+		[ImGuiRegister("REG_SND_CH1_PITCH", 0x080, 0x081)]
+		[ImGuiBitDescription("Channel 1 pitch (frequency reload)", 0, 10)]
 		public ushort Channel1Pitch => channel1.Pitch;
+		[ImGuiRegister("REG_SND_CH2_PITCH", 0x082, 0x083)]
+		[ImGuiBitDescription("Channel 2 pitch (frequency reload)", 0, 10)]
 		public ushort Channel2Pitch => channel2.Pitch;
+		[ImGuiRegister("REG_SND_CH3_PITCH", 0x084, 0x085)]
+		[ImGuiBitDescription("Channel 3 pitch (frequency reload)", 0, 10)]
 		public ushort Channel3Pitch => channel3.Pitch;
+		[ImGuiRegister("REG_SND_CH4_PITCH", 0x086, 0x087)]
+		[ImGuiBitDescription("Channel 4 pitch (frequency reload)", 0, 10)]
 		public ushort Channel4Pitch => channel4.Pitch;
+		[ImGuiRegister("REG_SND_CH1_VOL", 0x088)]
+		[ImGuiBitDescription("Channel 1 volume right", 0, 3)]
 		public byte Channel1VolumeRight => channel1.VolumeRight;
+		[ImGuiRegister("REG_SND_CH1_VOL", 0x088)]
+		[ImGuiBitDescription("Channel 1 volume left", 4, 7)]
 		public byte Channel1VolumeLeft => channel1.VolumeLeft;
+		[ImGuiRegister("REG_SND_CH2_VOL", 0x089)]
+		[ImGuiBitDescription("Channel 2 volume right", 0, 3)]
 		public byte Channel2VolumeRight => channel2.VolumeRight;
+		[ImGuiRegister("REG_SND_CH2_VOL", 0x089)]
+		[ImGuiBitDescription("Channel 2 volume left", 4, 7)]
 		public byte Channel2VolumeLeft => channel2.VolumeLeft;
+		[ImGuiRegister("REG_SND_CH3_VOL", 0x08A)]
+		[ImGuiBitDescription("Channel 3 volume right", 0, 3)]
 		public byte Channel3VolumeRight => channel3.VolumeRight;
+		[ImGuiRegister("REG_SND_CH3_VOL", 0x08A)]
+		[ImGuiBitDescription("Channel 3 volume left", 4, 7)]
 		public byte Channel3VolumeLeft => channel3.VolumeLeft;
+		[ImGuiRegister("REG_SND_CH4_VOL", 0x08B)]
+		[ImGuiBitDescription("Channel 4 volume right", 0, 3)]
 		public byte Channel4VolumeRight => channel4.VolumeRight;
+		[ImGuiRegister("REG_SND_CH4_VOL", 0x08B)]
+		[ImGuiBitDescription("Channel 4 volume left", 4, 7)]
 		public byte Channel4VolumeLeft => channel4.VolumeLeft;
+		[ImGuiRegister("REG_SND_SWEEP_VALUE", 0x08C)]
+		[ImGuiBitDescription("Channel 3 sweep value")]
 		public sbyte Channel3SweepValue => channel3.SweepValue;
+		[ImGuiRegister("REG_SND_SWEEP_TIME", 0x08D)]
+		[ImGuiBitDescription("Channel 3 sweep time", 0, 4)]
 		public byte Channel3SweepTime => channel3.SweepTime;
+		[ImGuiRegister("REG_SND_NOISE", 0x08E)]
+		[ImGuiBitDescription("Channel 4 noise mode", 0, 2)]
 		public byte Channel4NoiseMode => channel4.NoiseMode;
+		[ImGuiRegister("REG_SND_NOISE", 0x08E)]
+		[ImGuiBitDescription("Is channel 4 noise enabled?", 4)]
 		public bool Channel4NoiseEnable => channel4.NoiseEnable;
+		[ImGuiRegister("REG_SND_WAVE_BASE", 0x08F)]
+		[ImGuiBitDescription("Wavetable base address")]
+		[ImGuiFormat("X4", 6)]
 		public byte WaveTableBase => waveTableBase;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 1 enabled?", 0)]
 		public bool Channel1IsEnabled => channel1.IsEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 2 enabled?", 1)]
 		public bool Channel2IsEnabled => channel2.IsEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 3 enabled?", 2)]
 		public bool Channel3IsEnabled => channel3.IsEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 4 enabled?", 3)]
 		public bool Channel4IsEnabled => channel4.IsEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 2 in voice mode?", 5)]
 		public bool Channel2IsVoiceEnabled => channel2.IsVoiceEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 3 in sweep mode?", 6)]
 		public bool Channel3IsSweepEnabled => channel3.IsSweepEnabled;
+		[ImGuiRegister("REG_SND_CTRL", 0x090)]
+		[ImGuiBitDescription("Is channel 4 in noise mode?", 7)]
 		public bool Channel4IsNoiseEnabled => channel4.IsNoiseEnabled;
+		[ImGuiRegister("REG_SND_OUTPUT", 0x091)]
+		[ImGuiBitDescription("Is speaker enabled?", 0)]
 		public bool SpeakerEnable => speakerEnable;
+		[ImGuiRegister("REG_SND_OUTPUT", 0x091)]
+		[ImGuiBitDescription("Speaker PWM volume bitshift", 1, 2)]
 		public byte SpeakerVolumeShift => speakerVolumeShift;
+		[ImGuiRegister("REG_SND_OUTPUT", 0x091)]
+		[ImGuiBitDescription("Are headphones enabled?", 3)]
 		public bool HeadphoneEnable => headphoneEnable;
+		[ImGuiRegister("REG_SND_OUTPUT", 0x091)]
+		[ImGuiBitDescription("Are headphones connected?", 7)]
 		public bool HeadphonesConnected => headphonesConnected;
+		[ImGuiRegister("REG_SND_RANDOM", 0x092, 0x093)]
+		[ImGuiBitDescription("Current noise LFSR value", 0, 14)]
+		[ImGuiFormat("X4")]
 		public ushort Channel4NoiseLfsr => channel4.NoiseLfsr;
+		[ImGuiRegister("REG_SND_VOLUME", 0x09E)]
+		[ImGuiBitDescription("Master volume level", 0, 1)]
 		public byte MasterVolume => masterVolume;
 	}
 }

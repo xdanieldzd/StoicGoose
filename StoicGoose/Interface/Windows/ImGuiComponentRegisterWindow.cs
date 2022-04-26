@@ -5,7 +5,7 @@ using System.Reflection;
 
 using ImGuiNET;
 
-using StoicGoose.Interface.Attributes;
+using StoicGoose.Common.Attributes;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

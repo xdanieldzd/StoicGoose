@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Collections.Generic;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 
 namespace StoicGoose.GLWindow

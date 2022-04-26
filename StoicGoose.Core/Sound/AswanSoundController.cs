@@ -1,4 +1,6 @@
-﻿namespace StoicGoose.Core.Sound
+﻿using StoicGoose.Common.Attributes;
+
+namespace StoicGoose.Core.Sound
 {
 	public class AswanSoundController : SoundControllerCommon
 	{
@@ -110,5 +112,14 @@
 					break;
 			}
 		}
+
+		[ImGuiRegister("REG_SND_9697", 0x096, 0x097)]
+		[ImGuiBitDescription("Unknown data", 0, 9)]
+		[ImGuiFormat("X4")]
+		public ushort Unknown9697 => unknown9697;
+		[ImGuiRegister("REG_SND_9899", 0x098, 0x099)]
+		[ImGuiBitDescription("Unknown data", 0, 9)]
+		[ImGuiFormat("X4")]
+		public ushort Unknown9899 => unknown9899;
 	}
 }

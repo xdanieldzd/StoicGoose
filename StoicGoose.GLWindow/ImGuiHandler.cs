@@ -10,7 +10,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using ImGuiNET;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;

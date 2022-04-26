@@ -1,5 +1,7 @@
 ﻿using System;
 
+using StoicGoose.Common.Attributes;
+
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -635,49 +637,140 @@ namespace StoicGoose.Core.Display
 			}
 		}
 
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SCR1 enable", 0)]
 		public bool Scr1Enable => scr1Enable;
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SCR2 enable", 1)]
 		public bool Scr2Enable => scr2Enable;
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SPR enable", 2)]
 		public bool SprEnable => sprEnable;
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SPR window enable", 3)]
 		public bool SprWindowEnable => sprWindowEnable;
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SCR2 window mode; display outside?", 4)]
 		public bool Scr2WindowDisplayOutside => scr2WindowDisplayOutside;
+		[ImGuiRegister("REG_DISP_CTRL", 0x000)]
+		[ImGuiBitDescription("SCR2 window enable", 5)]
 		public bool Scr2WindowEnable => scr2WindowEnable;
+		[ImGuiRegister("REG_BACK_COLOR", 0x001)]
+		[ImGuiBitDescription("Background color pool index", 0, 2)]
 		public virtual byte BackColorIndex => backColorIndex;
+		[ImGuiRegister("REG_LINE_CUR", 0x002)]
+		[ImGuiBitDescription("Current line being drawn")]
 		public int LineCurrent => lineCurrent;
+		[ImGuiRegister("REG_LINE_CMP", 0x003)]
+		[ImGuiBitDescription("Line compare interrupt line")]
 		public int LineCompare => lineCompare;
+		[ImGuiRegister("REG_SPR_BASE", 0x004)]
+		[ImGuiBitDescription("Sprite table base address", 0, 4)]
+		[ImGuiFormat("X4", 9)]
 		public virtual int SprBase => sprBase;
+		[ImGuiRegister("REG_SPR_FIRST", 0x005)]
+		[ImGuiBitDescription("First sprite to draw", 0, 6)]
 		public int SprFirst => sprFirst;
+		[ImGuiRegister("REG_SPR_COUNT", 0x006)]
+		[ImGuiBitDescription("Number of sprites to draw")]
 		public int SprCount => sprCount;
+		[ImGuiRegister("REG_MAP_BASE", 0x007)]
+		[ImGuiBitDescription("SCR1 base address", 0, 2)]
+		[ImGuiFormat("X4", 11)]
 		public virtual int Scr1Base => scr1Base;
+		[ImGuiRegister("REG_MAP_BASE", 0x007)]
+		[ImGuiBitDescription("SCR2 base address", 4, 6)]
+		[ImGuiFormat("X4", 11)]
 		public virtual int Scr2Base => scr2Base;
+		[ImGuiRegister("REG_SCR2_WIN_X0", 0x008)]
+		[ImGuiBitDescription("Top-left X of SCR2 window")]
 		public int Scr2WinX0 => scr2WinX0;
+		[ImGuiRegister("REG_SCR2_WIN_Y0", 0x009)]
+		[ImGuiBitDescription("Top-left Y of SCR2 window")]
 		public int Scr2WinY0 => scr2WinY0;
+		[ImGuiRegister("REG_SCR2_WIN_X1", 0x00A)]
+		[ImGuiBitDescription("Bottom-right X of SCR2 window")]
 		public int Scr2WinX1 => scr2WinX1;
+		[ImGuiRegister("REG_SCR2_WIN_Y1", 0x00B)]
+		[ImGuiBitDescription("Bottom-right Y of SCR2 window")]
 		public int Scr2WinY1 => scr2WinY1;
+		[ImGuiRegister("REG_SPR_WIN_X0", 0x00C)]
+		[ImGuiBitDescription("Top-left X of SPR window")]
 		public int SprWinX0 => sprWinX0;
+		[ImGuiRegister("REG_SPR_WIN_Y0", 0x00D)]
+		[ImGuiBitDescription("Top-left Y of SPR window")]
 		public int SprWinY0 => sprWinY0;
+		[ImGuiRegister("REG_SPR_WIN_X1", 0x00E)]
+		[ImGuiBitDescription("Bottom-right X of SPR window")]
 		public int SprWinX1 => sprWinX1;
+		[ImGuiRegister("REG_SPR_WIN_Y1", 0x00F)]
+		[ImGuiBitDescription("Bottom-right Y of SPR window")]
 		public int SprWinY1 => sprWinY1;
+		[ImGuiRegister("REG_SCR1_X", 0x010)]
+		[ImGuiBitDescription("SCR1 X scroll")]
 		public int Scr1ScrollX => scr1ScrollX;
+		[ImGuiRegister("REG_SCR1_Y", 0x011)]
+		[ImGuiBitDescription("SCR1 Y scroll")]
 		public int Scr1ScrollY => scr1ScrollY;
+		[ImGuiRegister("REG_SCR2_X", 0x012)]
+		[ImGuiBitDescription("SCR2 X scroll")]
 		public int Scr2ScrollX => scr2ScrollX;
+		[ImGuiRegister("REG_SCR2_Y", 0x013)]
+		[ImGuiBitDescription("SCR2 Y scroll")]
 		public int Scr2ScrollY => scr2ScrollY;
+		[ImGuiRegister("REG_LCD_CTRL", 0x014)]
+		[ImGuiBitDescription("LCD sleep mode; is LCD active?", 0)]
 		public bool LcdActive => lcdActive;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Sleep indicator", 0)]
 		public bool IconSleep => iconSleep;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Vertical orientation indicator", 1)]
 		public bool IconVertical => iconVertical;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Horizontal orientation indicator", 2)]
 		public bool IconHorizontal => iconHorizontal;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Auxiliary 1 (Small circle)", 3)]
 		public bool IconAux1 => iconAux1;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Auxiliary 2 (Medium circle)", 4)]
 		public bool IconAux2 => iconAux2;
+		[ImGuiRegister("REG_LCD_ICON", 0x015)]
+		[ImGuiBitDescription("Auxiliary 3 (Big circle)", 5)]
 		public bool IconAux3 => iconAux3;
+		[ImGuiRegister("REG_LCD_VTOTAL", 0x016)]
+		[ImGuiBitDescription("Display VTOTAL")]
 		public int VTotal => vtotal;
+		[ImGuiRegister("REG_LCD_VSYNC", 0x017)]
+		[ImGuiBitDescription("VSYNC line position")]
 		public int VSync => vsync;
+		[ImGuiRegister("REG_DISP_MODE", 0x060)]
+		[ImGuiBitDescription("Tile format; is packed format?", 5)]
 		public bool DisplayPackedFormatSet => displayPackedFormatSet;
+		[ImGuiRegister("REG_TMR_CTRL", 0x0A2)]
+		[ImGuiBitDescription("H-blank timer enable", 0)]
 		public bool HBlankTimerEnable => hBlankTimer.Enable;
+		[ImGuiRegister("REG_TMR_CTRL", 0x0A2)]
+		[ImGuiBitDescription("H-blank timer mode; is repeating?", 1)]
 		public bool HBlankTimerRepeating => hBlankTimer.Repeating;
+		[ImGuiRegister("REG_TMR_CTRL", 0x0A2)]
+		[ImGuiBitDescription("V-blank timer enable", 2)]
 		public bool VBlankTimerEnable => vBlankTimer.Enable;
+		[ImGuiRegister("REG_TMR_CTRL", 0x0A2)]
+		[ImGuiBitDescription("V-blank timer mode; is repeating?", 3)]
 		public bool VBlankTimerRepeating => vBlankTimer.Repeating;
+		[ImGuiRegister("REG_HTMR_FREQ", 0x0A4, 0x0A5)]
+		[ImGuiBitDescription("H-blank timer frequency")]
 		public ushort HBlankTimerFrequency => hBlankTimer.Frequency;
+		[ImGuiRegister("REG_VTMR_FREQ", 0x0A6, 0x0A7)]
+		[ImGuiBitDescription("V-blank timer frequency")]
 		public ushort VBlankTimerFrequency => vBlankTimer.Frequency;
+		[ImGuiRegister("REG_HTMR_CTR", 0x0A8, 0x0A9)]
+		[ImGuiBitDescription("H-blank timer counter")]
 		public ushort HBlankTimerCounter => hBlankTimer.Counter;
+		[ImGuiRegister("REG_VTMR_CTR", 0x0AA, 0x0AB)]
+		[ImGuiBitDescription("V-blank timer counter")]
 		public ushort VBlankTimerCounter => vBlankTimer.Counter;
 
 		// TODO: reorganize palmono stuff & add public accessors

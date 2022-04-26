@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StoicGoose.Interface.Attributes
+namespace StoicGoose.Common.Attributes
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class ImGuiBitDescriptionAttribute : Attribute

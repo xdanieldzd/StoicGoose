@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace StoicGoose.Common
+namespace StoicGoose.Common.Utilities
 {
 	public static class Crc32
 	{

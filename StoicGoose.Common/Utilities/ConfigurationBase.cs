@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace StoicGoose.Common
+namespace StoicGoose.Common.Utilities
 {
 	public abstract class ConfigurationBase<T> where T : class, new()
 	{

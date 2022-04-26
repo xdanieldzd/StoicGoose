@@ -7,8 +7,8 @@ using System.Threading;
 
 using OpenTK.Windowing.Common;
 
-using StoicGoose.Common;
 using StoicGoose.Common.Extensions;
+using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.GLWindow
 {

@@ -4,8 +4,8 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-using StoicGoose.Common;
 using StoicGoose.Common.Extensions;
+using StoicGoose.Common.Utilities;
 using StoicGoose.DataStorage;
 
 namespace StoicGoose

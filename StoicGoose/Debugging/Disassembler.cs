@@ -5,7 +5,7 @@ using System.Linq;
 using Gee.External.Capstone;
 using Gee.External.Capstone.X86;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Console;
 using StoicGoose.Core;
 
 namespace StoicGoose.Debugging

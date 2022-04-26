@@ -13,13 +13,13 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using ImGuiNET;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Console;
+using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Machines;
-using StoicGoose.Debugging;
+//using StoicGoose.Debugging;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 using StoicGoose.Interface.Windows;
-using StoicGoose.Common.OpenGL;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 

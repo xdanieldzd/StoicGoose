@@ -10,12 +10,12 @@ using OpenTK.WinForms;
 
 using ImGuiNET;
 
-using StoicGoose.Common;
-using StoicGoose.Interface.Windows;
+using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
+using StoicGoose.Interface.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
@@ -160,6 +160,8 @@ namespace StoicGoose.Handlers
 
 		public void Resize(int width, int height)
 		{
+			renderState.SetViewport(0, 0, width, height);
+
 			var io = ImGui.GetIO();
 			io.DisplaySize = new NumericsVector2(width, height);
 

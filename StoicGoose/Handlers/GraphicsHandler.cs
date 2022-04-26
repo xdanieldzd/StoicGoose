@@ -7,7 +7,7 @@ using System.Linq;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
@@ -272,7 +272,7 @@ namespace StoicGoose.Handlers
 
 		public void Resize(Rectangle clientRect)
 		{
-			GL.Viewport(clientRect);
+			renderState.SetViewport(clientRect.X, clientRect.Y, clientRect.Width, clientRect.Height);
 
 			var statusIconsOnRight = metadata.StatusIconsLocation.X > metadata.StatusIconsLocation.Y;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace StoicGoose.Interface.Attributes
+namespace StoicGoose.Common.Attributes
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public class ImGuiRegisterAttribute : Attribute

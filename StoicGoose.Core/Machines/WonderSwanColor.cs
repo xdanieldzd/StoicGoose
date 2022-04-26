@@ -2,14 +2,14 @@
 using StoicGoose.Core.DMA;
 using StoicGoose.Core.Sound;
 
+using StoicGoose.Common.Attributes;
+
 using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Machines
 {
 	public partial class WonderSwanColor : MachineCommon
 	{
-		public override byte InterruptBase { get; protected set; } = 0x00;
-
 		public override int InternalRamSize => 64 * 1024;
 
 		public override int InternalEepromSize => 1024 * 2;
@@ -39,7 +39,7 @@ namespace StoicGoose.Core.Machines
 
 		public override void ResetRegisters()
 		{
-			IsWSCOrGreater = true;
+			isWSCOrGreater = true;
 
 			base.ResetRegisters();
 		}
@@ -84,7 +84,7 @@ namespace StoicGoose.Core.Machines
 		public override void UpdateStatusIcons()
 		{
 			Metadata.IsStatusIconActive["Power"] = true;
-			Metadata.IsStatusIconActive["Initialized"] = BuiltInSelfTestOk;
+			Metadata.IsStatusIconActive["Initialized"] = builtInSelfTestOk;
 
 			Metadata.IsStatusIconActive["Sleep"] = DisplayController.IconSleep;
 			Metadata.IsStatusIconActive["Vertical"] = DisplayController.IconVertical;
@@ -135,37 +135,37 @@ namespace StoicGoose.Core.Machines
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
-					ChangeBit(ref retVal, 0, CartEnable);
+					ChangeBit(ref retVal, 0, cartEnable);
 					ChangeBit(ref retVal, 1, true);
-					ChangeBit(ref retVal, 2, Is16BitExtBus);
-					ChangeBit(ref retVal, 3, CartRom1CycleSpeed);
-					ChangeBit(ref retVal, 7, BuiltInSelfTestOk);
+					ChangeBit(ref retVal, 2, is16BitExtBus);
+					ChangeBit(ref retVal, 3, cartRom1CycleSpeed);
+					ChangeBit(ref retVal, 7, builtInSelfTestOk);
 					break;
 
 				case 0xB0:
 					/* REG_INT_BASE */
-					retVal = InterruptBase;
+					retVal = interruptBase;
 					break;
 
 				case 0xB1:
 					/* REG_SER_DATA */
-					retVal = SerialData;
+					retVal = serialData;
 					break;
 
 				case 0xB2:
 					/* REG_INT_ENABLE */
-					retVal = InterruptEnable;
+					retVal = interruptEnable;
 					break;
 
 				case 0xB3:
 					/* REG_SER_STATUS */
 					//TODO: Puyo Puyo Tsuu accesses this, stub properly?
-					ChangeBit(ref retVal, 7, SerialEnable);
-					ChangeBit(ref retVal, 6, SerialBaudRateSelect);
-					ChangeBit(ref retVal, 5, SerialOverrunReset);
-					ChangeBit(ref retVal, 2, SerialSendBufferEmpty);
-					ChangeBit(ref retVal, 1, SerialOverrun);
-					ChangeBit(ref retVal, 0, SerialDataReceived);
+					ChangeBit(ref retVal, 7, serialEnable);
+					ChangeBit(ref retVal, 6, serialBaudRateSelect);
+					ChangeBit(ref retVal, 5, serialOverrunReset);
+					ChangeBit(ref retVal, 2, serialSendBufferEmpty);
+					ChangeBit(ref retVal, 1, serialOverrun);
+					ChangeBit(ref retVal, 0, serialDataReceived);
 					break;
 
 				case 0xB4:
@@ -175,9 +175,9 @@ namespace StoicGoose.Core.Machines
 
 				case 0xB5:
 					/* REG_KEYPAD */
-					ChangeBit(ref retVal, 4, KeypadYEnable);
-					ChangeBit(ref retVal, 5, KeypadXEnable);
-					ChangeBit(ref retVal, 6, KeypadButtonEnable);
+					ChangeBit(ref retVal, 4, keypadYEnable);
+					ChangeBit(ref retVal, 5, keypadXEnable);
+					ChangeBit(ref retVal, 6, keypadButtonEnable);
 
 					/* Get input from UI */
 					var buttonsHeld = ReceiveInput?.Invoke().buttonsHeld;
@@ -186,7 +186,7 @@ namespace StoicGoose.Core.Machines
 						if (buttonsHeld.Count > 0)
 							RaiseInterrupt(1);
 
-						if (KeypadYEnable)
+						if (keypadYEnable)
 						{
 							if (buttonsHeld.Contains("Y1")) ChangeBit(ref retVal, 0, true);
 							if (buttonsHeld.Contains("Y2")) ChangeBit(ref retVal, 1, true);
@@ -194,7 +194,7 @@ namespace StoicGoose.Core.Machines
 							if (buttonsHeld.Contains("Y4")) ChangeBit(ref retVal, 3, true);
 						}
 
-						if (KeypadXEnable)
+						if (keypadXEnable)
 						{
 							if (buttonsHeld.Contains("X1")) ChangeBit(ref retVal, 0, true);
 							if (buttonsHeld.Contains("X2")) ChangeBit(ref retVal, 1, true);
@@ -202,7 +202,7 @@ namespace StoicGoose.Core.Machines
 							if (buttonsHeld.Contains("X4")) ChangeBit(ref retVal, 3, true);
 						}
 
-						if (KeypadButtonEnable)
+						if (keypadButtonEnable)
 						{
 							if (buttonsHeld.Contains("Start")) ChangeBit(ref retVal, 1, true);
 							if (buttonsHeld.Contains("A")) ChangeBit(ref retVal, 2, true);
@@ -284,31 +284,31 @@ namespace StoicGoose.Core.Machines
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
-					if (!CartEnable)
-						CartEnable = IsBitSet(value, 0);
-					Is16BitExtBus = IsBitSet(value, 2);
-					CartRom1CycleSpeed = IsBitSet(value, 3);
+					if (!cartEnable)
+						cartEnable = IsBitSet(value, 0);
+					is16BitExtBus = IsBitSet(value, 2);
+					cartRom1CycleSpeed = IsBitSet(value, 3);
 					break;
 
 				case 0xB0:
 					/* REG_INT_BASE */
-					InterruptBase = (byte)(value & 0b11111110);
+					interruptBase = (byte)(value & 0b11111110);
 					break;
 
 				case 0xB1:
 					/* REG_SER_DATA */
-					SerialData = value;
+					serialData = value;
 					break;
 
 				case 0xB2:
 					/* REG_INT_ENABLE */
-					InterruptEnable = value;
+					interruptEnable = value;
 					break;
 
 				case 0xB3:
 					/* REG_SER_STATUS */
-					SerialEnable = IsBitSet(value, 7);
-					SerialBaudRateSelect = IsBitSet(value, 6);
+					serialEnable = IsBitSet(value, 7);
+					serialBaudRateSelect = IsBitSet(value, 6);
 					break;
 
 				case 0xB4:
@@ -317,9 +317,9 @@ namespace StoicGoose.Core.Machines
 
 				case 0xB5:
 					/* REG_KEYPAD */
-					KeypadYEnable = IsBitSet(value, 4);
-					KeypadXEnable = IsBitSet(value, 5);
-					KeypadButtonEnable = IsBitSet(value, 6);
+					keypadYEnable = IsBitSet(value, 4);
+					keypadXEnable = IsBitSet(value, 5);
+					keypadButtonEnable = IsBitSet(value, 6);
 					break;
 
 				case 0xB6:
@@ -350,5 +350,10 @@ namespace StoicGoose.Core.Machines
 					break;
 			}
 		}
+
+		[ImGuiRegister("REG_INT_BASE", 0x0B0)]
+		[ImGuiBitDescription("Interrupt base address", 1, 7)]
+		[ImGuiFormat("X4", 0)]
+		public override byte InterruptBase => interruptBase;
 	}
 }

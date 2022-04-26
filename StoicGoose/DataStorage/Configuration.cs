@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
-using StoicGoose.Common;
+using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.DataStorage
 {
