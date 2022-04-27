@@ -30,9 +30,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		/* Internal stuff */
 		readonly List<Instruction> dummyInstructions = new();
-		uint lastCartridgeCrc32 = 0;
 		ushort codeSegment = 0x0000;
-		Thread disassemblyThread = default;
 		List<Instruction> instructions = new();
 		readonly List<ushort> stackAddresses = new(), stackAddressesAscending = new();
 		bool jumpToIpNext = false, jumpToSpNext = false;
@@ -46,8 +44,6 @@ namespace StoicGoose.GLWindow.Interface
 		float posStackAddrEnd = 0f, posStackDivStart = 0f, posStackHexStart = 0f;
 
 		/* Functional stuffs */
-		readonly Disassembler disassembler = Disassembler.Instance;
-
 		readonly ImGuiListClipper clipperObject = default;
 		readonly GCHandle clipperHandle = default;
 		readonly IntPtr clipperPointer = IntPtr.Zero;
@@ -94,7 +90,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		protected override void DrawWindow(object userData)
 		{
-			if (userData is not (IMachine machine, bool isRunning, bool isPaused)) return;
+			if (userData is not (IMachine machine, ThreadedDisassembler disassembler, bool isRunning, bool isPaused)) return;
 
 			if (HighlightColor1 == 0) HighlightColor1 = 0x3F000000 | (ImGui.GetColorU32(ImGuiCol.TextSelectedBg) & 0x00FFFFFF);
 			if (HighlightColor2 == 0) HighlightColor2 = 0x1F000000 | (ImGui.GetColorU32(ImGuiCol.Text) & 0x00FFFFFF);
@@ -104,26 +100,10 @@ namespace StoicGoose.GLWindow.Interface
 
 			CalcSizes();
 
-			if (lastCartridgeCrc32 != machine.Cartridge.Crc32)
-			{
-				disassembler.Reset();
-				lastCartridgeCrc32 = machine.Cartridge.Crc32;
-			}
-
-			if ((instructions.Count == 0 || codeSegment != machine.Cpu.CS) && (disassemblyThread == null || !disassemblyThread.IsAlive))
+			if (instructions.Count == 0 || codeSegment != machine.Cpu.CS || instructions == dummyInstructions)
 			{
 				codeSegment = machine.Cpu.CS;
-
-				var segInstructions = disassembler.GetCachedSegment(codeSegment);
-				if (segInstructions == null)
-				{
-					instructions = dummyInstructions;
-
-					disassemblyThread = new((seg) => instructions = disassembler.DisassembleSegment((ushort)seg)) { Priority = ThreadPriority.AboveNormal, IsBackground = true };
-					disassemblyThread.Start(codeSegment);
-				}
-				else
-					instructions = segInstructions;
+				instructions = disassembler.GetSegmentInstructions(codeSegment) ?? dummyInstructions;
 			}
 
 			if (stackAddresses.Count == 0)
@@ -140,11 +120,9 @@ namespace StoicGoose.GLWindow.Interface
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse))
 			{
-				var isDisasmThreadRunning = disassemblyThread?.IsAlive == true;
-
 				if (ImGui.BeginChild("##disassembly-scroll", new NumericsVector2(-(stackWidth + 1f), 390f), false, traceExecution ? ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar : ImGuiWindowFlags.None))
 				{
-					if (isDisasmThreadRunning)
+					if (instructions == dummyInstructions)
 						ImGui.BeginDisabled();
 
 					var drawListDisasm = ImGui.GetWindowDrawList();
@@ -229,7 +207,7 @@ namespace StoicGoose.GLWindow.Interface
 					ImGui.PopStyleVar(2);
 					ImGui.EndChild();
 
-					if (isDisasmThreadRunning)
+					if (instructions == dummyInstructions)
 						ImGui.EndDisabled();
 				}
 

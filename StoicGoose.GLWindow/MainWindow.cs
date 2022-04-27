@@ -9,7 +9,10 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
 
+using Newtonsoft.Json;
+
 using StoicGoose.Common.Console;
+using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Debugging;
@@ -19,13 +22,10 @@ using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
 namespace StoicGoose.GLWindow
 {
-	public class MainWindow : GameWindow
+	public partial class MainWindow : GameWindow
 	{
 		/* UI */
-		readonly MenuItem fileMenu = default, emulationMenu = default, optionsMenu = default, helpMenu = default;
-		readonly MessageBox aboutBox = default;
-		readonly StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
-		ImGuiLogWindow logWindow = default;
+		readonly ImGuiLogWindow logWindow = default;
 		ImGuiHandler imGuiHandler = default;
 		ImGuiMenuHandler imGuiMenuHandler = default;
 		ImGuiMessageBoxHandler imGuiMessageBoxHandler = default;
@@ -41,13 +41,16 @@ namespace StoicGoose.GLWindow
 		/* Input */
 		readonly InputHandler inputHandler = new();
 
+		/* Disassembly */
+		ThreadedDisassembler disassembler = default;
+
 		/* Emulation */
 		IMachine machine = default;
 		Texture displayTexture = default;
 		double frameTimeElapsed = 0.0;
 
 		/* Misc. runtime variables */
-		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default;
+		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default, disassemblyCacheFilename = default;
 		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
@@ -65,92 +68,12 @@ namespace StoicGoose.GLWindow
 			Program.Configuration.UseBootstrap = true;
 			Program.Configuration.BootstrapFiles[typeof(WonderSwan).FullName] = @"D:\Temp\Goose\WonderSwan Boot ROM.rom";
 			Program.Configuration.BootstrapFiles[typeof(WonderSwanColor).FullName] = @"D:\Temp\Goose\WonderSwan Color Boot ROM.rom";
-
-			fileMenu = new("File")
-			{
-				SubItems = new MenuItem[]
-				{
-					new("Open", (_) =>
-					{
-						// TODO: imgui file dialog
-						LoadAndRunCartridge(@"D:\Temp\Goose\Digimon Adventure 02 - D1 Tamers (Japan).wsc");
-					}),
-					new("-"),
-					new("Exit", (_) => { Close(); })
-				}
-			};
-
-			emulationMenu = new("Emulation")
-			{
-				SubItems = new MenuItem[]
-				{
-					new("Pause",
-					(_) => { isPaused = !isPaused; },
-					(s) => { s.IsEnabled = isRunning; s.IsChecked = isPaused; }),
-					new("Reset",
-					(_) => { if (isRunning) { SaveEepromAndCartridgeRam(); machine?.Reset(); } },
-					(s) => { s.IsEnabled = isRunning; }),
-					new("-"),
-					new("Shutdown",
-					(_) => { if (isRunning) { SaveEepromAndCartridgeRam(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); isRunning = false; } },
-					(s) => { s.IsEnabled = isRunning; })
-				}
-			};
-
-			optionsMenu = new("Options")
-			{
-				SubItems = new MenuItem[]
-				{
-					new("Preferred System")
-					{
-						SubItems = new MenuItem[]
-						{
-							new("WonderSwan",
-							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
-							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
-							new("WonderSwan Color",
-							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
-							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwanColor).FullName; })
-						}
-					},
-					new("-"),
-					new("Limit FPS",
-					(_) => { Program.Configuration.LimitFps = !Program.Configuration.LimitFps; },
-					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
-					new("Mute",
-					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; }),
-					new("-"),
-					new("Show Log",
-					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
-				}
-			};
-
-			helpMenu = new("Help")
-			{
-				SubItems = new MenuItem[]
-				{
-					new("About...", (_) => { aboutBox.IsOpen = true; })
-				}
-			};
-
-			aboutBox = new(
-				"About",
-				$"{Program.ProductName} {Program.GetVersionString(true)}\r\n" +
-				$"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description}\r\n" +
-				"\r\n" +
-				$"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright}\r\n" +
-				$"{ThisAssembly.Git.RepositoryUrl}",
-				"Okay");
-
-			statusMessageItem = new(string.Empty) { ShowSeparator = false };
-			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
-			statusFpsItem = new(string.Empty) { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 		}
 
 		protected override void OnLoad()
 		{
+			InitializeUI();
+
 			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = true };
 			disassemblerWindow.PauseEmulation += (s, e) => isPaused = true;
 			disassemblerWindow.UnpauseEmulation += (s, e) => isPaused = false;
@@ -158,7 +81,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize }, () => (displayTexture, isVerticalOrientation));
-			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));
+			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, disassembler, isRunning, isPaused));
 			imGuiMenuHandler = new(fileMenu, emulationMenu, optionsMenu, helpMenu);
 			imGuiMessageBoxHandler = new(aboutBox);
 			imGuiStatusBarHandler = new();
@@ -177,6 +100,8 @@ namespace StoicGoose.GLWindow
 			inputHandler.SetGameWindow(this);
 			inputHandler.SetKeyMapping(Program.Configuration.GameControls, Program.Configuration.SystemControls);
 
+			disassembler = new();
+
 			CreateMachine(Program.Configuration.PreferredSystem);
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnLoad)} override finished.");
@@ -186,6 +111,8 @@ namespace StoicGoose.GLWindow
 
 		protected override void OnUnload()
 		{
+			DestroyMachine();
+
 			Program.SaveConfiguration();
 
 			soundHandler.Dispose();
@@ -291,12 +218,12 @@ namespace StoicGoose.GLWindow
 			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);
 
-			Disassembler.Instance.ReadDelegate = machine.ReadMemory;
+			disassembler.ReadDelegate = machine.ReadMemory;
 		}
 
 		private void DestroyMachine()
 		{
-			SaveEepromAndCartridgeRam();
+			SaveVolatileData();
 
 			machine.Shutdown();
 
@@ -306,10 +233,11 @@ namespace StoicGoose.GLWindow
 			isRunning = false;
 		}
 
-		private void SaveEepromAndCartridgeRam()
+		private void SaveVolatileData()
 		{
 			SaveCartridgeRam();
 			SaveInternalEeprom();
+			SaveDisassemblyCache();
 		}
 
 		private void LoadAndRunCartridge(string filename)
@@ -319,11 +247,12 @@ namespace StoicGoose.GLWindow
 			if (isRunning)
 			{
 				isRunning = false;
-				SaveEepromAndCartridgeRam();
+				SaveVolatileData();
 			}
 
 			cartridgeFilename = filename;
 			cartSaveFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}.sav";
+			disassemblyCacheFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}_cache.json";
 
 			using var stream = new FileStream(cartridgeFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			var data = new byte[stream.Length];
@@ -335,6 +264,7 @@ namespace StoicGoose.GLWindow
 			LoadCartridgeRam();
 			LoadBootstrap();
 			LoadInternalEeprom();
+			LoadDisassemblyCache();
 
 			machine.Reset();
 
@@ -369,13 +299,23 @@ namespace StoicGoose.GLWindow
 
 		private void LoadInternalEeprom()
 		{
-			if (!isRunning && File.Exists(internalEepromFilename))
-			{
-				using var stream = new FileStream(internalEepromFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				var data = new byte[stream.Length];
-				stream.Read(data, 0, data.Length);
-				machine.LoadInternalEeprom(data);
-			}
+			var path = Path.Combine(Program.InternalDataPath, internalEepromFilename);
+			if (!File.Exists(path)) return;
+
+			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			var data = new byte[stream.Length];
+			stream.Read(data, 0, data.Length);
+			if (data.Length != 0) machine.LoadInternalEeprom(data);
+		}
+
+		private void LoadDisassemblyCache()
+		{
+			var path = Path.Combine(Program.DebuggingDataPath, disassemblyCacheFilename);
+			if (!File.Exists(path)) return;
+
+			var data = path.DeserializeFromFile<Dictionary<ushort, List<Instruction>>>();
+			disassembler.Clear();
+			disassembler.SetSegmentCache(data);
 		}
 
 		private void SaveCartridgeRam()
@@ -394,8 +334,25 @@ namespace StoicGoose.GLWindow
 			var data = machine.GetInternalEeprom();
 			if (data.Length == 0) return;
 
-			using var stream = new FileStream(internalEepromFilename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+			var path = Path.Combine(Program.InternalDataPath, internalEepromFilename);
+
+			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
+		}
+
+		private void SaveDisassemblyCache()
+		{
+			var data = disassembler.GetSegmentCache();
+			if (data.Count == 0) return;
+
+			var path = Path.Combine(Program.DebuggingDataPath, disassemblyCacheFilename);
+
+			data.SerializeToFile(path, new()
+			{
+				Formatting = Formatting.None,
+				NullValueHandling = NullValueHandling.Ignore,
+				DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate
+			});
 		}
 	}
 }

@@ -8,13 +8,13 @@ namespace StoicGoose.Common.Extensions
 	{
 		public static void SerializeToFile(this object obj, string jsonFileName)
 		{
-			SerializeToFile(obj, jsonFileName, new JsonSerializerSettings());
+			SerializeToFile(obj, jsonFileName, new JsonSerializerSettings() { Formatting = Formatting.Indented });
 		}
 
 		public static void SerializeToFile(this object obj, string jsonFileName, JsonSerializerSettings serializerSettings)
 		{
 			using var writer = new StreamWriter(jsonFileName);
-			writer.Write(JsonConvert.SerializeObject(obj, Formatting.Indented, serializerSettings));
+			writer.Write(JsonConvert.SerializeObject(obj, serializerSettings));
 		}
 
 		public static T DeserializeFromFile<T>(this string jsonFileName)

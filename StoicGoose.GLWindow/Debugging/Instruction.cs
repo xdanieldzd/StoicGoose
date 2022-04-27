@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 using Gee.External.Capstone.X86;
 
@@ -9,8 +10,12 @@ namespace StoicGoose.GLWindow.Debugging
 		public ushort Segment { get; set; } = 0;
 		public ushort Address { get; set; } = 0;
 		public byte[] Bytes { get; set; } = Array.Empty<byte>();
+
+		[DefaultValue("")]
 		public string Mnemonic { get; set; } = string.Empty;
+		[DefaultValue("")]
 		public string Operand { get; set; } = string.Empty;
+		[DefaultValue("")]
 		public string Comment { get; set; } = string.Empty;
 
 		public Instruction() { }

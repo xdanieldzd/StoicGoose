@@ -16,6 +16,7 @@ namespace StoicGoose.GLWindow
 	{
 		const string jsonConfigFileName = "Config.json";
 
+		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
 		const string debuggingDataDirectoryName = "Debugging";
 
@@ -32,13 +33,13 @@ namespace StoicGoose.GLWindow
 
 		public static string InternalDataPath { get; } = string.Empty;
 		public static string SaveDataPath { get; } = string.Empty;
-		public static string CheatsDataPath { get; } = string.Empty;
 		public static string DebuggingDataPath { get; } = string.Empty;
 
 		static Program()
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
+			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 		}
