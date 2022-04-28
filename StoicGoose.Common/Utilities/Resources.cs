@@ -1,6 +1,7 @@
-﻿using System.Drawing;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
+
+using StoicGoose.Common.Drawing;
 
 namespace StoicGoose.Common.Utilities
 {
@@ -13,11 +14,11 @@ namespace StoicGoose.Common.Utilities
 			return assembly.GetManifestResourceStream(name);
 		}
 
-		public static Bitmap GetEmbeddedBitmap(string name)
+		public static RgbaFile GetEmbeddedRgbaFile(string name)
 		{
 			using var stream = GetEmbeddedResourceStream(name);
 			if (stream == null) return null;
-			return new Bitmap(stream);
+			return new RgbaFile(stream);
 		}
 
 		public static string GetEmbeddedText(string name)
@@ -28,9 +29,9 @@ namespace StoicGoose.Common.Utilities
 			return reader.ReadToEnd();
 		}
 
-		public static Bitmap GetEmbeddedSystemIcon(string name)
+		public static RgbaFile GetEmbeddedSystemIcon(string name)
 		{
-			return GetEmbeddedBitmap($"Assets.Icons.{name}");
+			return GetEmbeddedRgbaFile($"Assets.Icons.{name}");
 		}
 
 		public static string GetEmbeddedShaderFile(string name)

@@ -6,6 +6,8 @@ using StoicGoose.Core.Display;
 
 namespace StoicGoose.Core.Machines
 {
+	// TODO: move status icon information into WinForms frontend? GLWindow frontend doesn't use it; seems strange to keep here in core
+
 	public class WonderSwanMetadata : MetadataBase
 	{
 		public override string Manufacturer => "Bandai";
@@ -49,19 +51,19 @@ namespace StoicGoose.Core.Machines
 
 		readonly static Dictionary<string, (string, Vector2i)> statusIcons = new()
 		{
-			{ "Power", ("Power.png", new(0, 0)) },
-			{ "Initialized", ("Initialized.png", new(18, 0)) },
-			{ "Sleep", ("Sleep.png", new(50, 0)) },
-			{ "LowBattery", ("LowBattery.png", new(80, 0)) },
-			{ "Volume0", ("VolumeA0.png", new(105, 0)) },
-			{ "Volume1", ("VolumeA1.png", new(105, 0)) },
-			{ "Volume2", ("VolumeA2.png", new(105, 0)) },
-			{ "Headphones", ("Headphones.png", new(130, 0)) },
-			{ "Horizontal", ("Horizontal.png", new(155, 0)) },
-			{ "Vertical", ("Vertical.png", new(168, 0)) },
-			{ "Aux1", ("Aux1.png", new(185, 0)) },
-			{ "Aux2", ("Aux2.png", new(195, 0)) },
-			{ "Aux3", ("Aux3.png", new(205, 0)) }
+			{ "Power", ("Power.rgba", new(0, 0)) },
+			{ "Initialized", ("Initialized.rgba", new(18, 0)) },
+			{ "Sleep", ("Sleep.rgba", new(50, 0)) },
+			{ "LowBattery", ("LowBattery.rgba", new(80, 0)) },
+			{ "Volume0", ("VolumeA0.rgba", new(105, 0)) },
+			{ "Volume1", ("VolumeA1.rgba", new(105, 0)) },
+			{ "Volume2", ("VolumeA2.rgba", new(105, 0)) },
+			{ "Headphones", ("Headphones.rgba", new(130, 0)) },
+			{ "Horizontal", ("Horizontal.rgba", new(155, 0)) },
+			{ "Vertical", ("Vertical.rgba", new(168, 0)) },
+			{ "Aux1", ("Aux1.rgba", new(185, 0)) },
+			{ "Aux2", ("Aux2.rgba", new(195, 0)) },
+			{ "Aux3", ("Aux3.rgba", new(205, 0)) }
 		};
 
 		public override Dictionary<string, (string filename, Vector2i location)> StatusIcons => statusIcons;
@@ -110,20 +112,20 @@ namespace StoicGoose.Core.Machines
 
 		readonly static Dictionary<string, (string, Vector2i)> statusIcons = new()
 		{
-			{ "Power", ("Power.png", new(0, 132)) },
-			{ "Initialized", ("Initialized.png", new(0, 120)) },
-			{ "Sleep", ("Sleep.png", new(0, 100)) },
-			{ "LowBattery", ("LowBattery.png", new(0, 81)) },
-			{ "Volume0", ("VolumeS0.png", new(0, 65)) },
-			{ "Volume1", ("VolumeS1.png", new(0, 65)) },
-			{ "Volume2", ("VolumeS2.png", new(0, 65)) },
-			{ "Volume3", ("VolumeS3.png", new(0, 65)) },
-			{ "Headphones", ("Headphones.png", new(0, 49)) },
-			{ "Horizontal", ("Horizontal.png", new(0, 32)) },
-			{ "Vertical", ("Vertical.png", new(0, 24)) },
-			{ "Aux1", ("Aux1.png", new(0, 14)) },
-			{ "Aux2", ("Aux2.png", new(0, 7)) },
-			{ "Aux3", ("Aux3.png", new(0, 0)) }
+			{ "Power", ("Power.rgba", new(0, 132)) },
+			{ "Initialized", ("Initialized.rgba", new(0, 120)) },
+			{ "Sleep", ("Sleep.rgba", new(0, 100)) },
+			{ "LowBattery", ("LowBattery.rgba", new(0, 81)) },
+			{ "Volume0", ("VolumeS0.rgba", new(0, 65)) },
+			{ "Volume1", ("VolumeS1.rgba", new(0, 65)) },
+			{ "Volume2", ("VolumeS2.rgba", new(0, 65)) },
+			{ "Volume3", ("VolumeS3.rgba", new(0, 65)) },
+			{ "Headphones", ("Headphones.rgba", new(0, 49)) },
+			{ "Horizontal", ("Horizontal.rgba", new(0, 32)) },
+			{ "Vertical", ("Vertical.rgba", new(0, 24)) },
+			{ "Aux1", ("Aux1.rgba", new(0, 14)) },
+			{ "Aux2", ("Aux2.rgba", new(0, 7)) },
+			{ "Aux3", ("Aux3.rgba", new(0, 0)) }
 		};
 
 		public override Dictionary<string, (string filename, Vector2i location)> StatusIcons => statusIcons;

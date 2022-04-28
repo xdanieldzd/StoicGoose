@@ -296,9 +296,9 @@ namespace StoicGoose.Core.Display
 		protected void WriteToFramebuffer(int y, int x, byte r, byte g, byte b)
 		{
 			var outputAddress = ((y * HorizontalDisp) + x) * 4;
-			outputFramebuffer[outputAddress + 0] = b;
+			outputFramebuffer[outputAddress + 0] = r;
 			outputFramebuffer[outputAddress + 1] = g;
-			outputFramebuffer[outputAddress + 2] = r;
+			outputFramebuffer[outputAddress + 2] = b;
 			outputFramebuffer[outputAddress + 3] = 255;
 		}
 

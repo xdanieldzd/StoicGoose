@@ -34,8 +34,6 @@ namespace StoicGoose
 			this.tvSettings = new StoicGoose.WinForms.Controls.TreeViewEx();
 			this.tlpSettings = new StoicGoose.WinForms.Controls.TableLayoutPanelEx();
 			this.lblNothing = new System.Windows.Forms.Label();
-			this.pbBackground = new System.Windows.Forms.PictureBox();
-			((System.ComponentModel.ISupportInitialize)(this.pbBackground)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// btnOk
@@ -102,14 +100,6 @@ namespace StoicGoose
 			this.lblNothing.TabIndex = 104;
 			this.lblNothing.Text = "---";
 			// 
-			// pbBackground
-			// 
-			this.pbBackground.Location = new System.Drawing.Point(168, 12);
-			this.pbBackground.Name = "pbBackground";
-			this.pbBackground.Size = new System.Drawing.Size(454, 407);
-			this.pbBackground.TabIndex = 105;
-			this.pbBackground.TabStop = false;
-			// 
 			// SettingsForm
 			// 
 			this.AcceptButton = this.btnOk;
@@ -122,7 +112,6 @@ namespace StoicGoose
 			this.Controls.Add(this.btnCancel);
 			this.Controls.Add(this.btnOk);
 			this.Controls.Add(this.lblNothing);
-			this.Controls.Add(this.pbBackground);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
@@ -131,7 +120,6 @@ namespace StoicGoose
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Settings";
-			((System.ComponentModel.ISupportInitialize)(this.pbBackground)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -143,6 +131,5 @@ namespace StoicGoose
 		private StoicGoose.WinForms.Controls.TreeViewEx tvSettings;
 		private StoicGoose.WinForms.Controls.TableLayoutPanelEx tlpSettings;
 		private System.Windows.Forms.Label lblNothing;
-		private System.Windows.Forms.PictureBox pbBackground;
 	}
 }

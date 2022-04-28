@@ -131,7 +131,10 @@ namespace StoicGoose.Handlers
 		{
 			foreach (var (name, (filename, _)) in metadata.StatusIcons)
 			{
-				iconTextures.Add(name, new Texture(Resources.GetEmbeddedSystemIcon(filename), TextureMinFilter.Linear, TextureMagFilter.Linear));
+				var texture = new Texture(Resources.GetEmbeddedSystemIcon(filename));
+				texture.SetTextureFilter(TextureMinFilter.Linear, TextureMagFilter.Linear);
+
+				iconTextures.Add(name, texture);
 				iconModelviewMatrices.Add(name, new Matrix4Uniform(defaultModelviewMatrixName));
 			}
 		}
@@ -223,9 +226,12 @@ namespace StoicGoose.Handlers
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
 				if (!metadata.StatusIconsInverted)
-					displayTextures[i] = new Texture(255, 255, 255, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+					displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, 255, 255, 255, 255);
 				else
-					displayTextures[i] = new Texture(8, 8, 8, 255, metadata.ScreenSize.X, metadata.ScreenSize.Y, textureMinFilter, textureMagFilter, textureWrapMode);
+					displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, 8, 8, 8, 255);
+
+				displayTextures[i].SetTextureFilter(textureMinFilter, textureMagFilter);
+				displayTextures[i].SetTextureWrapMode(textureWrapMode, textureWrapMode);
 
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}

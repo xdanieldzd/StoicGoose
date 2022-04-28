@@ -17,9 +17,6 @@ namespace StoicGoose
 			InitializeComponent();
 
 			InitializePages();
-
-			pbBackground.BackgroundImage = Common.Utilities.Resources.GetEmbeddedBitmap("Assets.Goose.png");
-			pbBackground.BackgroundImageLayout = ImageLayout.Zoom;
 		}
 
 		private void InitializePages()
@@ -74,7 +71,6 @@ namespace StoicGoose
 				}
 				lblNothing.Text = string.Empty;
 				lblNothing.Visible = false;
-				pbBackground.Visible = false;
 
 				tlpSettings.ResumeLayout();
 				tlpSettings.Visible = true;
@@ -85,7 +81,6 @@ namespace StoicGoose
 
 				lblNothing.Text = "Honk.";
 				lblNothing.Visible = true;
-				pbBackground.Visible = true;
 			}
 		}
 	}

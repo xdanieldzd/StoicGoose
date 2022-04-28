@@ -108,7 +108,7 @@ namespace StoicGoose.GLWindow
 			io.Fonts.AddFontDefault();// TODO jpn font
 
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
-			texture = new Texture(fontTexturePixels, fontTextureWidth, fontTextureHeight);
+			texture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
 			io.Fonts.SetTexID((IntPtr)texture.Handle);
 			io.Fonts.ClearTexData();
 

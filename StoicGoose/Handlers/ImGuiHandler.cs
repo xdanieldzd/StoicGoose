@@ -114,7 +114,7 @@ namespace StoicGoose.Handlers
 			if (!string.IsNullOrEmpty(japaneseFontPath)) io.Fonts.AddFontFromFileTTF(japaneseFontPath, 18f, null, io.Fonts.GetGlyphRangesJapanese());
 
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
-			texture = new Texture(fontTexturePixels, fontTextureWidth, fontTextureHeight);
+			texture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
 			io.Fonts.SetTexID((IntPtr)texture.Handle);
 			io.Fonts.ClearTexData();
 

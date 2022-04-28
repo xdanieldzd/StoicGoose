@@ -27,24 +27,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Assets\Goose.png" />
-    <None Remove="Assets\Icons\Aux1.png" />
-    <None Remove="Assets\Icons\Aux2.png" />
-    <None Remove="Assets\Icons\Aux3.png" />
-    <None Remove="Assets\Icons\Headphones.png" />
-    <None Remove="Assets\Icons\Horizontal.png" />
-    <None Remove="Assets\Icons\Initialized.png" />
-    <None Remove="Assets\Icons\LowBattery.png" />
-    <None Remove="Assets\Icons\Power.png" />
-    <None Remove="Assets\Icons\Sleep.png" />
-    <None Remove="Assets\Icons\Vertical.png" />
-    <None Remove="Assets\Icons\VolumeA0.png" />
-    <None Remove="Assets\Icons\VolumeA1.png" />
-    <None Remove="Assets\Icons\VolumeA2.png" />
-    <None Remove="Assets\Icons\VolumeS0.png" />
-    <None Remove="Assets\Icons\VolumeS1.png" />
-    <None Remove="Assets\Icons\VolumeS2.png" />
-    <None Remove="Assets\Icons\VolumeS3.png" />
+    <None Remove="Assets\Icons\Aux1.rgba" />
+    <None Remove="Assets\Icons\Aux2.rgba" />
+    <None Remove="Assets\Icons\Aux3.rgba" />
+    <None Remove="Assets\Icons\Headphones.rgba" />
+    <None Remove="Assets\Icons\Horizontal.rgba" />
+    <None Remove="Assets\Icons\Initialized.rgba" />
+    <None Remove="Assets\Icons\LowBattery.rgba" />
+    <None Remove="Assets\Icons\Power.rgba" />
+    <None Remove="Assets\Icons\Sleep.rgba" />
+    <None Remove="Assets\Icons\Vertical.rgba" />
+    <None Remove="Assets\Icons\VolumeA0.rgba" />
+    <None Remove="Assets\Icons\VolumeA1.rgba" />
+    <None Remove="Assets\Icons\VolumeA2.rgba" />
+    <None Remove="Assets\Icons\VolumeB0.rgba" />
+    <None Remove="Assets\Icons\VolumeB1.rgba" />
+    <None Remove="Assets\Icons\VolumeB2.rgba" />
+    <None Remove="Assets\Icons\VolumeB3.rgba" />
     <None Remove="Assets\Shaders\Basic\Fragment.glsl" />
     <None Remove="Assets\Shaders\Basic\Manifest.json" />
     <None Remove="Assets\Shaders\FragmentBase.glsl" />
@@ -52,24 +51,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\Goose.png" />
-    <EmbeddedResource Include="Assets\Icons\Aux1.png" />
-    <EmbeddedResource Include="Assets\Icons\Aux2.png" />
-    <EmbeddedResource Include="Assets\Icons\Aux3.png" />
-    <EmbeddedResource Include="Assets\Icons\Headphones.png" />
-    <EmbeddedResource Include="Assets\Icons\Horizontal.png" />
-    <EmbeddedResource Include="Assets\Icons\Initialized.png" />
-    <EmbeddedResource Include="Assets\Icons\LowBattery.png" />
-    <EmbeddedResource Include="Assets\Icons\Power.png" />
-    <EmbeddedResource Include="Assets\Icons\Sleep.png" />
-    <EmbeddedResource Include="Assets\Icons\Vertical.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeA0.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeA1.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeA2.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeS0.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeS1.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeS2.png" />
-    <EmbeddedResource Include="Assets\Icons\VolumeS3.png" />
+    <EmbeddedResource Include="Assets\Icons\Aux1.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Aux2.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Aux3.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Headphones.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Horizontal.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Initialized.rgba" />
+    <EmbeddedResource Include="Assets\Icons\LowBattery.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Power.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Sleep.rgba" />
+    <EmbeddedResource Include="Assets\Icons\Vertical.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA0.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA1.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeA2.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeB0.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeB1.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeB2.rgba" />
+    <EmbeddedResource Include="Assets\Icons\VolumeB3.rgba" />
     <EmbeddedResource Include="Assets\Shaders\Basic\Fragment.glsl" />
     <EmbeddedResource Include="Assets\Shaders\Basic\Manifest.json" />
     <EmbeddedResource Include="Assets\Shaders\FragmentBase.glsl" />
