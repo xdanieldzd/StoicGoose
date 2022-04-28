@@ -8,9 +8,9 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiScreenWindow : ImGuiWindowBase
+	public class ImGuiDisplayWindow : ImGuiWindowBase
 	{
-		public ImGuiScreenWindow() : base("Display") { }
+		public ImGuiDisplayWindow() : base("Display") { }
 
 		int windowScale = 1;
 

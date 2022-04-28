@@ -28,7 +28,7 @@ namespace StoicGoose.Interface.Windows
 			SizingCondition = condition;
 		}
 
-		public virtual void Draw(object userData)
+		public void Draw(object userData)
 		{
 			if (!isWindowOpen) return;
 

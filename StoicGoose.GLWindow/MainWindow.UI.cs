@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.IO;
+using System.Reflection;
 
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Interface;
@@ -7,20 +8,28 @@ namespace StoicGoose.GLWindow
 {
 	partial class MainWindow
 	{
-		MenuItem fileMenu = default, emulationMenu = default, optionsMenu = default, helpMenu = default;
+		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
 		StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
+		FileDialog openRomDialog = default;
 
 		private void InitializeUI()
 		{
+			displayWindow = new ImGuiDisplayWindow() { WindowScale = Program.Configuration.DisplaySize };
+			disassemblerWindow = new ImGuiDisassemblerWindow();
+			disassemblerWindow.PauseEmulation += (s, e) => isPaused = true;
+			disassemblerWindow.UnpauseEmulation += (s, e) => isPaused = false;
+
 			fileMenu = new("File")
 			{
 				SubItems = new MenuItem[]
 				{
 					new("Open", (_) =>
 					{
-						// TODO: imgui file dialog
-						LoadAndRunCartridge(@"D:\Temp\Goose\Digimon Adventure 02 - D1 Tamers (Japan).wsc");
+						openRomDialog.Filter = machine?.Metadata.RomFileFilter;
+						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
+						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
+						openRomDialog.IsOpen = true;
 					}),
 					new("-"),
 					new("Exit", (_) => { Close(); })
@@ -39,8 +48,25 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsEnabled = isRunning; }),
 					new("-"),
 					new("Shutdown",
-					(_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); isRunning = false; } },
+					(_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
 					(s) => { s.IsEnabled = isRunning; })
+				}
+			};
+
+			windowsMenu = new("Windows")
+			{
+				SubItems = new MenuItem[]
+				{
+					new("Show Display",
+					(_) => { displayWindow.IsWindowOpen = !displayWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = displayWindow.IsWindowOpen; }),
+					new("Show Log",
+					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = logWindow.IsWindowOpen; }),
+					new("-"),
+					new("Show Disassembler",
+					(_) => { disassemblerWindow.IsWindowOpen = !disassemblerWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = disassemblerWindow.IsWindowOpen; })
 				}
 			};
 
@@ -66,11 +92,7 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
 					new("Mute",
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; }),
-					new("-"),
-					new("Show Log",
-					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
+					(s) => { s.IsChecked = Program.Configuration.Mute; })
 				}
 			};
 
@@ -94,6 +116,15 @@ namespace StoicGoose.GLWindow
 			statusMessageItem = new(string.Empty) { ShowSeparator = false };
 			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 			statusFpsItem = new(string.Empty) { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
+
+			openRomDialog = new(ImGuiFileDialogType.Open, "Open ROM")
+			{
+				Callback = (res, fn) =>
+				{
+					if (res == ImGuiFileDialogResult.Okay)
+						LoadAndRunCartridge(fn);
+				}
+			};
 		}
 	}
 }

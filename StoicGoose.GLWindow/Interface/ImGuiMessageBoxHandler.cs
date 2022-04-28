@@ -12,6 +12,8 @@ namespace StoicGoose.GLWindow.Interface
 	{
 		readonly List<MessageBox> messageBoxes = new();
 
+		public bool IsAnyMessageBoxOpen => messageBoxes.Any(x => x.IsOpen);
+
 		public ImGuiMessageBoxHandler(params MessageBox[] messageBoxes)
 		{
 			this.messageBoxes.AddRange(messageBoxes);
@@ -29,6 +31,8 @@ namespace StoicGoose.GLWindow.Interface
 
 			for (var i = 0; i < messageBoxes.Count; i++)
 			{
+				if (!messageBoxes[i].IsOpen) continue;
+
 				var viewportCenter = ImGui.GetMainViewport().GetCenter();
 				ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
 

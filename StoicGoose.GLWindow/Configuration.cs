@@ -19,13 +19,17 @@ namespace StoicGoose.GLWindow
 		[Description("Path to the WonderSwan bootstrap ROM image to use.")]
 		public Dictionary<string, string> BootstrapFiles { get; set; } = new();
 
+		[DisplayName("Last ROM Loaded")]
+		[Description("Most recently loaded ROM image.")]
+		public string LastRomLoaded { get; set; } = string.Empty;
+
 		[DisplayName("Limit FPS")]
 		[Description("Toggle limiting the framerate to the system's native ~75.47 Hz.")]
 		public bool LimitFps { get; set; } = true;
 
-		[DisplayName("Screen Size")]
+		[DisplayName("Display Size")]
 		[Description("Size of the emulated screen, in times original display resolution.")]
-		public int ScreenSize { get; set; } = 3;
+		public int DisplaySize { get; set; } = 3;
 
 		[DisplayName("Mute")]
 		[Description("Toggles muting all sound output.")]

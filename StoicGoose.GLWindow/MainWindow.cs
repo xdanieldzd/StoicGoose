@@ -26,10 +26,14 @@ namespace StoicGoose.GLWindow
 	{
 		/* UI */
 		readonly ImGuiLogWindow logWindow = default;
+		ImGuiDisplayWindow displayWindow = default;
+		ImGuiDisassemblerWindow disassemblerWindow = default;
+
 		ImGuiHandler imGuiHandler = default;
 		ImGuiMenuHandler imGuiMenuHandler = default;
 		ImGuiMessageBoxHandler imGuiMessageBoxHandler = default;
 		ImGuiStatusBarHandler imGuiStatusBarHandler = default;
+		ImGuiFileDialogHandler imGuiFileDialogHandler = default;
 
 		/* Graphics */
 		readonly State renderState = new();
@@ -56,7 +60,7 @@ namespace StoicGoose.GLWindow
 
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
-			if ((logWindow = new() { IsWindowOpen = true }) != null)
+			if ((logWindow = new() { IsWindowOpen = GlobalVariables.IsAuthorsMachine }) != null)
 			{
 				Console.SetOut(logWindow.TextWriter);
 				var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
@@ -74,17 +78,14 @@ namespace StoicGoose.GLWindow
 		{
 			InitializeUI();
 
-			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = true };
-			disassemblerWindow.PauseEmulation += (s, e) => isPaused = true;
-			disassemblerWindow.UnpauseEmulation += (s, e) => isPaused = false;
-
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
-			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = true, WindowScale = Program.Configuration.ScreenSize }, () => (displayTexture, isVerticalOrientation));
+			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, disassembler, isRunning, isPaused));
-			imGuiMenuHandler = new(fileMenu, emulationMenu, optionsMenu, helpMenu);
+			imGuiMenuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
 			imGuiMessageBoxHandler = new(aboutBox);
 			imGuiStatusBarHandler = new();
+			imGuiFileDialogHandler = new(openRomDialog);
 
 			statusMessageItem.Label = $"{Program.ProductName} {Program.GetVersionString(true)} ready!";
 
@@ -140,7 +141,8 @@ namespace StoicGoose.GLWindow
 
 			if (frameTimeElapsed >= 1.0 / machine.Metadata.RefreshRate || !Program.Configuration.LimitFps)
 			{
-				if (isRunning && !isPaused)
+				if (isRunning && !isPaused &&
+					!imGuiFileDialogHandler.IsAnyDialogOpen && !imGuiMessageBoxHandler.IsAnyMessageBoxOpen)
 				{
 					machine.RunFrame();
 					soundHandler.Update();
@@ -173,6 +175,7 @@ namespace StoicGoose.GLWindow
 				imGuiMenuHandler.Draw();
 				imGuiMessageBoxHandler.Draw();
 				imGuiStatusBarHandler.Draw(statusMessageItem, statusRunningItem, statusFpsItem);
+				imGuiFileDialogHandler.Draw();
 
 				displayTexture?.Bind();
 			}
@@ -197,7 +200,7 @@ namespace StoicGoose.GLWindow
 				var buttonsPressed = new List<string>();
 				var buttonsHeld = new List<string>();
 
-				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
+				var screenWindow = imGuiHandler.GetWindow<ImGuiDisplayWindow>();
 				if (screenWindow.IsWindowOpen && screenWindow.IsFocused)
 					inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
 
@@ -266,9 +269,13 @@ namespace StoicGoose.GLWindow
 			LoadInternalEeprom();
 			LoadDisassemblyCache();
 
+			displayWindow.IsWindowOpen = true;
+
 			machine.Reset();
 
 			statusMessageItem.Label = $"Emulating {machine.Metadata.Manufacturer} {machine.Metadata.Model}, running '{cartridgeFilename}' ({machine.Cartridge.Metadata.GameIdString})";
+
+			Program.Configuration.LastRomLoaded = cartridgeFilename;
 
 			Program.SaveConfiguration();
 
