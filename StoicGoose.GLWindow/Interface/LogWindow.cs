@@ -13,7 +13,7 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiLogWindow : ImGuiWindowBase
+	public class LogWindow : WindowBase
 	{
 		/* https://github.com/ocornut/imgui/blob/3587ee492bbee8144dbfbf5f660d4a7fd6316638/imgui_demo.cpp#L6819
 		 * https://github.com/BalazsJako/ImGuiColorTextEdit/blob/0a88824f7de8d0bd11d8419066caa7d3469395c4/TextEditor.cpp#L854
@@ -37,7 +37,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		public TextWriter TextWriter => logWriter;
 
-		public ImGuiLogWindow() : base("Log", new NumericsVector2(450f, 500f), ImGuiCond.FirstUseEver)
+		public LogWindow() : base("Log", new NumericsVector2(450f, 500f), ImGuiCond.FirstUseEver)
 		{
 			clipperObject = new ImGuiListClipper();
 			clipperHandle = GCHandle.Alloc(clipperObject, GCHandleType.Pinned);
@@ -47,7 +47,7 @@ namespace StoicGoose.GLWindow.Interface
 			logWriter = new(this);
 		}
 
-		~ImGuiLogWindow()
+		~LogWindow()
 		{
 			clipperHandle.Free();
 		}
@@ -279,9 +279,9 @@ namespace StoicGoose.GLWindow.Interface
 
 		class LogWriter : TextWriter
 		{
-			readonly ImGuiLogWindow logWindow;
+			readonly LogWindow logWindow;
 
-			public LogWriter(ImGuiLogWindow log) : base() => logWindow = log;
+			public LogWriter(LogWindow log) : base() => logWindow = log;
 
 			public override Encoding Encoding => Encoding.Unicode;
 			public override void Write(char value) => logWindow.Write(value);

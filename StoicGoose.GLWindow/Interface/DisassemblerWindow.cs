@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 using ImGuiNET;
 
@@ -14,7 +13,7 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiDisassemblerWindow : ImGuiWindowBase
+	public class DisassemblerWindow : WindowBase
 	{
 		/* Consts, dicts, enums... */
 		const int maxInternalRamSize = 0x10000;
@@ -57,7 +56,7 @@ namespace StoicGoose.GLWindow.Interface
 		public event EventHandler<EventArgs> UnpauseEmulation;
 		private void OnUnpauseEmulation(EventArgs e) => UnpauseEmulation?.Invoke(this, e);
 
-		public ImGuiDisassemblerWindow() : base("Disassembler", new NumericsVector2(720f, 635f), ImGuiCond.Always)
+		public DisassemblerWindow() : base("Disassembler", new NumericsVector2(720f, 635f), ImGuiCond.Always)
 		{
 			dummyInstructions.AddRange(Enumerable.Range(0, 0x10000).Select(x => new Instruction() { Address = (ushort)x, Mnemonic = "---" }));
 
@@ -66,7 +65,7 @@ namespace StoicGoose.GLWindow.Interface
 			clipperPointer = clipperHandle.AddrOfPinnedObject();
 		}
 
-		~ImGuiDisassemblerWindow()
+		~DisassemblerWindow()
 		{
 			clipperHandle.Free();
 		}

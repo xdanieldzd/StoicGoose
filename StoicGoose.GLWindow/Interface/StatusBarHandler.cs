@@ -4,7 +4,7 @@ using ImGuiNET;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiStatusBarHandler
+	public class StatusBarHandler
 	{
 		public void Draw(params StatusBarItem[] items)
 		{

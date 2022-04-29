@@ -5,11 +5,11 @@ using ImGuiNET;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiMenuHandler
+	public class MenuHandler
 	{
 		readonly List<MenuItem> menuItems = new();
 
-		public ImGuiMenuHandler(params MenuItem[] menuItems)
+		public MenuHandler(params MenuItem[] menuItems)
 		{
 			this.menuItems.AddRange(menuItems);
 		}

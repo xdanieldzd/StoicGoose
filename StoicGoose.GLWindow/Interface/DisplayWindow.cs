@@ -8,9 +8,9 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiDisplayWindow : ImGuiWindowBase
+	public class DisplayWindow : WindowBase
 	{
-		public ImGuiDisplayWindow() : base("Display") { }
+		public DisplayWindow() : base("Display") { }
 
 		int windowScale = 1;
 
@@ -77,7 +77,7 @@ namespace StoicGoose.GLWindow.Interface
 
 				if (ImGui.BeginPopup("context"))
 				{
-					ImGui.SliderInt("##size", ref windowScale, 1, 5, "Scale %dx");
+					ImGui.SliderInt("##size", ref windowScale, 1, 5, "%dx");
 					ImGui.EndPopup();
 				}
 

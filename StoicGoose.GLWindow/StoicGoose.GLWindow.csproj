@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,7 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Interface\jm21gfp2.htk~" />
+    <None Remove="Goose-Logo.rgba" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,13 +8,13 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiMessageBoxHandler
+	public class MessageBoxHandler
 	{
 		readonly List<MessageBox> messageBoxes = new();
 
 		public bool IsAnyMessageBoxOpen => messageBoxes.Any(x => x.IsOpen);
 
-		public ImGuiMessageBoxHandler(params MessageBox[] messageBoxes)
+		public MessageBoxHandler(params MessageBox[] messageBoxes)
 		{
 			this.messageBoxes.AddRange(messageBoxes);
 		}

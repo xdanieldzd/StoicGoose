@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface;
@@ -25,15 +26,16 @@ namespace StoicGoose.GLWindow
 	public partial class MainWindow : GameWindow
 	{
 		/* UI */
-		readonly ImGuiLogWindow logWindow = default;
-		ImGuiDisplayWindow displayWindow = default;
-		ImGuiDisassemblerWindow disassemblerWindow = default;
+		readonly LogWindow logWindow = default;
 
 		ImGuiHandler imGuiHandler = default;
-		ImGuiMenuHandler imGuiMenuHandler = default;
-		ImGuiMessageBoxHandler imGuiMessageBoxHandler = default;
-		ImGuiStatusBarHandler imGuiStatusBarHandler = default;
-		ImGuiFileDialogHandler imGuiFileDialogHandler = default;
+
+		BackgroundLogo backgroundGoose = default;
+
+		MenuHandler menuHandler = default;
+		MessageBoxHandler messageBoxHandler = default;
+		StatusBarHandler statusBarHandler = default;
+		FileDialogHandler fileDialogHandler = default;
 
 		/* Graphics */
 		readonly State renderState = new();
@@ -82,10 +84,23 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, disassembler, isRunning, isPaused));
-			imGuiMenuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
-			imGuiMessageBoxHandler = new(aboutBox);
-			imGuiStatusBarHandler = new();
-			imGuiFileDialogHandler = new(openRomDialog);
+			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
+			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
+			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
+
+			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
+			{
+				var type = Type.GetType(windowTypeName);
+				if (type == null) continue;
+				imGuiHandler.GetWindow(type).IsWindowOpen = true;
+			}
+
+			backgroundGoose = new(Resources.GetEmbeddedRgbaFile("Assets.Goose-Logo.rgba"));
+
+			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
+			messageBoxHandler = new(aboutBox);
+			statusBarHandler = new();
+			fileDialogHandler = new(openRomDialog);
 
 			statusMessageItem.Label = $"{Program.ProductName} {Program.GetVersionString(true)} ready!";
 
@@ -113,6 +128,8 @@ namespace StoicGoose.GLWindow
 		protected override void OnUnload()
 		{
 			DestroyMachine();
+
+			Program.Configuration.WindowsToRestore = imGuiHandler.OpenWindows.Select(x => x.GetType().FullName).ToList();
 
 			Program.SaveConfiguration();
 
@@ -142,7 +159,7 @@ namespace StoicGoose.GLWindow
 			if (frameTimeElapsed >= 1.0 / machine.Metadata.RefreshRate || !Program.Configuration.LimitFps)
 			{
 				if (isRunning && !isPaused &&
-					!imGuiFileDialogHandler.IsAnyDialogOpen && !imGuiMessageBoxHandler.IsAnyMessageBoxOpen)
+					!fileDialogHandler.IsAnyDialogOpen && !messageBoxHandler.IsAnyMessageBoxOpen)
 				{
 					machine.RunFrame();
 					soundHandler.Update();
@@ -172,10 +189,12 @@ namespace StoicGoose.GLWindow
 
 			imGuiHandler.BeginFrame((float)args.Time);
 			{
-				imGuiMenuHandler.Draw();
-				imGuiMessageBoxHandler.Draw();
-				imGuiStatusBarHandler.Draw(statusMessageItem, statusRunningItem, statusFpsItem);
-				imGuiFileDialogHandler.Draw();
+				backgroundGoose.Draw();
+
+				menuHandler.Draw();
+				messageBoxHandler.Draw();
+				statusBarHandler.Draw(statusMessageItem, statusRunningItem, statusFpsItem);
+				fileDialogHandler.Draw();
 
 				displayTexture?.Bind();
 			}
@@ -200,7 +219,7 @@ namespace StoicGoose.GLWindow
 				var buttonsPressed = new List<string>();
 				var buttonsHeld = new List<string>();
 
-				var screenWindow = imGuiHandler.GetWindow<ImGuiDisplayWindow>();
+				var screenWindow = imGuiHandler.GetWindow<DisplayWindow>();
 				if (screenWindow.IsWindowOpen && screenWindow.IsFocused)
 					inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
 
@@ -222,6 +241,10 @@ namespace StoicGoose.GLWindow
 			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);
 
 			disassembler.ReadDelegate = machine.ReadMemory;
+
+			systemControllerStatusWindow.SetComponentType(machine.GetType());
+			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());
+			soundControllerStatusWindow.SetComponentType(machine.SoundController.GetType());
 		}
 
 		private void DestroyMachine()
@@ -317,6 +340,8 @@ namespace StoicGoose.GLWindow
 
 		private void LoadDisassemblyCache()
 		{
+			if (!Program.Configuration.CacheDisassembly) return;
+
 			var path = Path.Combine(Program.DebuggingDataPath, disassemblyCacheFilename);
 			if (!File.Exists(path)) return;
 
@@ -349,6 +374,8 @@ namespace StoicGoose.GLWindow
 
 		private void SaveDisassemblyCache()
 		{
+			if (!Program.Configuration.CacheDisassembly) return;
+
 			var data = disassembler.GetSegmentCache();
 			if (data.Count == 0) return;
 

@@ -9,7 +9,7 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ImGuiFileDialogHandler
+	public class FileDialogHandler
 	{
 		readonly List<FileDialog> fileDialogs = new();
 
@@ -32,7 +32,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		public bool IsAnyDialogOpen => fileDialogs.Any(x => x.IsOpen);
 
-		public ImGuiFileDialogHandler(params FileDialog[] fileDialogs)
+		public FileDialogHandler(params FileDialog[] fileDialogs)
 		{
 			this.fileDialogs.AddRange(fileDialogs);
 		}

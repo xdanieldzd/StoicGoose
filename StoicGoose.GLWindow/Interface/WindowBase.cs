@@ -4,7 +4,7 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public abstract class ImGuiWindowBase
+	public abstract class WindowBase
 	{
 		protected bool isWindowOpen = false;
 
@@ -16,12 +16,12 @@ namespace StoicGoose.GLWindow.Interface
 
 		public bool IsFocused { get; private set; } = default;
 
-		public ImGuiWindowBase(string title)
+		public WindowBase(string title)
 		{
 			WindowTitle = title;
 		}
 
-		public ImGuiWindowBase(string title, NumericsVector2 size, ImGuiCond condition)
+		public WindowBase(string title, NumericsVector2 size, ImGuiCond condition)
 		{
 			WindowTitle = title;
 			InitialWindowSize = size;

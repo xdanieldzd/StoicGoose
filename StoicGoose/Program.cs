@@ -60,6 +60,18 @@ namespace StoicGoose
 		[STAThread]
 		static void Main()
 		{
+			/*
+			var bmp = new System.Drawing.Bitmap(@"D:\User Data\Pictures\WS\Goose-Logo.png");
+			var b = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
+			var data = new byte[bmp.Width * bmp.Height * 4];
+			System.Runtime.InteropServices.Marshal.Copy(b.Scan0, data, 0, data.Length);
+			bmp.UnlockBits(b);
+			var tmp = new StoicGoose.Common.Drawing.RgbaFile((uint)bmp.Width, (uint)bmp.Height, data);
+			tmp.Save(@"D:\User Data\Pictures\WS\Goose-Logo.rgba");
+
+			return;
+			*/
+
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance)
 			{

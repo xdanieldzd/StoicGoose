@@ -76,11 +76,13 @@ namespace StoicGoose.GLWindow
 		readonly ShaderProgram shaderProgram = default;
 		readonly Texture texture = default;
 
-		readonly List<(ImGuiWindowBase window, Func<object> getUserDataFunc)> windowList = new();
+		readonly List<(WindowBase window, Func<object> getUserDataFunc)> windowList = new();
 
 		bool wasFrameBegun = false;
 
 		Vector2 lastMouseWheelOffset = default;
+
+		public List<WindowBase> OpenWindows => windowList.Where(x => x.window.IsWindowOpen).Select(x => x.window).ToList();
 
 		public ImGuiHandler(GameWindow window)
 		{
@@ -195,19 +197,24 @@ namespace StoicGoose.GLWindow
 			lastMouseWheelOffset = mouseState.Scroll;
 		}
 
-		public void RegisterWindow(ImGuiWindowBase window, Func<object> getUserData)
+		public void RegisterWindow(WindowBase window, Func<object> getUserData)
 		{
 			windowList.Add((window, getUserData));
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Registered {window.GetType().Name}.");
 		}
 
-		public T GetWindow<T>() where T : ImGuiWindowBase
+		public T GetWindow<T>() where T : WindowBase
 		{
 			return (T)windowList.First(x => x.window is T).window;
 		}
 
-		public void DeregisterWindows<T>() where T : ImGuiWindowBase
+		public WindowBase GetWindow(Type type)
+		{
+			return windowList.First(x => x.window.GetType() == type).window;
+		}
+
+		public void DeregisterWindows<T>() where T : WindowBase
 		{
 			windowList.RemoveAll(x => x.window is T);
 

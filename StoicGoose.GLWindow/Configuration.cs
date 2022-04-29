@@ -16,7 +16,7 @@ namespace StoicGoose.GLWindow
 		[Description("Toggle using WonderSwan bootstrap ROM images.")]
 		public bool UseBootstrap { get; set; } = false;
 		[DisplayName("Bootstrap ROM Paths")]
-		[Description("Path to the WonderSwan bootstrap ROM image to use.")]
+		[Description("Paths to the WonderSwan bootstrap ROM images to use.")]
 		public Dictionary<string, string> BootstrapFiles { get; set; } = new();
 
 		[DisplayName("Last ROM Loaded")]
@@ -35,11 +35,19 @@ namespace StoicGoose.GLWindow
 		[Description("Toggles muting all sound output.")]
 		public bool Mute { get; set; } = false;
 
+		[DisplayName("Cache Disassembly")]
+		[Description("Cache disassembled code segments locally.")]
+		public bool CacheDisassembly { get; set; } = true;
+
 		[DisplayName("Game Controls")]
 		[Description("Controls related to game input, i.e. X-/Y-pads, etc.")]
-		public Dictionary<string, string> GameControls { get; set; } = new Dictionary<string, string>();
+		public Dictionary<string, string> GameControls { get; set; } = new();
 		[DisplayName("System Controls")]
 		[Description("Controls related to hardware functions, i.e. volume button.")]
-		public Dictionary<string, string> SystemControls { get; set; } = new Dictionary<string, string>();
+		public Dictionary<string, string> SystemControls { get; set; } = new();
+
+		[DisplayName("Restored Windows")]
+		[Description("Windows restored on program start.")]
+		public List<string> WindowsToRestore { get; set; } = new();
 	}
 }

@@ -11,6 +11,8 @@ namespace StoicGoose.GLWindow.Interface
 {
 	public static class ImGuiHelpers
 	{
+		const string helpMarker = "(?)";
+
 		readonly static List<Type> typeList = new()
 		{
 			typeof(byte),
@@ -52,7 +54,7 @@ namespace StoicGoose.GLWindow.Interface
 		/* https://github.com/ocornut/imgui/blob/f5c5926fb91764c2ec0e995970818d79b5873d42/imgui_demo.cpp#L191 */
 		public static void HelpMarker(string desc)
 		{
-			ImGui.TextDisabled("(?)");
+			ImGui.TextDisabled(helpMarker);
 			if (ImGui.IsItemHovered())
 			{
 				ImGui.BeginTooltip();
@@ -62,6 +64,8 @@ namespace StoicGoose.GLWindow.Interface
 				ImGui.EndTooltip();
 			}
 		}
+
+		public static float HelpMarkerWidth() => ImGui.CalcTextSize(helpMarker).X;
 
 		public static bool IsPointInsideRectangle(NumericsVector2 point, NumericsVector2 rectPos, NumericsVector2 rectSize)
 		{
