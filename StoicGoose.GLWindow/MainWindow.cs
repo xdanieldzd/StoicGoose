@@ -95,7 +95,14 @@ namespace StoicGoose.GLWindow
 				imGuiHandler.GetWindow(type).IsWindowOpen = true;
 			}
 
-			backgroundGoose = new(Resources.GetEmbeddedRgbaFile("Assets.Goose-Logo.rgba"));
+			backgroundGoose = new()
+			{
+				Texture = new(Resources.GetEmbeddedRgbaFile("Assets.Goose-Logo.rgba")),
+				Positioning = BackgroundLogoPositioning.BottomRight,
+				Offset = new(-32f),
+				Scale = new(0.5f),
+				Alpha = 32
+			};
 
 			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
 			messageBoxHandler = new(aboutBox);

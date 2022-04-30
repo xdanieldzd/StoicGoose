@@ -13,24 +13,44 @@ namespace StoicGoose.GLWindow.Interface
 {
 	public class BackgroundLogo
 	{
-		readonly NumericsVector2 bottomRightOffset = new(32f);
-		readonly byte imageAlpha = 64;
+		public Texture Texture { get; set; } = default;
+		public NumericsVector2 Size => new((float)Texture?.Size.X, (float)Texture?.Size.Y);
 
-		readonly Texture backgroundTexture = default;
-		readonly NumericsVector2 imageSize = default;
+		public BackgroundLogoPositioning Positioning { get; set; } = BackgroundLogoPositioning.Center;
+		public NumericsVector2 Offset { get; set; } = NumericsVector2.Zero;
+		public NumericsVector2 Scale { get; set; } = NumericsVector2.One;
+		public byte Alpha { get; set; } = 255;
 
-		public BackgroundLogo(RgbaFile background)
+		readonly bool debug = false;
+
+		public void SetImage(RgbaFile background)
 		{
-			backgroundTexture = new(background);
-			backgroundTexture.SetTextureFilter(TextureMinFilter.Nearest, TextureMagFilter.Nearest);
-			imageSize = new(backgroundTexture.Size.X, backgroundTexture.Size.Y);
+			Texture = new(background);
+			Texture.SetTextureFilter(TextureMinFilter.Nearest, TextureMagFilter.Nearest);
+			Texture.SetTextureWrapMode(TextureWrapMode.Repeat, TextureWrapMode.Repeat);
 		}
 
 		public void Draw()
 		{
-			var position = ImGui.GetMainViewport().Size - imageSize - bottomRightOffset;
+			if (Texture == default) return;
+
+			var scaledSize = Size * Scale;
+			var position = Positioning switch
+			{
+				BackgroundLogoPositioning.Center => ImGui.GetMainViewport().Size / 2f - scaledSize / 2f + Offset,
+				BackgroundLogoPositioning.TopLeft => Offset,
+				BackgroundLogoPositioning.TopRight => new(ImGui.GetMainViewport().Size.X - scaledSize.X + Offset.X, Offset.Y),
+				BackgroundLogoPositioning.BottomLeft => new(Offset.X, ImGui.GetMainViewport().Size.Y - scaledSize.Y + Offset.Y),
+				BackgroundLogoPositioning.BottomRight => ImGui.GetMainViewport().Size - scaledSize + Offset,
+				_ => throw new Exception("Invalid positioning mode"),
+			};
+
 			var backgroundDrawList = ImGui.GetBackgroundDrawList();
-			backgroundDrawList.AddImage(new IntPtr(backgroundTexture.Handle), position, position + imageSize, NumericsVector2.Zero, NumericsVector2.One, (uint)(imageAlpha << 24));
+			backgroundDrawList.AddImage(new IntPtr(Texture.Handle), position, position + scaledSize, NumericsVector2.Zero, NumericsVector2.One, (uint)(Alpha << 24));
+
+			if (debug) backgroundDrawList.AddRect(position, position + scaledSize, 0xFF0000FF);
 		}
 	}
+
+	public enum BackgroundLogoPositioning { Center, TopLeft, TopRight, BottomLeft, BottomRight }
 }
