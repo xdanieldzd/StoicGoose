@@ -206,12 +206,12 @@ namespace StoicGoose.GLWindow
 
 		public T GetWindow<T>() where T : WindowBase
 		{
-			return (T)windowList.First(x => x.window is T).window;
+			return (T)windowList.FirstOrDefault(x => x.window is T).window;
 		}
 
 		public WindowBase GetWindow(Type type)
 		{
-			return windowList.First(x => x.window.GetType() == type).window;
+			return windowList.FirstOrDefault(x => x.window.GetType() == type).window;
 		}
 
 		public void DeregisterWindows<T>() where T : WindowBase

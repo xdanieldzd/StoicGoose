@@ -10,7 +10,9 @@ namespace StoicGoose.GLWindow
 	{
 		DisplayWindow displayWindow = default;
 		DisassemblerWindow disassemblerWindow = default;
-		ComponentRegisterWindow systemControllerStatusWindow = default, displayControllerStatusWindow = default, soundControllerStatusWindow = default;
+		SystemControllerStatusWindow systemControllerStatusWindow = default;
+		DisplayControllerStatusWindow displayControllerStatusWindow = default;
+		SoundControllerStatusWindow soundControllerStatusWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
@@ -25,9 +27,9 @@ namespace StoicGoose.GLWindow
 			disassemblerWindow.PauseEmulation += (s, e) => isPaused = true;
 			disassemblerWindow.UnpauseEmulation += (s, e) => isPaused = false;
 
-			systemControllerStatusWindow = new("System Controller");
-			displayControllerStatusWindow = new("Display Controller");
-			soundControllerStatusWindow = new("Sound Controller");
+			systemControllerStatusWindow = new();
+			displayControllerStatusWindow = new();
+			soundControllerStatusWindow = new();
 
 			fileMenu = new("File")
 			{

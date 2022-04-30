@@ -91,8 +91,8 @@ namespace StoicGoose.GLWindow
 			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
 			{
 				var type = Type.GetType(windowTypeName);
-				if (type == null) continue;
-				imGuiHandler.GetWindow(type).IsWindowOpen = true;
+				if (type == null || imGuiHandler.GetWindow(type) is not WindowBase window) continue;
+				window.IsWindowOpen = true;
 			}
 
 			backgroundGoose = new()
