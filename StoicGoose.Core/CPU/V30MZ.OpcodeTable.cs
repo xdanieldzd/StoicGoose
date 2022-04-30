@@ -158,14 +158,14 @@
 							/* MOV Sw Ew */                 (cpu) => { cpu.WriteOpcodeSw(cpu.ReadOpcodeEw()); return 1; },
 							/* POP Ew */                    (cpu) => { cpu.WriteOpcodeEw(cpu.Pop()); return 1; },
 
-			/* 0x90 */      /* NOP (XCHG AX AX) */          (cpu) => { cpu.Exchange(ref cpu.ax.Word, ref cpu.ax.Word); return 3; },
-							/* XCHG CX AX */                (cpu) => { cpu.Exchange(ref cpu.cx.Word, ref cpu.ax.Word); return 3; },
-							/* XCHG DX AX */                (cpu) => { cpu.Exchange(ref cpu.dx.Word, ref cpu.ax.Word); return 3; },
-							/* XCHG BX AX */                (cpu) => { cpu.Exchange(ref cpu.bx.Word, ref cpu.ax.Word); return 3; },
-			/* 0x94 */      /* XCHG SP AX */                (cpu) => { cpu.Exchange(ref cpu.sp, ref cpu.ax.Word); return 3; },
-							/* XCHG BP AX */                (cpu) => { cpu.Exchange(ref cpu.bp, ref cpu.ax.Word); return 3; },
-							/* XCHG SI AX */                (cpu) => { cpu.Exchange(ref cpu.si, ref cpu.ax.Word); return 3; },
-							/* XCHG DI AX */                (cpu) => { cpu.Exchange(ref cpu.di, ref cpu.ax.Word); return 3; },
+			/* 0x90 */      /* NOP (XCHG AX AX) */          (cpu) => { Exchange(ref cpu.ax.Word, ref cpu.ax.Word); return 3; },
+							/* XCHG CX AX */                (cpu) => { Exchange(ref cpu.cx.Word, ref cpu.ax.Word); return 3; },
+							/* XCHG DX AX */                (cpu) => { Exchange(ref cpu.dx.Word, ref cpu.ax.Word); return 3; },
+							/* XCHG BX AX */                (cpu) => { Exchange(ref cpu.bx.Word, ref cpu.ax.Word); return 3; },
+			/* 0x94 */      /* XCHG SP AX */                (cpu) => { Exchange(ref cpu.sp, ref cpu.ax.Word); return 3; },
+							/* XCHG BP AX */                (cpu) => { Exchange(ref cpu.bp, ref cpu.ax.Word); return 3; },
+							/* XCHG SI AX */                (cpu) => { Exchange(ref cpu.si, ref cpu.ax.Word); return 3; },
+							/* XCHG DI AX */                (cpu) => { Exchange(ref cpu.di, ref cpu.ax.Word); return 3; },
 			/* 0x98 */      /* CBW */                       (cpu) => { cpu.ax.Word = (ushort)(sbyte)cpu.ax.Low; return 2; },
 							/* CWD */                       (cpu) => { var value = (uint)(short)cpu.ax.Word; cpu.dx.Word = (ushort)((value >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((value >> 0) & 0xFFFF); return 2; },
 							/* CALL Ap */                   Opcode0x9A,
@@ -782,7 +782,7 @@
 				value = 10;
 				cpu.ax.High = (byte)(cpu.ax.Low / value);
 				cpu.ax.Low = (byte)(cpu.ax.Low % value);
-				cpu.SetClearFlagConditional(Flags.Parity, cpu.CalculateParity(cpu.ax.Low));
+				cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
 				cpu.SetClearFlagConditional(Flags.Zero, (cpu.ax.Word & 0xFFFF) == 0);
 				cpu.SetClearFlagConditional(Flags.Sign, (cpu.ax.Word & 0x8000) != 0);
 			}
@@ -796,7 +796,7 @@
 			var value = 10;
 			cpu.ax.Low = (byte)(cpu.ax.High * value + cpu.ax.Low);
 			cpu.ax.High = 0;
-			cpu.SetClearFlagConditional(Flags.Parity, cpu.CalculateParity(cpu.ax.Low));
+			cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
 			cpu.SetClearFlagConditional(Flags.Zero, (cpu.ax.Word & 0xFFFF) == 0);
 			cpu.SetClearFlagConditional(Flags.Sign, (cpu.ax.Word & 0x8000) != 0);
 			return 6;

@@ -15,7 +15,6 @@ using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
-
 using StoicGoose.GLWindow.Interface;
 
 using NumericsVector2 = System.Numerics.Vector2;

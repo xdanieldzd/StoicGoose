@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using StoicGoose.Common.Attributes;
+using StoicGoose.Common.Console;
 using StoicGoose.Core.Cartridges;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
 using StoicGoose.Core.Sound;
-
-using StoicGoose.Common.Attributes;
-using StoicGoose.Common.Console;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 
@@ -127,7 +126,7 @@ namespace StoicGoose.Core.Machines
 			foreach (var (address, value) in Metadata.InternalEepromDefaultData) InternalEeprom.Program(address, value);
 		}
 
-		private byte[] ConvertUsernameForEeprom(string name)
+		private static byte[] ConvertUsernameForEeprom(string name)
 		{
 			var data = new byte[16];
 			for (var i = 0; i < data.Length; i++)

@@ -6,7 +6,7 @@ namespace StoicGoose.GLWindow.Interface
 {
 	public class StatusBarHandler
 	{
-		public void Draw(params StatusBarItem[] items)
+		public static void Draw(params StatusBarItem[] items)
 		{
 			var viewport = ImGui.GetMainViewport();
 			var frameHeight = ImGui.GetFrameHeight();
@@ -20,7 +20,7 @@ namespace StoicGoose.GLWindow.Interface
 			var framePadding = ImGui.GetStyle().FramePadding.X;
 			var itemPadding = framePadding * 4f;
 
-			if (ImGui.Begin("StatusBar", flags))
+			if (ImGui.Begin("##statusbar", flags))
 			{
 				if (ImGui.BeginMenuBar())
 				{

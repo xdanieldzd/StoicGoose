@@ -2,7 +2,7 @@
 {
 	public sealed partial class V30MZ
 	{
-		private int GetIncrement(bool is16Bit, bool isDirectionFlagSet)
+		private static int GetIncrement(bool is16Bit, bool isDirectionFlagSet)
 		{
 			return isDirectionFlagSet ? (is16Bit ? -2 : -1) : (is16Bit ? 2 : 1);
 		}

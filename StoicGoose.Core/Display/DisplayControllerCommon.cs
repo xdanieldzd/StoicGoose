@@ -1,7 +1,6 @@
 ﻿using System;
 
 using StoicGoose.Common.Attributes;
-
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -228,7 +227,7 @@ namespace StoicGoose.Core.Display
 
 		protected abstract byte GetPixelColor(ushort tile, int y, int x);
 
-		protected void ValidateWindowCoordinates(ref int x0, ref int x1, ref int y0, ref int y1)
+		protected static void ValidateWindowCoordinates(ref int x0, ref int x1, ref int y0, ref int y1)
 		{
 			/* Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
 			 * https://forum.fobby.net/index.php?t=msg&goto=6085 */

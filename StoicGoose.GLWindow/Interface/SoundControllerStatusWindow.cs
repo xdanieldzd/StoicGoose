@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StoicGoose.GLWindow.Interface
+﻿namespace StoicGoose.GLWindow.Interface
 {
 	public class SoundControllerStatusWindow : ComponentRegisterWindow
 	{

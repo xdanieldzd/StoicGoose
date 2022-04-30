@@ -40,7 +40,7 @@ namespace StoicGoose.IO
 
 		public void Save()
 		{
-			waveHeader.FileLength += formatChunk.ChunkSize + 8;
+			waveHeader.FileLength += FormatChunk.ChunkSize + 8;
 			waveHeader.FileLength += dataChunk.ChunkSize + 8;
 
 			outStream.Write(waveHeader.Bytes);
@@ -52,9 +52,9 @@ namespace StoicGoose.IO
 
 		private class WaveHeader
 		{
-			public string FileTypeId => "RIFF";
+			public static string FileTypeId => "RIFF";
 			public uint FileLength { get; set; } = 4;   /* Minimum size is always 4 bytes */
-			public string MediaTypeId => "WAVE";
+			public static string MediaTypeId => "WAVE";
 
 			public ReadOnlySpan<byte> Bytes
 			{
@@ -71,17 +71,17 @@ namespace StoicGoose.IO
 
 		private class FormatChunk
 		{
-			public string ChunkId => "fmt ";
-			public uint ChunkSize => 16;
-			public ushort FormatTag => 1;       /* MS PCM (Uncompressed wave file) */
+			public static string ChunkId => "fmt ";
+			public static uint ChunkSize => 16;
+			public static ushort FormatTag => 1;        /* MS PCM (Uncompressed wave file) */
 			public ushort Channels => channels;
 			public uint Frequency => frequency;
 			public uint AverageBytesPerSec { get; private set; } = 0;
 			public ushort BlockAlign { get; private set; } = 0;
-			public ushort BitsPerSample => 16;
+			public static ushort BitsPerSample => 16;
 
-			readonly ushort channels = 2;       /* Default to stereo */
-			readonly uint frequency = 44100;    /* Default to 44100hz */
+			readonly ushort channels = 2;               /* Default to stereo */
+			readonly uint frequency = 44100;            /* Default to 44100hz */
 
 			public FormatChunk(int frequency, int channels)
 			{
@@ -116,7 +116,7 @@ namespace StoicGoose.IO
 
 		private class DataChunk
 		{
-			public string ChunkId => "data";
+			public static string ChunkId => "data";
 			public uint ChunkSize => (uint)(WaveData.Count * 2);
 			public List<short> WaveData { get; private set; } = new();
 

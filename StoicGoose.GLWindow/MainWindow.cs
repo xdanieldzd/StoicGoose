@@ -6,8 +6,8 @@ using System.Reflection;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using Newtonsoft.Json;
 
@@ -200,7 +200,7 @@ namespace StoicGoose.GLWindow
 
 				menuHandler.Draw();
 				messageBoxHandler.Draw();
-				statusBarHandler.Draw(statusMessageItem, statusRunningItem, statusFpsItem);
+				StatusBarHandler.Draw(statusMessageItem, statusRunningItem, statusFpsItem);
 				fileDialogHandler.Draw();
 
 				displayTexture?.Bind();

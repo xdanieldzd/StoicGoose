@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-using StoicGoose.Core.Machines;
 using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 

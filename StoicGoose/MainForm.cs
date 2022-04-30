@@ -371,7 +371,7 @@ namespace StoicGoose
 			}
 		}
 
-		private void AddToRecentFiles(string filename)
+		private static void AddToRecentFiles(string filename)
 		{
 			if (Program.Configuration.General.RecentFiles.Contains(filename))
 			{

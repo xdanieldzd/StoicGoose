@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 
 using StoicGoose.Common.Attributes;
-
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;

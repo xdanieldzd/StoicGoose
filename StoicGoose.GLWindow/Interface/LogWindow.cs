@@ -242,7 +242,7 @@ namespace StoicGoose.GLWindow.Interface
 			}
 		}
 
-		private (uint fgColor, uint _) ParseEscSequence(string esc)
+		private static (uint fgColor, uint _) ParseEscSequence(string esc)
 		{
 			var fgColor = uint.MaxValue;
 

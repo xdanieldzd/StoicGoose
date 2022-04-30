@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;

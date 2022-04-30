@@ -168,7 +168,7 @@ namespace StoicGoose.Common.OpenGL.Vertices
 			return attributes.ToArray();
 		}
 
-		private VertexAttribPointerType GetVertexAttribPointerType(Type type)
+		private static VertexAttribPointerType GetVertexAttribPointerType(Type type)
 		{
 			if (pointerTypeTranslator.ContainsKey(type))
 				return pointerTypeTranslator[type];
@@ -176,7 +176,7 @@ namespace StoicGoose.Common.OpenGL.Vertices
 				throw new ArgumentException("Unimplemented or unsupported vertex attribute pointer type");
 		}
 
-		private VertexAttribIntegerType GetVertexAttribIntegerType(Type type)
+		private static VertexAttribIntegerType GetVertexAttribIntegerType(Type type)
 		{
 			if (integerTypeTranslator.ContainsKey(type))
 				return integerTypeTranslator[type];
@@ -184,7 +184,7 @@ namespace StoicGoose.Common.OpenGL.Vertices
 				throw new ArgumentException("Unimplemented or unsupported vertex attribute integer type");
 		}
 
-		private DrawElementsType GetDrawElementsType(Type type)
+		private static DrawElementsType GetDrawElementsType(Type type)
 		{
 			if (drawElementsTypeTranslator.ContainsKey(type))
 				return drawElementsTypeTranslator[type];

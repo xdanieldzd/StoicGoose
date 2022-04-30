@@ -1,8 +1,7 @@
-﻿using System;
-using System.Windows.Forms;
-
-using StoicGoose.IO;
+﻿using StoicGoose.IO;
 using StoicGoose.WinForms;
+using System;
+using System.Windows.Forms;
 
 namespace StoicGoose
 {

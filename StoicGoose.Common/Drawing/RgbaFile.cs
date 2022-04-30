@@ -46,10 +46,10 @@ namespace StoicGoose.Common.Drawing
 			stream.Write(PixelData);
 		}
 
-		private string ReadString(Stream stream, int length) => new(Enumerable.Range(0, length).Select(_ => (char)stream.ReadByte()).ToArray());
-		private uint ReadUInt32(Stream stream) => (uint)(((stream.ReadByte() & 0xFF) << 24) | ((stream.ReadByte() & 0xFF) << 16) | ((stream.ReadByte() & 0xFF) << 8) | ((stream.ReadByte() & 0xFF) << 0));
+		private static string ReadString(Stream stream, int length) => new(Enumerable.Range(0, length).Select(_ => (char)stream.ReadByte()).ToArray());
+		private static uint ReadUInt32(Stream stream) => (uint)(((stream.ReadByte() & 0xFF) << 24) | ((stream.ReadByte() & 0xFF) << 16) | ((stream.ReadByte() & 0xFF) << 8) | ((stream.ReadByte() & 0xFF) << 0));
 
-		private void WriteString(Stream stream, string str) => Array.ForEach(str.ToCharArray(), (x) => stream.WriteByte((byte)x));
-		private void WriteUInt32(Stream stream, uint val) { stream.WriteByte((byte)((val >> 24) & 0xFF)); stream.WriteByte((byte)((val >> 16) & 0xFF)); stream.WriteByte((byte)((val >> 8) & 0xFF)); stream.WriteByte((byte)((val >> 0) & 0xFF)); }
+		private static void WriteString(Stream stream, string str) => Array.ForEach(str.ToCharArray(), (x) => stream.WriteByte((byte)x));
+		private static void WriteUInt32(Stream stream, uint val) { stream.WriteByte((byte)((val >> 24) & 0xFF)); stream.WriteByte((byte)((val >> 16) & 0xFF)); stream.WriteByte((byte)((val >> 8) & 0xFF)); stream.WriteByte((byte)((val >> 0) & 0xFF)); }
 	}
 }

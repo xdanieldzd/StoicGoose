@@ -1,8 +1,7 @@
-﻿using StoicGoose.Core.Display;
+﻿using StoicGoose.Common.Attributes;
+using StoicGoose.Core.Display;
 using StoicGoose.Core.DMA;
 using StoicGoose.Core.Sound;
-
-using StoicGoose.Common.Attributes;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 

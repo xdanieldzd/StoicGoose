@@ -100,7 +100,10 @@ namespace StoicGoose.Handlers
 		{
 			var list = new List<string>();
 
-			// TODO
+			foreach (var (_, _) in buttonMapping)
+			{
+				// TODO
+			}
 
 			return list;
 		}

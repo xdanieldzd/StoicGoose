@@ -602,7 +602,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void DrawPreviewSjis(EmulatorHandler handler, int addr, ref string outBuf)
+		private static void DrawPreviewSjis(EmulatorHandler handler, int addr, ref string outBuf)
 		{
 			var buf = new byte[256];
 			var elemSize = dataTypeSizes[ImGuiDataType.U16];
@@ -613,7 +613,7 @@ namespace StoicGoose.Interface.Windows
 			outBuf = Encoding.GetEncoding(932).GetString(buf);
 		}
 
-		private void EndiannessCopyLittleEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
+		private static void EndiannessCopyLittleEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
 		{
 			if (isLittleEndian)
 				Array.Copy(src, dst, src.Length);
@@ -625,7 +625,7 @@ namespace StoicGoose.Interface.Windows
 			}
 		}
 
-		private void EndiannessCopyBigEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
+		private static void EndiannessCopyBigEndian(ref byte[] dst, byte[] src, int elemSize, bool isLittleEndian)
 		{
 			if (isLittleEndian)
 			{
@@ -647,7 +647,7 @@ namespace StoicGoose.Interface.Windows
 				EndiannessCopyBigEndian(ref dst, src, elemSize, previewEndianness != 0);
 		}
 
-		private string FormatBinary(byte[] buf, int width)
+		private static string FormatBinary(byte[] buf, int width)
 		{
 			var outBuf = new char[width + (width / buf.Length)];
 			for (int i = buf.Length - 1, j = 0; i >= 0; i--, j += 9)

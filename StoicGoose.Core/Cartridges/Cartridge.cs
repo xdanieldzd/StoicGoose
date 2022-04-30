@@ -1,7 +1,6 @@
 ﻿using System;
 
 using StoicGoose.Common.Console;
-
 using StoicGoose.Core.EEPROMs;
 
 namespace StoicGoose.Core.Cartridges

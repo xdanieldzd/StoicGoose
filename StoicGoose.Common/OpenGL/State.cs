@@ -2,8 +2,8 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 
-using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace StoicGoose.Common.OpenGL
 {

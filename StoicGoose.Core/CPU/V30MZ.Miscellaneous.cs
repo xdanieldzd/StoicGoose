@@ -33,14 +33,14 @@
 			else { ip++; return 1; }
 		}
 
-		private bool CalculateParity(int result)
+		private static bool CalculateParity(int result)
 		{
 			int bitsSet = 0;
 			while (result != 0) { bitsSet += result & 0x01; result >>= 1; }
 			return bitsSet == 0 || (bitsSet % 2) == 0;
 		}
 
-		private void Exchange(ref ushort a, ref ushort b)
+		private static void Exchange(ref ushort a, ref ushort b)
 		{
 			var temp = a;
 			a = b;
