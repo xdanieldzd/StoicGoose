@@ -427,7 +427,7 @@ namespace StoicGoose.GLWindow.Interface
 					var pos = ImGui.GetCursorScreenPos();
 					var posStart = pos;
 
-					drawListProcessor.AddText(pos, colorText, $"IP: 0x{machine.Cpu.IP:x4}"); pos.X += glyphSize.X * 19f;
+					drawListProcessor.AddText(pos, colorText, $"IP: 0x{machine.Cpu.IP:X4}"); pos.X += glyphSize.X * 19f;
 
 					drawListProcessor.AddText(pos, colorText, "Flags:"); pos.X += glyphSize.X * 6f;
 					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Carry, "CF"); pos.X += glyphSize.X * 2.5f;
@@ -457,27 +457,27 @@ namespace StoicGoose.GLWindow.Interface
 					pos.Y += height + lineHeight * 0.75f;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"SP: 0x{machine.Cpu.SP:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SP: 0x{machine.Cpu.SP:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SP}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"CS: 0x{machine.Cpu.CS:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"CS: 0x{machine.Cpu.CS:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.CS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"BP: 0x{machine.Cpu.BP:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"BP: 0x{machine.Cpu.BP:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.BP}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"DS: 0x{machine.Cpu.DS:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"DS: 0x{machine.Cpu.DS:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"SI: 0x{machine.Cpu.SI:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SI: 0x{machine.Cpu.SI:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SI}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"SS: 0x{machine.Cpu.SS:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SS: 0x{machine.Cpu.SS:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"DI: 0x{machine.Cpu.DI:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"DI: 0x{machine.Cpu.DI:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DI}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"ES: 0x{machine.Cpu.ES:x4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"ES: 0x{machine.Cpu.ES:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.ES}]"); pos.Y += height;
 
 					ImGui.EndChild();
@@ -501,11 +501,11 @@ namespace StoicGoose.GLWindow.Interface
 			var rectPos = new NumericsVector2(position.X + glyphSize.X * 3f, position.Y - padding);
 			var rectSize = new NumericsVector2(glyphSize.X * 14f, lineHeight + padding);
 
-			drawList.AddText(position, colorText, $"{label}X: 0x{register.Word:x4}"); position.X += glyphSize.X * 10f;
+			drawList.AddText(position, colorText, $"{label}X: 0x{register.Word:X4}"); position.X += glyphSize.X * 10f;
 			drawList.AddText(position, colorDisabled, $"[{register.Word}]"); position.X += glyphSize.X * 8f;
-			drawList.AddText(position, colorText, $"{label}L: 0x{register.Low:x2}"); position.X += glyphSize.X * 8f;
+			drawList.AddText(position, colorText, $"{label}L: 0x{register.Low:X2}"); position.X += glyphSize.X * 8f;
 			drawList.AddText(position, colorDisabled, $"[{register.Low}]"); position.X += glyphSize.X * 6f;
-			drawList.AddText(position, colorText, $"{label}H: 0x{register.High:x2}"); position.X += glyphSize.X * 8f;
+			drawList.AddText(position, colorText, $"{label}H: 0x{register.High:X2}"); position.X += glyphSize.X * 8f;
 			drawList.AddText(position, colorDisabled, $"[{register.High}]"); position.X += glyphSize.X * 6f;
 
 			if (string.IsNullOrEmpty(doModifyRegisterName) && ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && ImGuiHelpers.IsPointInsideRectangle(mousePosition, rectPos, rectSize))
