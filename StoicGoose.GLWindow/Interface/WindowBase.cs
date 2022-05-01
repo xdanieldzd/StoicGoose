@@ -7,6 +7,7 @@ namespace StoicGoose.GLWindow.Interface
 	public abstract class WindowBase
 	{
 		protected bool isWindowOpen = false;
+		protected bool isFirstOpen = true;
 
 		public bool IsWindowOpen { get => isWindowOpen; set => isWindowOpen = value; }
 
@@ -32,6 +33,12 @@ namespace StoicGoose.GLWindow.Interface
 		{
 			if (!isWindowOpen) return;
 
+			if (isFirstOpen)
+			{
+				InitializeWindow(userData);
+				isFirstOpen = false;
+			}
+
 			ImGui.SetNextWindowSize(InitialWindowSize, SizingCondition);
 
 			DrawWindow(userData);
@@ -42,6 +49,8 @@ namespace StoicGoose.GLWindow.Interface
 				ImGui.End();
 			}
 		}
+
+		protected virtual void InitializeWindow(object userData) { }
 
 		protected abstract void DrawWindow(object userData);
 	}

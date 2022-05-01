@@ -1,39 +1,107 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 
-using Gee.External.Capstone.X86;
+using Iced.Intel;
+
+using StoicGoose.Core;
 
 namespace StoicGoose.GLWindow.Debugging
 {
-	public sealed class Instruction
+	public class Disassembler
 	{
-		public ushort Segment { get; set; } = 0;
-		public ushort Address { get; set; } = 0;
-		public byte[] Bytes { get; set; } = Array.Empty<byte>();
+		readonly Decoder decoder = default;
+		readonly MemoryCodeReader memoryCodeReader = new();
 
-		[DefaultValue("")]
-		public string Mnemonic { get; set; } = string.Empty;
-		[DefaultValue("")]
-		public string Operand { get; set; } = string.Empty;
-		[DefaultValue("")]
-		public string Comment { get; set; } = string.Empty;
+		readonly Dictionary<ushort, List<DisassembledInstruction>> segmentCache = new();
 
-		public Instruction() { }
-
-		public Instruction(X86Instruction disassembled) : this(0, (ushort)disassembled.Address, disassembled) { }
-
-		public Instruction(ushort segment, ushort address, X86Instruction disassembled)
+		MemoryReadDelegate memoryReadDelegate = default;
+		public MemoryReadDelegate ReadMemoryFunction
 		{
-			Segment = segment;
-			Address = address;
-			Bytes = disassembled.Bytes;
-			Mnemonic = disassembled.Mnemonic;
-			Operand = disassembled.Operand;
+			get => memoryReadDelegate;
+			set => memoryReadDelegate = memoryCodeReader.ReadDelegate = value;
+		}
 
-			if (disassembled.Id == X86InstructionId.X86_INS_OUT && disassembled.Details.Operands[0].Type == X86OperandType.Immediate)
-				Comment = wonderSwanPortNamesOutput[disassembled.Details.Operands[0].Immediate];
-			else if (disassembled.Id == X86InstructionId.X86_INS_IN && disassembled.Details.Operands[1].Type == X86OperandType.Immediate)
-				Comment = wonderSwanPortNamesInput[disassembled.Details.Operands[1].Immediate];
+		public Disassembler() => decoder = Decoder.Create(16, memoryCodeReader, DecoderOptions.NoInvalidCheck);
+
+		public List<DisassembledInstruction> DisassembleSegment(ushort segment)
+		{
+			if (!segmentCache.ContainsKey(segment))
+			{
+				var instructions = new List<DisassembledInstruction>();
+
+				memoryCodeReader.Position = segment << 4;
+				decoder.IP = 0;
+				while (decoder.IP < 0x10000 && memoryCodeReader.CanReadByte)
+					instructions.Add(new(segment, decoder.Decode(), memoryReadDelegate));
+
+				segmentCache[segment] = instructions;
+			}
+
+			return segmentCache[segment];
+		}
+	}
+
+	public class DisassembledInstruction
+	{
+		readonly static NasmFormatter formatter = new();
+		readonly static StringOutput stringOutput = new();
+
+		public ushort Segment { get; private set; } = 0;
+		public ushort Address { get; private set; } = 0;
+		public byte[] Bytes { get; private set; } = Array.Empty<byte>();
+
+		public string Mnemonic { get; private set; } = string.Empty;
+		public string Comment { get; private set; } = string.Empty;
+
+		public bool IsValid { get; } = false;
+
+		static DisassembledInstruction()
+		{
+			formatter.Options.BinaryPrefix = "0b";
+			formatter.Options.BinarySuffix = null;
+			formatter.Options.HexPrefix = "0x";
+			formatter.Options.HexSuffix = null;
+			formatter.Options.SmallHexNumbersInDecimal = false;
+			formatter.Options.SpaceAfterOperandSeparator = true;
+		}
+
+		public DisassembledInstruction() { }
+
+		public DisassembledInstruction(ushort segment, Iced.Intel.Instruction icedInstruction, MemoryReadDelegate readDelegate)
+		{
+			/* Set segment:address pair */
+			Segment = segment;
+			Address = icedInstruction.IP16;
+
+			/* Get instruction bytes */
+			var byteList = new List<byte>();
+			for (var i = 0; i < icedInstruction.Length; i++)
+				byteList.Add(readDelegate((uint)((segment << 4) + Address + i)));
+			Bytes = byteList.ToArray();
+
+			/* Turn invalid instructions into byte declarations */
+			if (icedInstruction.IsInvalid)
+			{
+				icedInstruction.Code = Code.DeclareByte;
+				for (var i = 0; i < Bytes.Length; i++)
+					icedInstruction.SetDeclareByteValue(i, Bytes[i]);
+			}
+
+			/* Generate comment */
+			if ((icedInstruction.Code == Code.Out_imm8_AL && icedInstruction.Op0Kind == OpKind.Immediate8) ||
+				(icedInstruction.Code == Code.Out_imm8_AX && icedInstruction.Op0Kind == OpKind.Immediate8))
+				Comment = wonderSwanPortNamesOutput[icedInstruction.Immediate8];
+
+			else if ((icedInstruction.Code == Code.In_AL_imm8 && icedInstruction.Op1Kind == OpKind.Immediate8) ||
+				(icedInstruction.Code == Code.In_AX_imm8 && icedInstruction.Op1Kind == OpKind.Immediate8))
+				Comment = wonderSwanPortNamesInput[icedInstruction.Immediate8];
+
+			/* Get mnemonic */
+			formatter.Format(icedInstruction, stringOutput);
+			Mnemonic = stringOutput.ToStringAndReset();
+
+			/* Yup, this one is valid */
+			IsValid = true;
 		}
 
 		readonly static string[] wonderSwanPortNamesOutput = new string[256]
@@ -107,5 +175,44 @@ namespace StoicGoose.GLWindow.Debugging
 			null, null, null, null, null, null, null, null,
 			null, null, null, null, null, null, null, null,
 		};
+	}
+
+	public class MemoryCodeReader : CodeReader
+	{
+		readonly int startPosition = 0, endPosition = 0;
+		int currentPosition = 0;
+
+		public int Position
+		{
+			get => currentPosition - startPosition;
+			set
+			{
+				if (value > Count)
+					throw new ArgumentOutOfRangeException(nameof(value));
+				currentPosition = startPosition + value;
+			}
+		}
+
+		public int Count => endPosition - startPosition;
+
+		public bool CanReadByte => currentPosition < endPosition;
+
+		public MemoryReadDelegate ReadDelegate { get; set; } = default;
+
+		public MemoryCodeReader()
+		{
+			startPosition = 0;
+			endPosition = 0x100000;
+
+			currentPosition = 0;
+		}
+
+		public override int ReadByte()
+		{
+			if (currentPosition >= endPosition || ReadDelegate == default)
+				return -1;
+
+			return ReadDelegate((uint)currentPosition++);
+		}
 	}
 }

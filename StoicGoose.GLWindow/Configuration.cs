@@ -35,10 +35,6 @@ namespace StoicGoose.GLWindow
 		[Description("Toggles muting all sound output.")]
 		public bool Mute { get; set; } = false;
 
-		[DisplayName("Cache Disassembly")]
-		[Description("Cache disassembled code segments locally.")]
-		public bool CacheDisassembly { get; set; } = true;
-
 		[DisplayName("Game Controls")]
 		[Description("Controls related to game input, i.e. X-/Y-pads, etc.")]
 		public Dictionary<string, string> GameControls { get; set; } = new();

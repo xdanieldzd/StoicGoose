@@ -9,14 +9,10 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-using Newtonsoft.Json;
-
 using StoicGoose.Common.Console;
-using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
-using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
@@ -47,9 +43,6 @@ namespace StoicGoose.GLWindow
 		/* Input */
 		readonly InputHandler inputHandler = new();
 
-		/* Disassembly */
-		ThreadedDisassembler disassembler = default;
-
 		/* Emulation */
 		IMachine machine = default;
 		Texture displayTexture = default;
@@ -62,7 +55,7 @@ namespace StoicGoose.GLWindow
 
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
-			if ((logWindow = new() { IsWindowOpen = GlobalVariables.IsAuthorsMachine }) != null)
+			if ((logWindow = new()) != null)
 			{
 				Console.SetOut(logWindow.TextWriter);
 				var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
@@ -83,7 +76,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
-			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, disassembler, isRunning, isPaused));
+			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, /*disassembler,*/ isRunning, isPaused));
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
@@ -122,8 +115,6 @@ namespace StoicGoose.GLWindow
 
 			inputHandler.SetGameWindow(this);
 			inputHandler.SetKeyMapping(Program.Configuration.GameControls, Program.Configuration.SystemControls);
-
-			disassembler = new();
 
 			CreateMachine(Program.Configuration.PreferredSystem);
 
@@ -247,8 +238,6 @@ namespace StoicGoose.GLWindow
 			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);
 
-			disassembler.ReadDelegate = machine.ReadMemory;
-
 			systemControllerStatusWindow.SetComponentType(machine.GetType());
 			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());
 			soundControllerStatusWindow.SetComponentType(machine.SoundController.GetType());
@@ -270,7 +259,6 @@ namespace StoicGoose.GLWindow
 		{
 			SaveCartridgeRam();
 			SaveInternalEeprom();
-			SaveDisassemblyCache();
 		}
 
 		private void LoadAndRunCartridge(string filename)
@@ -297,7 +285,6 @@ namespace StoicGoose.GLWindow
 			LoadCartridgeRam();
 			LoadBootstrap();
 			LoadInternalEeprom();
-			LoadDisassemblyCache();
 
 			displayWindow.IsWindowOpen = true;
 
@@ -345,18 +332,6 @@ namespace StoicGoose.GLWindow
 			if (data.Length != 0) machine.LoadInternalEeprom(data);
 		}
 
-		private void LoadDisassemblyCache()
-		{
-			if (!Program.Configuration.CacheDisassembly) return;
-
-			var path = Path.Combine(Program.DebuggingDataPath, disassemblyCacheFilename);
-			if (!File.Exists(path)) return;
-
-			var data = path.DeserializeFromFile<Dictionary<ushort, List<Instruction>>>();
-			disassembler.Clear();
-			disassembler.SetSegmentCache(data);
-		}
-
 		private void SaveCartridgeRam()
 		{
 			var data = machine.GetSaveData();
@@ -377,23 +352,6 @@ namespace StoicGoose.GLWindow
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
-		}
-
-		private void SaveDisassemblyCache()
-		{
-			if (!Program.Configuration.CacheDisassembly) return;
-
-			var data = disassembler.GetSegmentCache();
-			if (data.Count == 0) return;
-
-			var path = Path.Combine(Program.DebuggingDataPath, disassemblyCacheFilename);
-
-			data.SerializeToFile(path, new()
-			{
-				Formatting = Formatting.None,
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate
-			});
 		}
 	}
 }

@@ -100,14 +100,13 @@ namespace StoicGoose.GLWindow
 			optionsMenu = new("Options")
 			{
 				SubItems = new MenuItem[]
-						{
+				{
 					new("Preferred System")
 					{
 						SubItems = new MenuItem[]
 						{
 							new("WonderSwan",
-							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename);
-},
+							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
 							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
 							new("WonderSwan Color",
 							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
@@ -120,12 +119,8 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
 					new("Mute",
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; }),
-					new("-"),
-					new("Cache Disassembly",
-					(_) => { Program.Configuration.CacheDisassembly = !Program.Configuration.CacheDisassembly; },
-					(s) => { s.IsChecked = Program.Configuration.CacheDisassembly; })
-						}
+					(s) => { s.IsChecked = Program.Configuration.Mute; })
+				}
 			};
 
 			helpMenu = new("Help")
