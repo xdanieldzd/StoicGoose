@@ -15,7 +15,8 @@ namespace StoicGoose.GLWindow.Interface
 
 		bool firstOpen = true;
 
-		readonly DriveInfo[] driveInfos = DriveInfo.GetDrives();
+		DriveInfo[] driveInfos = default;
+		List<string> driveLabels = default;
 		int selectedDriveInfo = -1;
 
 		readonly List<(string label, string[] filter)> filters = new();
@@ -60,6 +61,12 @@ namespace StoicGoose.GLWindow.Interface
 						selectedFilePath = currentFiles[currentFileDirList[selectedFileDir].index].FullName;
 				};
 
+				if (driveInfos == default)
+				{
+					driveInfos = DriveInfo.GetDrives();
+					driveLabels = driveInfos.Select(x => $"{x.Name} {(x.IsReady ? $"[{x.VolumeLabel}]" : string.Empty)}").ToList();
+				}
+
 				if (filters.Count == 0)
 				{
 					var filterSplit = fileDialogs[i].Filter.Split('|');
@@ -97,7 +104,7 @@ namespace StoicGoose.GLWindow.Interface
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.SetNextItemWidth(windowContentAvailWidth);
-					if (ImGui.Combo("##drives", ref selectedDriveInfo, driveInfos.Select(x => $"{x.Name} {(x.IsReady ? $"[{x.VolumeLabel}]" : string.Empty)}").ToArray(), driveInfos.Length))
+					if (ImGui.Combo("##drives", ref selectedDriveInfo, driveLabels.ToArray(), driveLabels.Count))
 						UpdateCurrentFilesAndDirs(driveInfos[selectedDriveInfo].RootDirectory);
 
 					ImGui.Dummy(new NumericsVector2(0f, 3f));
