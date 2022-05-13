@@ -1,8 +1,10 @@
-﻿using static StoicGoose.Common.Utilities.BitHandling;
+﻿using StoicGoose.Core.Interfaces;
+
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.DMA
 {
-	public class SphinxGeneralDMAController : IComponent
+	public class SphinxGeneralDMAController : IPortAccessComponent
 	{
 		// TODO: verify behavior!
 
@@ -70,11 +72,11 @@ namespace StoicGoose.Core.DMA
 			}
 		}
 
-		public byte ReadRegister(ushort register)
+		public byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x40:
 					/* REG_DMA_SRC (low) */
@@ -116,9 +118,9 @@ namespace StoicGoose.Core.DMA
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x40:
 					/* REG_DMA_SRC (low) */

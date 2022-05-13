@@ -4,8 +4,8 @@
 	{
 		readonly MemoryReadDelegate memoryReadDelegate;
 		readonly MemoryWriteDelegate memoryWriteDelegate;
-		readonly RegisterReadDelegate registerReadDelegate;
-		readonly RegisterWriteDelegate registerWriteDelegate;
+		readonly PortReadDelegate portReadDelegate;
+		readonly PortWriteDelegate portWriteDelegate;
 
 		private byte ReadMemory8(ushort segment, ushort offset)
 		{
@@ -26,6 +26,27 @@
 		{
 			memoryWriteDelegate((uint)((segment << 4) + offset), (byte)(value & 0xFF));
 			memoryWriteDelegate((uint)((segment << 4) + offset + 1), (byte)(value >> 8));
+		}
+
+		private byte ReadPort8(ushort port)
+		{
+			return portReadDelegate(port);
+		}
+
+		private ushort ReadPort16(ushort port)
+		{
+			return (ushort)(portReadDelegate((ushort)(port + 1)) << 8 | portReadDelegate(port));
+		}
+
+		private void WritePort8(ushort port, byte value)
+		{
+			portWriteDelegate(port, value);
+		}
+
+		private void WritePort16(ushort port, ushort value)
+		{
+			portWriteDelegate(port, (byte)(value & 0xFF));
+			portWriteDelegate((ushort)(port + 1), (byte)(value >> 8));
 		}
 	}
 }

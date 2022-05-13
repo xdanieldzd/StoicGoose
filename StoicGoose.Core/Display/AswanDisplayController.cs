@@ -110,11 +110,11 @@ namespace StoicGoose.Core.Display
 			}
 		}
 
-		public override byte ReadRegister(ushort register)
+		public override byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x01:
 					/* REG_BACK_COLOR */
@@ -144,16 +144,16 @@ namespace StoicGoose.Core.Display
 
 				default:
 					/* Fall through to common */
-					retVal = base.ReadRegister(register);
+					retVal = base.ReadPort(port);
 					break;
 			}
 
 			return retVal;
 		}
 
-		public override void WriteRegister(ushort register, byte value)
+		public override void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x01:
 					/* REG_BACK_COLOR */
@@ -183,7 +183,7 @@ namespace StoicGoose.Core.Display
 
 				default:
 					/* Fall through to common */
-					base.WriteRegister(register, value);
+					base.WritePort(port, value);
 					break;
 			}
 		}

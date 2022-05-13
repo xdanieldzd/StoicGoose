@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 
-using StoicGoose.Core.Machines;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Handlers
 {

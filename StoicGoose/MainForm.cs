@@ -737,7 +737,7 @@ namespace StoicGoose
 
 					if (MessageBox.Show("Trace logs are highly verbose and can consume a lot of storage space, even during short sessions.\n\nDo you still want to continue and enable logging?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
 					{
-						emulatorHandler.Machine.BeginTraceLog(Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
+						//emulatorHandler.Machine.BeginTraceLog(Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
 						traceLogMenuItem.Checked = true;
 					}
 
@@ -745,7 +745,7 @@ namespace StoicGoose
 				}
 				else
 				{
-					emulatorHandler.Machine.EndTraceLog();
+					//emulatorHandler.Machine.EndTraceLog();
 					traceLogMenuItem.Checked = false;
 				}
 			}

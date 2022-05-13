@@ -11,15 +11,15 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public class ComponentRegisterWindow : WindowBase
+	public class ComponentPortWindow : WindowBase
 	{
 		const BindingFlags getPropBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
-		readonly Dictionary<string, (List<ushort> numbers, List<RegisterParameterInformation> regInfos)> registers = new();
+		readonly Dictionary<string, (List<ushort> numbers, List<PortParameterInformation> portInfos)> ports = new();
 
 		Type componentType = default;
 
-		public ComponentRegisterWindow(string title) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
+		public ComponentPortWindow(string title) : base(title, new NumericsVector2(500f, 300f), ImGuiCond.FirstUseEver) { }
 
 		public void SetComponentType(Type type)
 		{
@@ -27,28 +27,28 @@ namespace StoicGoose.GLWindow.Interface
 			{
 				componentType = type;
 
-				registers.Clear();
+				ports.Clear();
 
 				foreach (var propInfo in componentType.GetProperties(getPropBindingFlags).Where(x => !x.GetGetMethod().IsAbstract))
 				{
-					if (propInfo.GetCustomAttribute<RegisterAttribute>() is RegisterAttribute regAttrib)
+					if (propInfo.GetCustomAttribute<PortAttribute>() is PortAttribute regAttrib)
 					{
-						if (!registers.ContainsKey(regAttrib.Name))
-							registers.Add(regAttrib.Name, (regAttrib.Numbers, new()));
+						if (!ports.ContainsKey(regAttrib.Name))
+							ports.Add(regAttrib.Name, (regAttrib.Numbers, new()));
 					}
 				}
 
-				foreach (var (name, (numbers, list)) in registers)
+				foreach (var (name, (numbers, list)) in ports)
 				{
 					foreach (var propInfo in componentType.GetProperties(getPropBindingFlags)
-						.Where(x => x.GetCustomAttribute<RegisterAttribute>()?.Numbers.SequenceEqual(numbers) == true && x.GetCustomAttribute<RegisterAttribute>()?.Name == name)
+						.Where(x => x.GetCustomAttribute<PortAttribute>()?.Numbers.SequenceEqual(numbers) == true && x.GetCustomAttribute<PortAttribute>()?.Name == name)
 						.GroupBy(x => x.Name)
 						.Select(x => x.First()))
 					{
 						var descAttrib = propInfo.GetCustomAttribute<BitDescriptionAttribute>();
 						var formatAttrib = propInfo.GetCustomAttribute<FormatAttribute>();
 
-						list.Add(new RegisterParameterInformation()
+						list.Add(new PortParameterInformation()
 						{
 							Index = descAttrib?.LowBit ?? 0,
 							Description = descAttrib != null ? $"{descAttrib.BitString}{descAttrib.Description}" : "<no description>",
@@ -67,7 +67,7 @@ namespace StoicGoose.GLWindow.Interface
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
-				foreach (var (name, (numbers, list)) in registers.OrderBy(x => x.Value.numbers.Min()))
+				foreach (var (name, (numbers, list)) in ports.OrderBy(x => x.Value.numbers.Min()))
 				{
 					if (ImGui.CollapsingHeader($"{string.Join(", ", numbers.Select(x => $"0x{x:X3}"))} -- {name}", ImGuiTreeNodeFlags.DefaultOpen))
 					{
@@ -94,7 +94,7 @@ namespace StoicGoose.GLWindow.Interface
 		}
 	}
 
-	class RegisterParameterInformation
+	class PortParameterInformation
 	{
 		public int Index { get; set; } = -1;
 		public string Description { get; set; } = string.Empty;

@@ -7,13 +7,14 @@ using StoicGoose.Core.Cartridges;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
+using StoicGoose.Core.Interfaces;
 using StoicGoose.Core.Sound;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Machines
 {
-	public abstract class MachineCommon : IMachine, IComponent
+	public abstract class MachineCommon : IMachine, IMemoryAccessComponent, IPortAccessComponent
 	{
 		// http://daifukkat.su/docs/wsman/
 
@@ -63,7 +64,7 @@ namespace StoicGoose.Core.Machines
 			InternalRamMask = (uint)(InternalRamSize - 1);
 			InternalRam = new byte[InternalRamSize];
 
-			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadRegister, WriteRegister);
+			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadPort, WritePort);
 			InternalEeprom = new EEPROM(InternalEepromSize, InternalEepromAddressBits);
 
 			InitializeEepromToDefaults();
@@ -236,16 +237,6 @@ namespace StoicGoose.Core.Machines
 			return Array.Empty<byte>();
 		}
 
-		public void BeginTraceLog(string filename)
-		{
-			Cpu.InitializeTraceLogger(filename);
-		}
-
-		public void EndTraceLog()
-		{
-			Cpu.CloseTraceLogger();
-		}
-
 		public abstract void UpdateStatusIcons();
 
 		public byte ReadMemory(uint address)
@@ -291,66 +282,66 @@ namespace StoicGoose.Core.Machines
 			}
 		}
 
-		public abstract byte ReadRegister(ushort register);
-		public abstract void WriteRegister(ushort register, byte value);
+		public abstract byte ReadPort(ushort port);
+		public abstract void WritePort(ushort port, byte value);
 
-		[Register("REG_HW_FLAGS", 0x0A0)]
+		[Port("REG_HW_FLAGS", 0x0A0)]
 		[BitDescription("BIOS lockout; is cartridge mapped?", 0)]
 		public bool CartEnable => cartEnable;
-		[Register("REG_HW_FLAGS", 0x0A0)]
+		[Port("REG_HW_FLAGS", 0x0A0)]
 		[BitDescription("System type; is WSC or greater?", 1)]
 		public bool IsWSCOrGreater => isWSCOrGreater;
-		[Register("REG_HW_FLAGS", 0x0A0)]
+		[Port("REG_HW_FLAGS", 0x0A0)]
 		[BitDescription("External bus width; is 16-bit bus?", 2)]
 		public bool Is16BitExtBus => is16BitExtBus;
-		[Register("REG_HW_FLAGS", 0x0A0)]
+		[Port("REG_HW_FLAGS", 0x0A0)]
 		[BitDescription("Cartridge ROM speed; is 1-cycle?", 3)]
 		public bool CartRom1CycleSpeed => cartRom1CycleSpeed;
-		[Register("REG_HW_FLAGS", 0x0A0)]
+		[Port("REG_HW_FLAGS", 0x0A0)]
 		[BitDescription("Built-in self test passed", 7)]
 		public bool BuiltInSelfTestOk => builtInSelfTestOk;
 
-		[Register("REG_KEYPAD", 0x0B5)]
+		[Port("REG_KEYPAD", 0x0B5)]
 		[BitDescription("Y keys check enabled", 4)]
 		public bool KeypadYEnable => keypadYEnable;
-		[Register("REG_KEYPAD", 0x0B5)]
+		[Port("REG_KEYPAD", 0x0B5)]
 		[BitDescription("X keys check enabled", 5)]
 		public bool KeypadXEnable => keypadXEnable;
-		[Register("REG_KEYPAD", 0x0B5)]
+		[Port("REG_KEYPAD", 0x0B5)]
 		[BitDescription("Button check enabled", 6)]
 		public bool KeypadButtonEnable => keypadButtonEnable;
 
-		[Register("REG_INT_BASE", 0x0B0)]
+		[Port("REG_INT_BASE", 0x0B0)]
 		public abstract byte InterruptBase { get; }
-		[Register("REG_INT_ENABLE", 0x0B2)]
+		[Port("REG_INT_ENABLE", 0x0B2)]
 		[BitDescription("Interrupt enable bitmask", 4)]
 		[Format("X2")]
 		public byte InterruptEnable => interruptEnable;
-		[Register("REG_INT_STATUS", 0x0B4)]
+		[Port("REG_INT_STATUS", 0x0B4)]
 		[BitDescription("Interrupt status bitmask", 4)]
 		[Format("X2")]
 		public byte InterruptStatus => interruptStatus;
 
-		[Register("REG_SER_DATA", 0x0B1)]
+		[Port("REG_SER_DATA", 0x0B1)]
 		[BitDescription("Serial data TX/RX")]
 		[Format("X2")]
 		public byte SerialData => serialData;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Serial enabled", 7)]
 		public bool SerialEnable => serialEnable;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Baud rate; is 38400 baud?", 6)]
 		public bool SerialBaudRateSelect => serialBaudRateSelect;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Overrun reset", 5)]
 		public bool SerialOverrunReset => serialOverrunReset;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Serial buffer empty?", 2)]
 		public bool SerialSendBufferEmpty => serialSendBufferEmpty;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Overrun", 1)]
 		public bool SerialOverrun => serialOverrun;
-		[Register("REG_SER_STATUS", 0x0B3)]
+		[Port("REG_SER_STATUS", 0x0B3)]
 		[BitDescription("Data received", 0)]
 		public bool SerialDataReceived => serialDataReceived;
 	}

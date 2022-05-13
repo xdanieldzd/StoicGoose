@@ -1,6 +1,6 @@
 ﻿namespace StoicGoose.GLWindow.Interface
 {
-	public class DisplayControllerStatusWindow : ComponentRegisterWindow
+	public class DisplayControllerStatusWindow : ComponentPortWindow
 	{
 		public DisplayControllerStatusWindow() : base("Display Controller") { }
 	}

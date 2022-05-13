@@ -29,27 +29,6 @@ namespace StoicGoose.Core.CPU
 			DI = 0b111
 		}
 
-		private byte ReadRegister8(ushort register)
-		{
-			return registerReadDelegate(register);
-		}
-
-		private ushort ReadRegister16(ushort register)
-		{
-			return (ushort)(registerReadDelegate((ushort)(register + 1)) << 8 | registerReadDelegate(register));
-		}
-
-		private void WriteRegister8(ushort register, byte value)
-		{
-			registerWriteDelegate(register, value);
-		}
-
-		private void WriteRegister16(ushort register, ushort value)
-		{
-			registerWriteDelegate(register, (byte)(value & 0xFF));
-			registerWriteDelegate((ushort)(register + 1), (byte)(value >> 8));
-		}
-
 		private byte GetRegister8(RegisterNumber8 reg)
 		{
 			return reg switch

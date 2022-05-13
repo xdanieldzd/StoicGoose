@@ -187,11 +187,11 @@ namespace StoicGoose.Core.Display
 			WriteToFramebuffer(y, x, (byte)r, (byte)g, (byte)b);
 		}
 
-		public override byte ReadRegister(ushort register)
+		public override byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x01:
 					/* REG_BACK_COLOR */
@@ -225,16 +225,16 @@ namespace StoicGoose.Core.Display
 
 				default:
 					/* Fall through to common */
-					retVal = base.ReadRegister(register);
+					retVal = base.ReadPort(port);
 					break;
 			}
 
 			return retVal;
 		}
 
-		public override void WriteRegister(ushort register, byte value)
+		public override void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x01:
 					/* REG_BACK_COLOR */
@@ -268,36 +268,36 @@ namespace StoicGoose.Core.Display
 
 				default:
 					/* Fall through to common */
-					base.WriteRegister(register, value);
+					base.WritePort(port, value);
 					break;
 			}
 		}
 
-		[Register("REG_BACK_COLOR", 0x001)]
+		[Port("REG_BACK_COLOR", 0x001)]
 		[BitDescription("Background color index", 0, 3)]
 		public override byte BackColorIndex => backColorIndex;
-		[Register("REG_BACK_COLOR", 0x001)]
+		[Port("REG_BACK_COLOR", 0x001)]
 		[BitDescription("Background color palette", 4, 7)]
 		public byte BackColorPalette => backColorPalette;
-		[Register("REG_SPR_BASE", 0x004)]
+		[Port("REG_SPR_BASE", 0x004)]
 		[BitDescription("Sprite table base address", 0, 5)]
 		[Format("X4", 9)]
 		public override int SprBase => sprBase;
-		[Register("REG_MAP_BASE", 0x007)]
+		[Port("REG_MAP_BASE", 0x007)]
 		[BitDescription("SCR1 base address", 0, 3)]
 		[Format("X4", 11)]
 		public override int Scr1Base => scr1Base;
-		[Register("REG_MAP_BASE", 0x007)]
+		[Port("REG_MAP_BASE", 0x007)]
 		[BitDescription("SCR2 base address", 4, 7)]
 		[Format("X4", 11)]
 		public override int Scr2Base => scr2Base;
-		[Register("REG_LCD_CTRL", 0x014)]
+		[Port("REG_LCD_CTRL", 0x014)]
 		[BitDescription("LCD contrast setting; high contrast?", 1)]
 		public bool LcdContrastHigh => lcdContrastHigh;
-		[Register("REG_DISP_MODE", 0x060)]
+		[Port("REG_DISP_MODE", 0x060)]
 		[BitDescription("Display color mode; is color?", 6)]
 		public bool DisplayColorFlagSet => displayColorFlagSet;
-		[Register("REG_DISP_MODE", 0x060)]
+		[Port("REG_DISP_MODE", 0x060)]
 		[BitDescription("Tile bits-per-pixel; is 4bpp?", 7)]
 		public bool Display4bppFlagSet => display4bppFlagSet;
 	}

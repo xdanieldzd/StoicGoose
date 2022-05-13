@@ -5,9 +5,10 @@ using StoicGoose.Core.Cartridges;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
+using StoicGoose.Core.Machines;
 using StoicGoose.Core.Sound;
 
-namespace StoicGoose.Core.Machines
+namespace StoicGoose.Core.Interfaces
 {
 	public interface IMachine
 	{
@@ -40,10 +41,7 @@ namespace StoicGoose.Core.Machines
 
 		byte ReadMemory(uint address);
 		void WriteMemory(uint address, byte value);
-		byte ReadRegister(ushort register);
-		void WriteRegister(ushort register, byte value);
-
-		void BeginTraceLog(string filename);
-		void EndTraceLog();
+		byte ReadPort(ushort port);
+		void WritePort(ushort port, byte value);
 	}
 }

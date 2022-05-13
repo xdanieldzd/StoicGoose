@@ -1,4 +1,4 @@
-﻿using System;
+﻿using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.CPU
 {
@@ -35,16 +35,12 @@ namespace StoicGoose.Core.CPU
 
 		public bool IsHalted { get => halted; set => halted = value; }
 
-		readonly Func<ushort, ushort, string> disassembleOpcode = default;
-
-		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, RegisterReadDelegate registerRead, RegisterWriteDelegate registerWrite, Func<ushort, ushort, string> disassemble = null)
+		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, PortReadDelegate portRead, PortWriteDelegate portWrite)
 		{
 			memoryReadDelegate = memoryRead;
 			memoryWriteDelegate = memoryWrite;
-			registerReadDelegate = registerRead;
-			registerWriteDelegate = registerWrite;
-
-			disassembleOpcode = disassemble;
+			portReadDelegate = portRead;
+			portWriteDelegate = portWrite;
 
 			Reset();
 		}
@@ -78,7 +74,7 @@ namespace StoicGoose.Core.CPU
 
 		public void Shutdown()
 		{
-			CloseTraceLogger();
+			//
 		}
 
 		public void Interrupt(int vector)
@@ -119,21 +115,6 @@ namespace StoicGoose.Core.CPU
 			}
 			else
 			{
-				/* If CPU trace logger is enabled and disassembly function was given, write to logger */
-				if (isTraceLogOpen && disassembleOpcode != null)
-				{
-					var address = $"{cs:X4}:{ip:X4}";
-					var disassemblyAndComment = disassembleOpcode(cs, ip);
-					var registerStates = $"AX:{ax.Word:X4} BX:{bx.Word:X4} CX:{cx.Word:X4} DX:{dx.Word:X4} SP:{sp:X4} BP:{bp:X4} SI:{si:X4} DI:{di:X4}";
-					var segmentStates = $"CS:{cs:X4} SS:{ss:X4} DS:{ds:X4} ES:{es:X4}";
-					var flagStates =
-						$"{(IsFlagSet(Flags.Carry) ? "C" : "-")}{(IsFlagSet(Flags.Parity) ? "P" : "-")}{(IsFlagSet(Flags.Auxiliary) ? "A" : "-")}{(IsFlagSet(Flags.Zero) ? "Z" : "-")}" +
-						$"{(IsFlagSet(Flags.Sign) ? "S" : "-")}{(IsFlagSet(Flags.Trap) ? "T" : "-")}{(IsFlagSet(Flags.InterruptEnable) ? "I" : "-")}{(IsFlagSet(Flags.Direction) ? "D" : "-")}" +
-						$"{(IsFlagSet(Flags.Overflow) ? "O" : "-")}";
-
-					WriteToTraceLog($"{address} | {disassemblyAndComment,-84} | {registerStates} | {segmentStates} | {flagStates}");
-				}
-
 				/* Read any prefixes & opcode */
 				byte opcode;
 				while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }

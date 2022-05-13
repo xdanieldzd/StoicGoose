@@ -1,6 +1,7 @@
 ﻿using System;
 
 using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Interfaces;
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -14,7 +15,7 @@ namespace StoicGoose.Core.Cartridges
 
 	// TODO: interrupts, save/load current state
 
-	public sealed class RTC : IComponent
+	public sealed class RTC : IPortAccessComponent
 	{
 		const int cyclesInSecond = (int)MachineCommon.CpuClock;
 
@@ -304,11 +305,11 @@ namespace StoicGoose.Core.Cartridges
 			}
 		}
 
-		public byte ReadRegister(ushort register)
+		public byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0x90;
 
-			if (register == 0)
+			if (port == 0)
 			{
 				PerformAccess();
 
@@ -322,7 +323,7 @@ namespace StoicGoose.Core.Cartridges
 				if (payloadIndex >= numPayloadBytes[command & 0b111])
 					payloadIndex = 0;
 			}
-			else if (register == 1)
+			else if (port == 1)
 			{
 				retVal = wsData;
 			}
@@ -330,16 +331,16 @@ namespace StoicGoose.Core.Cartridges
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public void WritePort(ushort port, byte value)
 		{
-			if (register == 0)
+			if (port == 0)
 			{
 				isReadAccess = IsBitSet(value, 0);
 				command = (byte)((value >> 1) & 0b111);
 
 				PerformAccess();
 			}
-			else if (register == 1)
+			else if (port == 1)
 			{
 				wsData = value;
 			}

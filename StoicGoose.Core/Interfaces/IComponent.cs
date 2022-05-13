@@ -1,4 +1,4 @@
-﻿namespace StoicGoose.Core
+﻿namespace StoicGoose.Core.Interfaces
 {
 	public interface IComponent
 	{

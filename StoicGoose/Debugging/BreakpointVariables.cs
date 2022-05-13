@@ -1,5 +1,5 @@
 ﻿using StoicGoose.Core.CPU;
-using StoicGoose.Core.Machines;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Debugging
 {

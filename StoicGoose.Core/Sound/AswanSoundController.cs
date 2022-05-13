@@ -50,9 +50,9 @@ namespace StoicGoose.Core.Sound
 			return new[] { mixedLeft, mixedRight };
 		}
 
-		public override byte ReadRegister(ushort register)
+		public override byte ReadPort(ushort port)
 		{
-			return register switch
+			return port switch
 			{
 				/* REG_SND_9697 (low) */
 				0x96 => (byte)((unknown9697 >> 0) & 0b11111111),
@@ -71,13 +71,13 @@ namespace StoicGoose.Core.Sound
 				/* REG_SND_9D */
 				0x9D => 0b11111111,
 				/* Fall through to common */
-				_ => base.ReadRegister(register)
+				_ => base.ReadPort(port)
 			};
 		}
 
-		public override void WriteRegister(ushort register, byte value)
+		public override void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x96:
 					/* REG_SND_9697 (low) */
@@ -108,16 +108,16 @@ namespace StoicGoose.Core.Sound
 
 				default:
 					/* Fall through to common */
-					base.WriteRegister(register, value);
+					base.WritePort(port, value);
 					break;
 			}
 		}
 
-		[Register("REG_SND_9697", 0x096, 0x097)]
+		[Port("REG_SND_9697", 0x096, 0x097)]
 		[BitDescription("Unknown data", 0, 9)]
 		[Format("X4")]
 		public ushort Unknown9697 => unknown9697;
-		[Register("REG_SND_9899", 0x098, 0x099)]
+		[Port("REG_SND_9899", 0x098, 0x099)]
 		[BitDescription("Unknown data", 0, 9)]
 		[Format("X4")]
 		public ushort Unknown9899 => unknown9899;

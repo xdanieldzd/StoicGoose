@@ -68,20 +68,20 @@ namespace StoicGoose.Core.Machines
 			Metadata.IsStatusIconActive["Volume2"] = SoundController.MasterVolume == 2;
 		}
 
-		public override byte ReadRegister(ushort register)
+		public override byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
-					retVal = DisplayController.ReadRegister(register);
+					retVal = DisplayController.ReadPort(port);
 					break;
 
 				/* Sound controller */
 				case var n when n >= 0x80 && n < 0xA0:
-					retVal = SoundController.ReadRegister(register);
+					retVal = SoundController.ReadPort(port);
 					break;
 
 				/* System controller */
@@ -184,12 +184,12 @@ namespace StoicGoose.Core.Machines
 					/* REG_IEEP_ADDR (low) */
 					/* REG_IEEP_ADDR (high) */
 					/* REG_IEEP_CMD (write) */
-					retVal = InternalEeprom.ReadRegister((ushort)(register - 0xBA));
+					retVal = InternalEeprom.ReadPort((ushort)(port - 0xBA));
 					break;
 
 				/* Cartridge */
 				case var n when n >= 0xC0 && n < 0x100:
-					retVal = Cartridge.ReadRegister(register);
+					retVal = Cartridge.ReadPort(port);
 					break;
 
 				/* Unmapped */
@@ -201,18 +201,18 @@ namespace StoicGoose.Core.Machines
 			return retVal;
 		}
 
-		public override void WriteRegister(ushort register, byte value)
+		public override void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
 				case var n when (n >= 0x00 && n < 0x40) || n == 0x60 || n == 0xA2 || (n >= 0xA4 && n <= 0xAB):
-					DisplayController.WriteRegister(register, value);
+					DisplayController.WritePort(port, value);
 					break;
 
 				/* Sound controller */
 				case var n when n >= 0x80 && n < 0xA0:
-					SoundController.WriteRegister(register, value);
+					SoundController.WritePort(port, value);
 					break;
 
 				/* System controller */
@@ -275,17 +275,17 @@ namespace StoicGoose.Core.Machines
 					/* REG_IEEP_ADDR (low) */
 					/* REG_IEEP_ADDR (high) */
 					/* REG_IEEP_STATUS (read) */
-					InternalEeprom.WriteRegister((ushort)(register - 0xBA), value);
+					InternalEeprom.WritePort((ushort)(port - 0xBA), value);
 					break;
 
 				/* Cartridge */
 				case var n when n >= 0xC0 && n < 0x100:
-					Cartridge.WriteRegister(register, value);
+					Cartridge.WritePort(port, value);
 					break;
 			}
 		}
 
-		[Register("REG_INT_BASE", 0x0B0)]
+		[Port("REG_INT_BASE", 0x0B0)]
 		[BitDescription("Interrupt base address", 3, 7)]
 		[Format("X4", 0)]
 		public override byte InterruptBase => interruptBase;

@@ -2,6 +2,7 @@
 
 using StoicGoose.Common.Console;
 using StoicGoose.Core.EEPROMs;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.Cartridges
 {
@@ -167,9 +168,9 @@ namespace StoicGoose.Core.Cartridges
 				sram[((uint)(sramBank << 16) | (address & 0x0FFFF)) & sramMask] = value;
 		}
 
-		public byte ReadRegister(ushort register)
+		public byte ReadPort(ushort port)
 		{
-			return register switch
+			return port switch
 			{
 				/* REG_BANK_ROM2 */
 				0xC0 => romBank2,
@@ -180,27 +181,27 @@ namespace StoicGoose.Core.Cartridges
 				/* REG_BANK_ROM1 */
 				0xC3 => romBank1,
 				/* REG_EEP_DATA (low) */
-				0xC4 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				0xC4 => eeprom != null ? eeprom.ReadPort((byte)(port - 0xC4)) : (byte)0x90,
 				/* REG_EEP_DATA (high) */
-				0xC5 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				0xC5 => eeprom != null ? eeprom.ReadPort((byte)(port - 0xC4)) : (byte)0x90,
 				/* REG_EEP_ADDR (low) */
-				0xC6 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				0xC6 => eeprom != null ? eeprom.ReadPort((byte)(port - 0xC4)) : (byte)0x90,
 				/* REG_EEP_ADDR (high) */
-				0xC7 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				0xC7 => eeprom != null ? eeprom.ReadPort((byte)(port - 0xC4)) : (byte)0x90,
 				/* REG_EEP_STATUS (read) */
-				0xC8 => eeprom != null ? eeprom.ReadRegister((byte)(register - 0xC4)) : (byte)0x90,
+				0xC8 => eeprom != null ? eeprom.ReadPort((byte)(port - 0xC4)) : (byte)0x90,
 				/* REG_RTC_STATUS (read) */
-				0xCA => rtc != null ? rtc.ReadRegister((byte)(register - 0xCA)) : (byte)0x90,
+				0xCA => rtc != null ? rtc.ReadPort((byte)(port - 0xCA)) : (byte)0x90,
 				/* REG_RTC_DATA */
-				0xCB => rtc != null ? rtc.ReadRegister((byte)(register - 0xCA)) : (byte)0x90,
+				0xCB => rtc != null ? rtc.ReadPort((byte)(port - 0xCA)) : (byte)0x90,
 				/* Unmapped */
 				_ => 0x90,
 			};
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0xC0:
 					/* REG_BANK_ROM2 */
@@ -232,14 +233,14 @@ namespace StoicGoose.Core.Cartridges
 					/* REG_EEP_ADDR (low) */
 					/* REG_EEP_ADDR (high) */
 					/* REG_EEP_CMD (write) */
-					eeprom?.WriteRegister((byte)(register - 0xC4), value);
+					eeprom?.WritePort((byte)(port - 0xC4), value);
 					break;
 
 				case 0xCA:
 				case 0xCB:
 					/* REG_RTC_CMD (write) */
 					/* REG_RTC_DATA */
-					rtc?.WriteRegister((byte)(register - 0xCA), value);
+					rtc?.WritePort((byte)(port - 0xCA), value);
 					break;
 			}
 		}

@@ -1,13 +1,14 @@
 ﻿using System;
 
 using StoicGoose.Common.Attributes;
+using StoicGoose.Core.Interfaces;
 using StoicGoose.Core.Machines;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Display
 {
-	public abstract class DisplayControllerCommon : IComponent
+	public abstract class DisplayControllerCommon : IPortAccessComponent
 	{
 		public const int HorizontalDisp = 224;
 		public const int HorizontalBlank = 32;
@@ -305,11 +306,11 @@ namespace StoicGoose.Core.Display
 		protected ushort ReadMemory16(uint address) => (ushort)(memoryReadDelegate(address + 1) << 8 | memoryReadDelegate(address));
 		protected uint ReadMemory32(uint address) => (uint)(memoryReadDelegate(address + 3) << 24 | memoryReadDelegate(address + 2) << 16 | memoryReadDelegate(address + 1) << 8 | memoryReadDelegate(address));
 
-		public virtual byte ReadRegister(ushort register)
+		public virtual byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x00:
 					/* REG_DISP_CTRL */
@@ -426,14 +427,14 @@ namespace StoicGoose.Core.Display
 				case 0x1E:
 				case 0x1F:
 					/* REG_PALMONO_POOL_x */
-					retVal |= (byte)(palMonoPools[((register & 0b11) << 1) | 0] << 0);
-					retVal |= (byte)(palMonoPools[((register & 0b11) << 1) | 1] << 4);
+					retVal |= (byte)(palMonoPools[((port & 0b11) << 1) | 0] << 0);
+					retVal |= (byte)(palMonoPools[((port & 0b11) << 1) | 1] << 4);
 					break;
 
-				case ushort _ when register >= 0x20 && register <= 0x3F:
+				case ushort _ when port >= 0x20 && port <= 0x3F:
 					/* REG_PALMONO_x */
-					retVal |= (byte)(palMonoData[(register >> 1) & 0b1111][((register & 0b1) << 1) | 0] << 0);
-					retVal |= (byte)(palMonoData[(register >> 1) & 0b1111][((register & 0b1) << 1) | 1] << 4);
+					retVal |= (byte)(palMonoData[(port >> 1) & 0b1111][((port & 0b1) << 1) | 0] << 0);
+					retVal |= (byte)(palMonoData[(port >> 1) & 0b1111][((port & 0b1) << 1) | 1] << 4);
 					break;
 
 				case 0xA2:
@@ -447,34 +448,34 @@ namespace StoicGoose.Core.Display
 				case 0xA4:
 				case 0xA5:
 					/* REG_HTMR_FREQ */
-					retVal |= (byte)((hBlankTimer.Frequency >> ((register & 0b1) * 8)) & 0xFF);
+					retVal |= (byte)((hBlankTimer.Frequency >> ((port & 0b1) * 8)) & 0xFF);
 					break;
 
 				case 0xA6:
 				case 0xA7:
 					/* REG_VTMR_FREQ */
-					retVal |= (byte)((vBlankTimer.Frequency >> ((register & 0b1) * 8)) & 0xFF);
+					retVal |= (byte)((vBlankTimer.Frequency >> ((port & 0b1) * 8)) & 0xFF);
 					break;
 
 				case 0xA8:
 				case 0xA9:
 					/* REG_HTMR_CTR */
-					retVal |= (byte)((hBlankTimer.Counter >> ((register & 0b1) * 8)) & 0xFF);
+					retVal |= (byte)((hBlankTimer.Counter >> ((port & 0b1) * 8)) & 0xFF);
 					break;
 
 				case 0xAA:
 				case 0xAB:
 					/* REG_VTMR_CTR */
-					retVal |= (byte)((vBlankTimer.Counter >> ((register & 0b1) * 8)) & 0xFF);
+					retVal |= (byte)((vBlankTimer.Counter >> ((port & 0b1) * 8)) & 0xFF);
 					break;
 			}
 
 			return retVal;
 		}
 
-		public virtual void WriteRegister(ushort register, byte value)
+		public virtual void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x00:
 					/* REG_DISP_CTRL */
@@ -586,14 +587,14 @@ namespace StoicGoose.Core.Display
 				case 0x1E:
 				case 0x1F:
 					/* REG_PALMONO_POOL_x */
-					palMonoPools[((register & 0b11) << 1) | 0] = (byte)((value >> 0) & 0b1111);
-					palMonoPools[((register & 0b11) << 1) | 1] = (byte)((value >> 4) & 0b1111);
+					palMonoPools[((port & 0b11) << 1) | 0] = (byte)((value >> 0) & 0b1111);
+					palMonoPools[((port & 0b11) << 1) | 1] = (byte)((value >> 4) & 0b1111);
 					break;
 
-				case ushort _ when register >= 0x20 && register <= 0x3F:
+				case ushort _ when port >= 0x20 && port <= 0x3F:
 					/* REG_PALMONO_x */
-					palMonoData[(register >> 1) & 0b1111][((register & 0b1) << 1) | 0] = (byte)((value >> 0) & 0b111);
-					palMonoData[(register >> 1) & 0b1111][((register & 0b1) << 1) | 1] = (byte)((value >> 4) & 0b111);
+					palMonoData[(port >> 1) & 0b1111][((port & 0b1) << 1) | 0] = (byte)((value >> 0) & 0b111);
+					palMonoData[(port >> 1) & 0b1111][((port & 0b1) << 1) | 1] = (byte)((value >> 4) & 0b111);
 					break;
 
 				case 0xA2:
@@ -636,139 +637,139 @@ namespace StoicGoose.Core.Display
 			}
 		}
 
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SCR1 enable", 0)]
 		public bool Scr1Enable => scr1Enable;
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SCR2 enable", 1)]
 		public bool Scr2Enable => scr2Enable;
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SPR enable", 2)]
 		public bool SprEnable => sprEnable;
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SPR window enable", 3)]
 		public bool SprWindowEnable => sprWindowEnable;
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SCR2 window mode; display outside?", 4)]
 		public bool Scr2WindowDisplayOutside => scr2WindowDisplayOutside;
-		[Register("REG_DISP_CTRL", 0x000)]
+		[Port("REG_DISP_CTRL", 0x000)]
 		[BitDescription("SCR2 window enable", 5)]
 		public bool Scr2WindowEnable => scr2WindowEnable;
-		[Register("REG_BACK_COLOR", 0x001)]
+		[Port("REG_BACK_COLOR", 0x001)]
 		[BitDescription("Background color pool index", 0, 2)]
 		public virtual byte BackColorIndex => backColorIndex;
-		[Register("REG_LINE_CUR", 0x002)]
+		[Port("REG_LINE_CUR", 0x002)]
 		[BitDescription("Current line being drawn")]
 		public int LineCurrent => lineCurrent;
-		[Register("REG_LINE_CMP", 0x003)]
+		[Port("REG_LINE_CMP", 0x003)]
 		[BitDescription("Line compare interrupt line")]
 		public int LineCompare => lineCompare;
-		[Register("REG_SPR_BASE", 0x004)]
+		[Port("REG_SPR_BASE", 0x004)]
 		[BitDescription("Sprite table base address", 0, 4)]
 		[Format("X4", 9)]
 		public virtual int SprBase => sprBase;
-		[Register("REG_SPR_FIRST", 0x005)]
+		[Port("REG_SPR_FIRST", 0x005)]
 		[BitDescription("First sprite to draw", 0, 6)]
 		public int SprFirst => sprFirst;
-		[Register("REG_SPR_COUNT", 0x006)]
+		[Port("REG_SPR_COUNT", 0x006)]
 		[BitDescription("Number of sprites to draw")]
 		public int SprCount => sprCount;
-		[Register("REG_MAP_BASE", 0x007)]
+		[Port("REG_MAP_BASE", 0x007)]
 		[BitDescription("SCR1 base address", 0, 2)]
 		[Format("X4", 11)]
 		public virtual int Scr1Base => scr1Base;
-		[Register("REG_MAP_BASE", 0x007)]
+		[Port("REG_MAP_BASE", 0x007)]
 		[BitDescription("SCR2 base address", 4, 6)]
 		[Format("X4", 11)]
 		public virtual int Scr2Base => scr2Base;
-		[Register("REG_SCR2_WIN_X0", 0x008)]
+		[Port("REG_SCR2_WIN_X0", 0x008)]
 		[BitDescription("Top-left X of SCR2 window")]
 		public int Scr2WinX0 => scr2WinX0;
-		[Register("REG_SCR2_WIN_Y0", 0x009)]
+		[Port("REG_SCR2_WIN_Y0", 0x009)]
 		[BitDescription("Top-left Y of SCR2 window")]
 		public int Scr2WinY0 => scr2WinY0;
-		[Register("REG_SCR2_WIN_X1", 0x00A)]
+		[Port("REG_SCR2_WIN_X1", 0x00A)]
 		[BitDescription("Bottom-right X of SCR2 window")]
 		public int Scr2WinX1 => scr2WinX1;
-		[Register("REG_SCR2_WIN_Y1", 0x00B)]
+		[Port("REG_SCR2_WIN_Y1", 0x00B)]
 		[BitDescription("Bottom-right Y of SCR2 window")]
 		public int Scr2WinY1 => scr2WinY1;
-		[Register("REG_SPR_WIN_X0", 0x00C)]
+		[Port("REG_SPR_WIN_X0", 0x00C)]
 		[BitDescription("Top-left X of SPR window")]
 		public int SprWinX0 => sprWinX0;
-		[Register("REG_SPR_WIN_Y0", 0x00D)]
+		[Port("REG_SPR_WIN_Y0", 0x00D)]
 		[BitDescription("Top-left Y of SPR window")]
 		public int SprWinY0 => sprWinY0;
-		[Register("REG_SPR_WIN_X1", 0x00E)]
+		[Port("REG_SPR_WIN_X1", 0x00E)]
 		[BitDescription("Bottom-right X of SPR window")]
 		public int SprWinX1 => sprWinX1;
-		[Register("REG_SPR_WIN_Y1", 0x00F)]
+		[Port("REG_SPR_WIN_Y1", 0x00F)]
 		[BitDescription("Bottom-right Y of SPR window")]
 		public int SprWinY1 => sprWinY1;
-		[Register("REG_SCR1_X", 0x010)]
+		[Port("REG_SCR1_X", 0x010)]
 		[BitDescription("SCR1 X scroll")]
 		public int Scr1ScrollX => scr1ScrollX;
-		[Register("REG_SCR1_Y", 0x011)]
+		[Port("REG_SCR1_Y", 0x011)]
 		[BitDescription("SCR1 Y scroll")]
 		public int Scr1ScrollY => scr1ScrollY;
-		[Register("REG_SCR2_X", 0x012)]
+		[Port("REG_SCR2_X", 0x012)]
 		[BitDescription("SCR2 X scroll")]
 		public int Scr2ScrollX => scr2ScrollX;
-		[Register("REG_SCR2_Y", 0x013)]
+		[Port("REG_SCR2_Y", 0x013)]
 		[BitDescription("SCR2 Y scroll")]
 		public int Scr2ScrollY => scr2ScrollY;
-		[Register("REG_LCD_CTRL", 0x014)]
+		[Port("REG_LCD_CTRL", 0x014)]
 		[BitDescription("LCD sleep mode; is LCD active?", 0)]
 		public bool LcdActive => lcdActive;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Sleep indicator", 0)]
 		public bool IconSleep => iconSleep;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Vertical orientation indicator", 1)]
 		public bool IconVertical => iconVertical;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Horizontal orientation indicator", 2)]
 		public bool IconHorizontal => iconHorizontal;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Auxiliary 1 (Small circle)", 3)]
 		public bool IconAux1 => iconAux1;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Auxiliary 2 (Medium circle)", 4)]
 		public bool IconAux2 => iconAux2;
-		[Register("REG_LCD_ICON", 0x015)]
+		[Port("REG_LCD_ICON", 0x015)]
 		[BitDescription("Auxiliary 3 (Big circle)", 5)]
 		public bool IconAux3 => iconAux3;
-		[Register("REG_LCD_VTOTAL", 0x016)]
+		[Port("REG_LCD_VTOTAL", 0x016)]
 		[BitDescription("Display VTOTAL")]
 		public int VTotal => vtotal;
-		[Register("REG_LCD_VSYNC", 0x017)]
+		[Port("REG_LCD_VSYNC", 0x017)]
 		[BitDescription("VSYNC line position")]
 		public int VSync => vsync;
-		[Register("REG_DISP_MODE", 0x060)]
+		[Port("REG_DISP_MODE", 0x060)]
 		[BitDescription("Tile format; is packed format?", 5)]
 		public bool DisplayPackedFormatSet => displayPackedFormatSet;
-		[Register("REG_TMR_CTRL", 0x0A2)]
+		[Port("REG_TMR_CTRL", 0x0A2)]
 		[BitDescription("H-blank timer enable", 0)]
 		public bool HBlankTimerEnable => hBlankTimer.Enable;
-		[Register("REG_TMR_CTRL", 0x0A2)]
+		[Port("REG_TMR_CTRL", 0x0A2)]
 		[BitDescription("H-blank timer mode; is repeating?", 1)]
 		public bool HBlankTimerRepeating => hBlankTimer.Repeating;
-		[Register("REG_TMR_CTRL", 0x0A2)]
+		[Port("REG_TMR_CTRL", 0x0A2)]
 		[BitDescription("V-blank timer enable", 2)]
 		public bool VBlankTimerEnable => vBlankTimer.Enable;
-		[Register("REG_TMR_CTRL", 0x0A2)]
+		[Port("REG_TMR_CTRL", 0x0A2)]
 		[BitDescription("V-blank timer mode; is repeating?", 3)]
 		public bool VBlankTimerRepeating => vBlankTimer.Repeating;
-		[Register("REG_HTMR_FREQ", 0x0A4, 0x0A5)]
+		[Port("REG_HTMR_FREQ", 0x0A4, 0x0A5)]
 		[BitDescription("H-blank timer frequency")]
 		public ushort HBlankTimerFrequency => hBlankTimer.Frequency;
-		[Register("REG_VTMR_FREQ", 0x0A6, 0x0A7)]
+		[Port("REG_VTMR_FREQ", 0x0A6, 0x0A7)]
 		[BitDescription("V-blank timer frequency")]
 		public ushort VBlankTimerFrequency => vBlankTimer.Frequency;
-		[Register("REG_HTMR_CTR", 0x0A8, 0x0A9)]
+		[Port("REG_HTMR_CTR", 0x0A8, 0x0A9)]
 		[BitDescription("H-blank timer counter")]
 		public ushort HBlankTimerCounter => hBlankTimer.Counter;
-		[Register("REG_VTMR_CTR", 0x0AA, 0x0AB)]
+		[Port("REG_VTMR_CTR", 0x0AA, 0x0AB)]
 		[BitDescription("V-blank timer counter")]
 		public ushort VBlankTimerCounter => vBlankTimer.Counter;
 

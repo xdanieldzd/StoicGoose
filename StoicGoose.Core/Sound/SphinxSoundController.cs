@@ -62,11 +62,11 @@ namespace StoicGoose.Core.Sound
 			return new[] { mixedLeft, mixedRight };
 		}
 
-		public override byte ReadRegister(ushort register)
+		public override byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x6A:
 					/* REG_HYPER_CTRL */
@@ -102,16 +102,16 @@ namespace StoicGoose.Core.Sound
 
 				default:
 					/* Fall through to common */
-					retVal |= base.ReadRegister(register);
+					retVal |= base.ReadPort(port);
 					break;
 			}
 
 			return retVal;
 		}
 
-		public override void WriteRegister(ushort register, byte value)
+		public override void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x6A:
 					/* REG_HYPER_CTRL */
@@ -146,35 +146,35 @@ namespace StoicGoose.Core.Sound
 
 				default:
 					/* Fall through to common */
-					base.WriteRegister(register, value);
+					base.WritePort(port, value);
 					break;
 			}
 		}
 
-		[Register("REG_HYPER_CTRL", 0x06A)]
+		[Port("REG_HYPER_CTRL", 0x06A)]
 		[BitDescription("Is HyperVoice enabled?", 7)]
 		public bool ChannelHyperVoiceIsEnable => channelHyperVoice.IsEnabled;
-		[Register("REG_HYPER_CTRL", 0x06A)]
+		[Port("REG_HYPER_CTRL", 0x06A)]
 		[BitDescription("HyperVoice control unknown", 4, 6)]
 		public byte ChannelHyperVoiceCtrlUnknown => channelHyperVoice.CtrlUnknown;
-		[Register("REG_HYPER_CTRL", 0x06A)]
+		[Port("REG_HYPER_CTRL", 0x06A)]
 		[BitDescription("HyperVoice scaling mode", 2, 3)]
 		public int ChannelHyperVoiceScalingMode => channelHyperVoice.ScalingMode;
-		[Register("REG_HYPER_CTRL", 0x06A)]
+		[Port("REG_HYPER_CTRL", 0x06A)]
 		[BitDescription("HyperVoice volume", 0, 1)]
 		public int ChannelHyperVoiceVolume => channelHyperVoice.Volume;
 
-		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[Port("REG_HYPER_CHAN_CTRL", 0x06B)]
 		[BitDescription("Is HyperVoice right channel enabled?", 6)]
 		public bool ChannelHyperVoiceChanRightEnable => channelHyperVoice.RightEnable;
-		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[Port("REG_HYPER_CHAN_CTRL", 0x06B)]
 		[BitDescription("Is HyperVoice left channel enabled?", 5)]
 		public bool ChannelHyperVoiceChanLeftEnable => channelHyperVoice.LeftEnable;
-		[Register("REG_HYPER_CHAN_CTRL", 0x06B)]
+		[Port("REG_HYPER_CHAN_CTRL", 0x06B)]
 		[BitDescription("HyperVoice channel control unknown", 0, 3)]
 		public byte ChannelHyperVoiceChanCtrlUnknown => channelHyperVoice.ChanCtrlUnknown;
 
-		[Register("REG_SND_HYPERVOICE", 0x095)]
+		[Port("REG_SND_HYPERVOICE", 0x095)]
 		[BitDescription("HyperVoice channel working sample")]
 		public byte ChannelHyperVoiceData => channelHyperVoice.Data;
 	}

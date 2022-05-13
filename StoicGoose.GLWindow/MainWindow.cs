@@ -12,6 +12,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Interfaces;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Interface;
 
@@ -76,7 +77,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
-			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, /*disassembler,*/ isRunning, isPaused));
+			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);

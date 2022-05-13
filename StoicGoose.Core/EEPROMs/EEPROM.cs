@@ -1,10 +1,12 @@
 ﻿using System;
 
+using StoicGoose.Core.Interfaces;
+
 using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.EEPROMs
 {
-	public sealed class EEPROM : IComponent
+	public sealed class EEPROM : IPortAccessComponent
 	{
 		readonly byte[] contents = default;
 		readonly int numAddressBits = 0;
@@ -168,11 +170,11 @@ namespace StoicGoose.Core.EEPROMs
 			}
 		}
 
-		public byte ReadRegister(ushort register)
+		public byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x00: retVal = dataLo; break;
 				case 0x01: retVal = dataHi; break;
@@ -184,9 +186,9 @@ namespace StoicGoose.Core.EEPROMs
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x00: dataLo = value; break;
 				case 0x01: dataHi = value; break;

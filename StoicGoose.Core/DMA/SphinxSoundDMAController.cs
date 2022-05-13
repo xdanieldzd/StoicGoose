@@ -1,8 +1,10 @@
-﻿using static StoicGoose.Common.Utilities.BitHandling;
+﻿using StoicGoose.Core.Interfaces;
+
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.DMA
 {
-	public class SphinxSoundDMAController : IComponent
+	public class SphinxSoundDMAController : IPortAccessComponent
 	{
 		readonly static int[] cycleCounts = { 768, 512, 256, 128 };
 
@@ -10,7 +12,7 @@ namespace StoicGoose.Core.DMA
 		readonly static ushort destinationPortHyperVoice = 0x095;
 
 		readonly MemoryReadDelegate memoryReadDelegate;
-		readonly RegisterWriteDelegate registerWriteDelegate;
+		readonly PortWriteDelegate portWriteDelegate;
 
 		/* REG_DMA_SRC(_HI) */
 		uint dmaSource;
@@ -30,10 +32,10 @@ namespace StoicGoose.Core.DMA
 
 		int cycleCount;
 
-		public SphinxSoundDMAController(MemoryReadDelegate memoryRead, RegisterWriteDelegate registerWrite)
+		public SphinxSoundDMAController(MemoryReadDelegate memoryRead, PortWriteDelegate portWrite)
 		{
 			memoryReadDelegate = memoryRead;
-			registerWriteDelegate = registerWrite;
+			portWriteDelegate = portWrite;
 		}
 
 		public void Reset()
@@ -61,7 +63,7 @@ namespace StoicGoose.Core.DMA
 
 			if (cycleCount >= cycleCounts[dmaRate])
 			{
-				registerWriteDelegate(isDestinationHyperVoice ? destinationPortHyperVoice : destinationPortChannel2Volume, memoryReadDelegate(dmaSource));
+				portWriteDelegate(isDestinationHyperVoice ? destinationPortHyperVoice : destinationPortChannel2Volume, memoryReadDelegate(dmaSource));
 
 				dmaSource += (uint)(isDecrementMode ? -1 : 1);
 				dmaLength--;
@@ -81,11 +83,11 @@ namespace StoicGoose.Core.DMA
 			}
 		}
 
-		public byte ReadRegister(ushort register)
+		public byte ReadPort(ushort port)
 		{
 			var retVal = (byte)0;
 
-			switch (register)
+			switch (port)
 			{
 				case 0x4A:
 					/* REG_SDMA_SRC (low) */
@@ -122,9 +124,9 @@ namespace StoicGoose.Core.DMA
 			return retVal;
 		}
 
-		public void WriteRegister(ushort register, byte value)
+		public void WritePort(ushort port, byte value)
 		{
-			switch (register)
+			switch (port)
 			{
 				case 0x4A:
 					/* REG_SDMA_SRC (low) */
