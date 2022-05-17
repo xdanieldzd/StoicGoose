@@ -8,14 +8,17 @@
     <Description>16-bit handheld game system emulator</Description>
     <Copyright>Written 2021-2022 by xdaniel</Copyright>
     <NeutralLanguage>Englisch</NeutralLanguage>
+    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Assets\Goose-Logo.rgba" />
+    <None Remove="Assets\WS-Icon.rgba" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
+    <EmbeddedResource Include="Assets\WS-Icon.rgba" />
   </ItemGroup>
 
   <ItemGroup>

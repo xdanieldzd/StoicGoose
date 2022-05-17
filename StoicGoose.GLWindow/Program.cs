@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Common.Input;
 
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.Utilities;
@@ -56,6 +57,8 @@ namespace StoicGoose.GLWindow
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance) Environment.Exit(-1);
 
+			var windowIcon = Resources.GetEmbeddedRgbaFile("Assets.WS-Icon.rgba");
+
 			using var mainWindow = new MainWindow(new()
 			{
 				RenderFrequency = 0.0,
@@ -66,7 +69,8 @@ namespace StoicGoose.GLWindow
 				Title = $"{assemblyVersionInfo.ProductName} {GetVersionString(false)}",
 				Flags = ContextFlags.Default,
 				API = ContextAPI.OpenGL,
-				APIVersion = new(4, 6, 0)
+				APIVersion = new(4, 6, 0),
+				Icon = new(new Image((int)windowIcon.Width, (int)windowIcon.Height, windowIcon.PixelData))
 			})
 			{
 				VSync = VSyncMode.Off
