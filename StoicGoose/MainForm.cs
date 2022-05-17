@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -15,6 +16,7 @@ using ImGuiNET;
 
 using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
+using StoicGoose.Core.Display;
 using StoicGoose.Core.Machines;
 //using StoicGoose.Debugging;
 using StoicGoose.Extensions;
@@ -32,6 +34,7 @@ namespace StoicGoose
 		/* Constants */
 		readonly static int maxScreenSizeFactor = 5;
 		readonly static int maxRecentFiles = 15;
+		readonly static int statusIconSize = 12;
 
 		/* Log window */
 		readonly ImGuiLogWindow logWindow = default;
@@ -53,6 +56,7 @@ namespace StoicGoose
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
 		string internalEepromPath = string.Empty;
+		Vector2i statusIconsLocation = Vector2i.Zero;
 
 		public MainForm()
 		{
@@ -169,15 +173,13 @@ namespace StoicGoose
 
 		private void VerifyConfiguration()
 		{
-			var metadata = emulatorHandler.Machine.Metadata;
-
-			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
+			foreach (var button in emulatorHandler.Machine.GameControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.GameControls.ContainsKey(button))
 					Program.Configuration.Input.GameControls[button] = new();
 			}
 
-			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
+			foreach (var button in emulatorHandler.Machine.HardwareControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.SystemControls.ContainsKey(button))
 					Program.Configuration.Input.SystemControls[button] = new();
@@ -194,7 +196,11 @@ namespace StoicGoose
 		{
 			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
 
-			graphicsHandler = new GraphicsHandler(emulatorHandler.Machine.Metadata, Program.Configuration.Video.Shader) { IsVerticalOrientation = isVerticalOrientation };
+			statusIconsLocation = machineType == typeof(WonderSwan) ? new(0, DisplayControllerCommon.ScreenHeight) : new(DisplayControllerCommon.ScreenWidth, 0);
+			graphicsHandler = new GraphicsHandler(machineType, new(emulatorHandler.Machine.ScreenWidth, emulatorHandler.Machine.ScreenHeight), statusIconsLocation, statusIconSize, machineType != typeof(WonderSwan), Program.Configuration.Video.Shader)
+			{
+				IsVerticalOrientation = isVerticalOrientation
+			};
 
 			soundHandler = new SoundHandler(44100, 2);
 			soundHandler.SetVolume(1.0f);
@@ -203,7 +209,7 @@ namespace StoicGoose
 
 			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
-			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.Metadata.VerticalControlRemap
+			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
 				.ToDictionary(x => x[0], x => x[1]));
@@ -216,9 +222,9 @@ namespace StoicGoose
 			disassemblerWindow.UnpauseEmulation += (s, e) => { UnpauseEmulation(); };
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
 			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
-			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
-			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
-			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
+			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Model} System", machineType), () => emulatorHandler.Machine);
+			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
+			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
 			imGuiHandler.RegisterWindow(new ImGuiSoundVisualizerWindow() { IsWindowOpen = true }, () => emulatorHandler.Machine.SoundController);
 
 			emulatorHandler.Machine.DisplayController.SendFramebuffer = graphicsHandler.UpdateScreen;
@@ -252,6 +258,28 @@ namespace StoicGoose
 
 				graphicsHandler.ClearFrame();
 
+				if (emulatorHandler.Machine is MachineCommon machine)
+				{
+					var activeIcons = new List<string>() { "Power" };
+
+					if (machine.BuiltInSelfTestOk) activeIcons.Add("Initialized");
+
+					if (machine.DisplayController.IconSleep) activeIcons.Add("Sleep");
+					if (machine.DisplayController.IconVertical) activeIcons.Add("Vertical");
+					if (machine.DisplayController.IconHorizontal) activeIcons.Add("Horizontal");
+					if (machine.DisplayController.IconAux1) activeIcons.Add("Aux1");
+					if (machine.DisplayController.IconAux2) activeIcons.Add("Aux2");
+					if (machine.DisplayController.IconAux3) activeIcons.Add("Aux3");
+
+					if (machine.SoundController.HeadphonesConnected) activeIcons.Add("Headphones");
+					if (machine.SoundController.MasterVolume == 0) activeIcons.Add("Volume0");
+					if (machine.SoundController.MasterVolume == 1) activeIcons.Add("Volume1");
+					if (machine.SoundController.MasterVolume == 2) activeIcons.Add("Volume2");
+					if (machine.SoundController.MasterVolume == 3 && machine is WonderSwanColor) activeIcons.Add("Volume3");
+
+					graphicsHandler.UpdateStatusIcons(activeIcons);
+				}
+
 				if (!isScreenWindowOpen) graphicsHandler.DrawFrame();
 				else graphicsHandler.BindTextures();
 
@@ -259,7 +287,7 @@ namespace StoicGoose
 				imGuiHandler.EndFrame();
 			};
 
-			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata.InternalEepromFilename);
+			internalEepromPath = Path.Combine(Program.InternalDataPath, $"{machineType.Name}.eep");
 		}
 
 		private void InitializeWindows()
@@ -293,23 +321,23 @@ namespace StoicGoose
 			if (emulatorHandler == null || graphicsHandler == null)
 				return ClientSize;
 
-			var statusIconsOnRight = emulatorHandler.Machine.Metadata.StatusIconsLocation.X > emulatorHandler.Machine.Metadata.StatusIconsLocation.Y;
+			var statusIconsOnRight = statusIconsLocation.X > statusIconsLocation.Y;
 
 			int screenWidth, screenHeight;
 
 			if (!isVerticalOrientation)
 			{
-				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.X;
-				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.Y;
-				if (statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
-				if (!statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+				screenWidth = emulatorHandler.Machine.ScreenWidth;
+				screenHeight = emulatorHandler.Machine.ScreenHeight;
+				if (statusIconsOnRight) screenWidth += statusIconSize;
+				if (!statusIconsOnRight) screenHeight += statusIconSize;
 			}
 			else
 			{
-				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.Y;
-				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.X;
-				if (!statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
-				if (statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+				screenWidth = emulatorHandler.Machine.ScreenWidth;
+				screenHeight = emulatorHandler.Machine.ScreenHeight;
+				if (!statusIconsOnRight) screenWidth += statusIconSize;
+				if (statusIconsOnRight) screenHeight += statusIconSize;
 			}
 
 			return new(screenWidth * screenSize, (screenHeight * screenSize) + menuStrip.Height + statusStrip.Height);
@@ -326,7 +354,7 @@ namespace StoicGoose
 				titleStringBuilder.Append($" - [{Path.GetFileName(Program.Configuration.General.RecentFiles.First())}]");
 
 				var statusStringBuilder = new StringBuilder();
-				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Metadata.Manufacturer} {emulatorHandler.Machine.Metadata.Model}, ");
+				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Manufacturer} {emulatorHandler.Machine.Model}, ");
 				statusStringBuilder.Append($"playing {databaseHandler.GetGameTitle(emulatorHandler.Machine.Cartridge.Crc32, emulatorHandler.Machine.Cartridge.SizeInBytes)} ({emulatorHandler.Machine.Cartridge.Metadata.GameIdString})");
 
 				tsslStatus.Text = statusStringBuilder.ToString();
@@ -463,7 +491,7 @@ namespace StoicGoose
 
 			CreateDataBinding(enableBreakpointsToolStripMenuItem.DataBindings, nameof(enableBreakpointsToolStripMenuItem.Checked), Program.Configuration.Debugging, nameof(Program.Configuration.Debugging.EnableBreakpoints));
 
-			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata.RomFileFilter}|All Files (*.*)|*.*";
+			ofdOpenRom.Filter = $"WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc|All Files (*.*)|*.*";
 		}
 
 		private void LoadBootstrap(string filename)

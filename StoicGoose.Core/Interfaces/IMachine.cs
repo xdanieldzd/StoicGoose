@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 using StoicGoose.Core.Cartridges;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
-using StoicGoose.Core.Machines;
 using StoicGoose.Core.Sound;
 
 namespace StoicGoose.Core.Interfaces
 {
 	public interface IMachine
 	{
-		MetadataBase Metadata { get; }
+		static IEnumerable<Type> GetMachineTypes() => Assembly.GetAssembly(typeof(IMachine)).GetTypes().Where(x => !x.IsInterface && !x.IsAbstract && x.IsAssignableTo(typeof(IMachine)));
+
+		string Manufacturer { get; }
+		string Model { get; }
+
+		int ScreenWidth { get; }
+		int ScreenHeight { get; }
+		double RefreshRate { get; }
+		string GameControls { get; }
+		string HardwareControls { get; }
+		string VerticalControlRemap { get; }
+
+		string InternalEepromDefaultUsername { get; }
+		Dictionary<ushort, byte> InternalEepromDefaultData { get; }
 
 		Cartridge Cartridge { get; }
 		V30MZ Cpu { get; }

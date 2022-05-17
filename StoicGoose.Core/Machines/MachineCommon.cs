@@ -18,6 +18,19 @@ namespace StoicGoose.Core.Machines
 	{
 		// http://daifukkat.su/docs/wsman/
 
+		public abstract string Manufacturer { get; }
+		public abstract string Model { get; }
+
+		public int ScreenWidth => DisplayControllerCommon.ScreenWidth;
+		public int ScreenHeight => DisplayControllerCommon.ScreenHeight;
+		public double RefreshRate => DisplayControllerCommon.VerticalClock;
+		public string GameControls => "Start, B, A, X1, X2, X3, X4, Y1, Y2, Y3, Y4";
+		public string HardwareControls => "Volume";
+		public string VerticalControlRemap => "Y2=X1, Y3=X2, Y4=X3, Y1=X4, X2=Y1, X3=Y2, X4=Y3, X1=Y4";
+
+		public abstract string InternalEepromDefaultUsername { get; }
+		public abstract Dictionary<ushort, byte> InternalEepromDefaultData { get; }
+
 		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
 		public const double CpuClock = MasterClock / 4.0; /* /4 = 3.072 MHz */
 
@@ -54,8 +67,6 @@ namespace StoicGoose.Core.Machines
 		protected bool serialEnable, serialBaudRateSelect, serialOverrunReset, serialSendBufferEmpty, serialOverrun, serialDataReceived;
 
 		public bool IsBootstrapLoaded => BootstrapRom != null;
-
-		public MetadataBase Metadata { get; protected set; } = default;
 
 		public virtual void Initialize()
 		{
@@ -122,9 +133,9 @@ namespace StoicGoose.Core.Machines
 
 		protected virtual void InitializeEepromToDefaults()
 		{
-			var data = ConvertUsernameForEeprom(Metadata.InternalEepromDefaultUsername);
+			var data = ConvertUsernameForEeprom(InternalEepromDefaultUsername);
 			for (var i = 0; i < data.Length; i++) InternalEeprom.Program(0x60 + i, data[i]); // Username (0x60-0x6F, max 16 characters)
-			foreach (var (address, value) in Metadata.InternalEepromDefaultData) InternalEeprom.Program(address, value);
+			foreach (var (address, value) in InternalEepromDefaultData) InternalEeprom.Program(address, value);
 		}
 
 		private static byte[] ConvertUsernameForEeprom(string name)
@@ -154,8 +165,6 @@ namespace StoicGoose.Core.Machines
 				RunLine();
 
 			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
-
-			UpdateStatusIcons();
 
 			_ = ReceiveInput?.Invoke();
 		}
@@ -236,8 +245,6 @@ namespace StoicGoose.Core.Machines
 
 			return Array.Empty<byte>();
 		}
-
-		public abstract void UpdateStatusIcons();
 
 		public byte ReadMemory(uint address)
 		{

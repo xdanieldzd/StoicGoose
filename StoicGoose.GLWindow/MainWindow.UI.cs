@@ -37,7 +37,7 @@ namespace StoicGoose.GLWindow
 				{
 					new("Open", (_) =>
 					{
-						openRomDialog.Filter = machine?.Metadata.RomFileFilter;
+						openRomDialog.Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc";
 						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
 						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
 						openRomDialog.IsOpen = true;

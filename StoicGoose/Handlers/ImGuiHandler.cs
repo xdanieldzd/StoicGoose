@@ -110,8 +110,11 @@ namespace StoicGoose.Handlers
 			 */
 
 			io.Fonts.AddFontDefault();
-			var japaneseFontPath = Utilities.GetSystemFontFilePath("Meiryo");
-			if (!string.IsNullOrEmpty(japaneseFontPath)) io.Fonts.AddFontFromFileTTF(japaneseFontPath, 18f, null, io.Fonts.GetGlyphRangesJapanese());
+			if (OperatingSystem.IsWindows())
+			{
+				var japaneseFontPath = Utilities.GetSystemFontFilePath("Meiryo");
+				if (!string.IsNullOrEmpty(japaneseFontPath)) io.Fonts.AddFontFromFileTTF(japaneseFontPath, 18f, null, io.Fonts.GetGlyphRangesJapanese());
+			}
 
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
 			texture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);

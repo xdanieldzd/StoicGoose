@@ -50,7 +50,7 @@ namespace StoicGoose.GLWindow
 		double frameTimeElapsed = 0.0;
 
 		/* Misc. runtime variables */
-		string bootstrapFilename = default, internalEepromFilename = default, cartridgeFilename = default, cartSaveFilename = default, disassemblyCacheFilename = default;
+		string bootstrapFilename = default, cartridgeFilename = default, cartSaveFilename = default;
 		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
@@ -155,7 +155,7 @@ namespace StoicGoose.GLWindow
 
 			frameTimeElapsed += args.Time;
 
-			if (frameTimeElapsed >= 1.0 / machine.Metadata.RefreshRate || !Program.Configuration.LimitFps)
+			if (frameTimeElapsed >= 1.0 / machine.RefreshRate || !Program.Configuration.LimitFps)
 			{
 				if (isRunning && !isPaused &&
 					!fileDialogHandler.IsAnyDialogOpen && !messageBoxHandler.IsAnyMessageBoxOpen)
@@ -228,16 +228,15 @@ namespace StoicGoose.GLWindow
 				return (buttonsPressed, buttonsHeld);
 			};
 
-			inputHandler.SetVerticalRemapping(machine.Metadata.VerticalControlRemap
+			inputHandler.SetVerticalRemapping(machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
 				.ToDictionary(x => x[0], x => x[1]));
 
-			displayTexture = new Texture(machine.Metadata.ScreenSize.X, machine.Metadata.ScreenSize.Y);
+			displayTexture = new Texture(machine.ScreenWidth, machine.ScreenHeight);
 			displayTexture.Update(initialScreenImage);
 
 			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
-			internalEepromFilename = Path.Combine(Program.InternalDataPath, machine.Metadata.InternalEepromFilename);
 
 			systemControllerStatusWindow.SetComponentType(machine.GetType());
 			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());
@@ -274,7 +273,6 @@ namespace StoicGoose.GLWindow
 
 			cartridgeFilename = filename;
 			cartSaveFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}.sav";
-			disassemblyCacheFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}_cache.json";
 
 			using var stream = new FileStream(cartridgeFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			var data = new byte[stream.Length];
@@ -291,7 +289,7 @@ namespace StoicGoose.GLWindow
 
 			machine.Reset();
 
-			statusMessageItem.Label = $"Emulating {machine.Metadata.Manufacturer} {machine.Metadata.Model}, running '{cartridgeFilename}' ({machine.Cartridge.Metadata.GameIdString})";
+			statusMessageItem.Label = $"Emulating {machine.Manufacturer} {machine.Model}, running '{cartridgeFilename}' ({machine.Cartridge.Metadata.GameIdString})";
 
 			Program.Configuration.LastRomLoaded = cartridgeFilename;
 
@@ -302,6 +300,8 @@ namespace StoicGoose.GLWindow
 
 		private void LoadBootstrap()
 		{
+			if (machine == null) return;
+
 			if (!isRunning && Program.Configuration.UseBootstrap && File.Exists(bootstrapFilename) && !machine.IsBootstrapLoaded)
 			{
 				using var stream = new FileStream(bootstrapFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -313,6 +313,8 @@ namespace StoicGoose.GLWindow
 
 		private void LoadCartridgeRam()
 		{
+			if (machine == null) return;
+
 			var path = Path.Combine(Program.SaveDataPath, cartSaveFilename);
 			if (!File.Exists(path)) return;
 
@@ -324,7 +326,9 @@ namespace StoicGoose.GLWindow
 
 		private void LoadInternalEeprom()
 		{
-			var path = Path.Combine(Program.InternalDataPath, internalEepromFilename);
+			if (machine == null) return;
+
+			var path = Path.Combine(Program.InternalDataPath, Program.InternalEepromFilenames[machine.GetType()]);
 			if (!File.Exists(path)) return;
 
 			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -335,6 +339,8 @@ namespace StoicGoose.GLWindow
 
 		private void SaveCartridgeRam()
 		{
+			if (machine == null) return;
+
 			var data = machine.GetSaveData();
 			if (data.Length == 0) return;
 
@@ -346,10 +352,12 @@ namespace StoicGoose.GLWindow
 
 		private void SaveInternalEeprom()
 		{
+			if (machine == null) return;
+
 			var data = machine.GetInternalEeprom();
 			if (data.Length == 0) return;
 
-			var path = Path.Combine(Program.InternalDataPath, internalEepromFilename);
+			var path = Path.Combine(Program.InternalDataPath, Program.InternalEepromFilenames[machine.GetType()]);
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);

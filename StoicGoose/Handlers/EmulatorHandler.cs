@@ -76,7 +76,7 @@ namespace StoicGoose.Handlers
 		private void ThreadMainLoop()
 		{
 			var stopWatch = Stopwatch.StartNew();
-			var interval = 1000.0 / Machine.Metadata.RefreshRate;
+			var interval = 1000.0 / Machine.RefreshRate;
 			var lastTime = 0.0;
 
 			while (true)

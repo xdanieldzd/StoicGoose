@@ -1,4 +1,6 @@
-﻿using StoicGoose.Common.Attributes;
+﻿using System.Collections.Generic;
+
+using StoicGoose.Common.Attributes;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.DMA;
 using StoicGoose.Core.Sound;
@@ -9,6 +11,31 @@ namespace StoicGoose.Core.Machines
 {
 	public partial class WonderSwanColor : MachineCommon
 	{
+		public override string Manufacturer => "Bandai";
+		public override string Model => "WonderSwan Color";
+
+		public override string InternalEepromDefaultUsername => "WONDERSWANCOLOR";
+		public override Dictionary<ushort, byte> InternalEepromDefaultData => new()
+		{
+			{ 0x70, 0x20 }, // Year of birth [set to WSC release date for fun]
+			{ 0x71, 0x00 }, // ""
+			{ 0x72, 0x12 }, // Month of birth [again]
+			{ 0x73, 0x09 }, // Day of birth [again]
+			{ 0x74, 0x00 }, // Sex [?]
+			{ 0x75, 0x00 }, // Blood type [?]
+
+			{ 0x76, 0x00 }, // Last game played, publisher ID [none]
+			{ 0x77, 0x00 }, // ""
+			{ 0x78, 0x00 }, // Last game played, game ID [none]
+			{ 0x79, 0x00 }, // ""
+			{ 0x7A, 0x00 }, // Swan ID (see Mama Mitte) -- TODO: set to valid/random value?
+			{ 0x7B, 0x00 }, // ""
+			{ 0x7C, 0x00 }, // Number of different games played [none]
+			{ 0x7D, 0x00 }, // Number of times settings were changed [none]
+			{ 0x7E, 0x00 }, // Number of times powered on [none]
+			{ 0x7F, 0x00 }  // ""
+		};
+
 		public override int InternalRamSize => 64 * 1024;
 
 		public override int InternalEepromSize => 1024 * 2;
@@ -16,8 +43,6 @@ namespace StoicGoose.Core.Machines
 
 		public SphinxGeneralDMAController DmaController { get; protected set; } = default;
 		public SphinxSoundDMAController SoundDmaController { get; protected set; } = default;
-
-		public WonderSwanColor() : base() => Metadata = new WonderSwanColorMetadata();
 
 		public override void Initialize()
 		{
@@ -78,25 +103,6 @@ namespace StoicGoose.Core.Machines
 			else LowerInterrupt(2);
 
 			CurrentClockCyclesInLine += currentCpuClockCycles;
-		}
-
-		public override void UpdateStatusIcons()
-		{
-			Metadata.IsStatusIconActive["Power"] = true;
-			Metadata.IsStatusIconActive["Initialized"] = builtInSelfTestOk;
-
-			Metadata.IsStatusIconActive["Sleep"] = DisplayController.IconSleep;
-			Metadata.IsStatusIconActive["Vertical"] = DisplayController.IconVertical;
-			Metadata.IsStatusIconActive["Horizontal"] = DisplayController.IconHorizontal;
-			Metadata.IsStatusIconActive["Aux1"] = DisplayController.IconAux1;
-			Metadata.IsStatusIconActive["Aux2"] = DisplayController.IconAux2;
-			Metadata.IsStatusIconActive["Aux3"] = DisplayController.IconAux3;
-
-			Metadata.IsStatusIconActive["Headphones"] = SoundController.HeadphonesConnected;
-			Metadata.IsStatusIconActive["Volume0"] = SoundController.MasterVolume == 0;
-			Metadata.IsStatusIconActive["Volume1"] = SoundController.MasterVolume == 1;
-			Metadata.IsStatusIconActive["Volume2"] = SoundController.MasterVolume == 2;
-			Metadata.IsStatusIconActive["Volume3"] = SoundController.MasterVolume == 3;
 		}
 
 		public override byte ReadPort(ushort port)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 
 using Microsoft.Win32;
 
@@ -8,12 +9,14 @@ namespace StoicGoose
 {
 	public static class Utilities
 	{
+		[SupportedOSPlatform("windows")]
 		readonly static RegistryKey[] fontRegistryKeys = new RegistryKey[]
 		{
 			Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"),
 			Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts")
 		};
 
+		[SupportedOSPlatform("windows")]
 		public static string GetSystemFontFilePath(string name)
 		{
 			foreach (var key in fontRegistryKeys.Where(x => x != null))

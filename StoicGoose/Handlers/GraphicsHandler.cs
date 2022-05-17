@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -37,11 +36,58 @@ namespace StoicGoose.Handlers
 		readonly static string defaultModelviewMatrixName = "modelviewMatrix";
 		readonly static int maxTextureSamplerCount = 8;
 
+		readonly static Dictionary<Type, Dictionary<string, (string filename, Vector2i location)>> statusIconData = new()
+		{
+			{
+				typeof(WonderSwan),
+				new()
+				{
+					{ "Power", ("Power.rgba", new(0, 0)) },
+					{ "Initialized", ("Initialized.rgba", new(18, 0)) },
+					{ "Sleep", ("Sleep.rgba", new(50, 0)) },
+					{ "LowBattery", ("LowBattery.rgba", new(80, 0)) },
+					{ "Volume0", ("VolumeA0.rgba", new(105, 0)) },
+					{ "Volume1", ("VolumeA1.rgba", new(105, 0)) },
+					{ "Volume2", ("VolumeA2.rgba", new(105, 0)) },
+					{ "Headphones", ("Headphones.rgba", new(130, 0)) },
+					{ "Horizontal", ("Horizontal.rgba", new(155, 0)) },
+					{ "Vertical", ("Vertical.rgba", new(168, 0)) },
+					{ "Aux1", ("Aux1.rgba", new(185, 0)) },
+					{ "Aux2", ("Aux2.rgba", new(195, 0)) },
+					{ "Aux3", ("Aux3.rgba", new(205, 0)) }
+				}
+			},
+			{
+				typeof(WonderSwanColor),
+				new()
+				{
+					{ "Power", ("Power.rgba", new(0, 132)) },
+					{ "Initialized", ("Initialized.rgba", new(0, 120)) },
+					{ "Sleep", ("Sleep.rgba", new(0, 100)) },
+					{ "LowBattery", ("LowBattery.rgba", new(0, 81)) },
+					{ "Volume0", ("VolumeB0.rgba", new(0, 65)) },
+					{ "Volume1", ("VolumeB1.rgba", new(0, 65)) },
+					{ "Volume2", ("VolumeB2.rgba", new(0, 65)) },
+					{ "Volume3", ("VolumeB3.rgba", new(0, 65)) },
+					{ "Headphones", ("Headphones.rgba", new(0, 49)) },
+					{ "Horizontal", ("Horizontal.rgba", new(0, 32)) },
+					{ "Vertical", ("Vertical.rgba", new(0, 24)) },
+					{ "Aux1", ("Aux1.rgba", new(0, 14)) },
+					{ "Aux2", ("Aux2.rgba", new(0, 7)) },
+					{ "Aux3", ("Aux3.rgba", new(0, 0)) }
+				}
+			}
+		};
+
 		readonly static float iconScale = 0.85f;
 
-		readonly State renderState = new();
+		readonly Type machineType = default;
+		readonly Vector2i screenSize = Vector2i.Zero;
+		readonly Vector2i statusIconsLocation = Vector2i.Zero;
+		readonly int statusIconSize = 0;
+		readonly bool statusIconsInverted = false;
 
-		readonly MetadataBase metadata = default;
+		readonly State renderState = new();
 
 		readonly Matrix4Uniform projectionMatrix = new(nameof(projectionMatrix));
 		readonly Matrix4Uniform textureMatrix = new(nameof(textureMatrix));
@@ -75,15 +121,21 @@ namespace StoicGoose.Handlers
 
 		Vector2 displayPosition = default, displaySize = default;
 
+		readonly List<string> activeStatusIcons = new();
+
 		public bool IsVerticalOrientation { get; set; } = false;
 
 		public List<string> AvailableShaders { get; private set; } = default;
 
 		public Texture DisplayTexture => displayTextures[lastTextureUpdate];
 
-		public GraphicsHandler(MetadataBase metadata, string initialShaderName)
+		public GraphicsHandler(Type machineType, Vector2i screenSize, Vector2i statusIconsLocation, int statusIconSize, bool statusIconsInverted, string initialShaderName)
 		{
-			this.metadata = metadata;
+			this.machineType = machineType;
+			this.screenSize = screenSize;
+			this.statusIconsLocation = statusIconsLocation;
+			this.statusIconSize = statusIconSize;
+			this.statusIconsInverted = statusIconsInverted;
 
 			AvailableShaders = EnumerateShaders();
 
@@ -129,7 +181,7 @@ namespace StoicGoose.Handlers
 
 		private void ParseSystemIcons()
 		{
-			foreach (var (name, (filename, _)) in metadata.StatusIcons)
+			foreach (var (name, (filename, _)) in statusIconData[machineType])
 			{
 				var texture = new Texture(Resources.GetEmbeddedSystemIcon(filename));
 				texture.SetTextureFilter(TextureMinFilter.Linear, TextureMagFilter.Linear);
@@ -225,10 +277,10 @@ namespace StoicGoose.Handlers
 
 			for (var i = 0; i < commonBundleManifest.Samplers; i++)
 			{
-				if (!metadata.StatusIconsInverted)
-					displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, 255, 255, 255, 255);
+				if (!statusIconsInverted)
+					displayTextures[i] = new Texture(screenSize.X, screenSize.Y, 255, 255, 255, 255);
 				else
-					displayTextures[i] = new Texture(metadata.ScreenSize.X, metadata.ScreenSize.Y, 8, 8, 8, 255);
+					displayTextures[i] = new Texture(screenSize.X, screenSize.Y, 8, 8, 8, 255);
 
 				displayTextures[i].SetTextureFilter(textureMinFilter, textureMagFilter);
 				displayTextures[i].SetTextureWrapMode(textureWrapMode, textureWrapMode);
@@ -280,23 +332,23 @@ namespace StoicGoose.Handlers
 		{
 			renderState.SetViewport(clientRect.X, clientRect.Y, clientRect.Width, clientRect.Height);
 
-			var statusIconsOnRight = metadata.StatusIconsLocation.X > metadata.StatusIconsLocation.Y;
+			var statusIconsOnRight = statusIconsLocation.X > statusIconsLocation.Y;
 
 			int screenWidth, screenHeight;
 
 			if (!IsVerticalOrientation)
 			{
-				screenWidth = metadata.ScreenSize.X;
-				screenHeight = metadata.ScreenSize.Y;
-				if (statusIconsOnRight) screenWidth += metadata.StatusIconSize;
-				if (!statusIconsOnRight) screenHeight += metadata.StatusIconSize;
+				screenWidth = screenSize.X;
+				screenHeight = screenSize.Y;
+				if (statusIconsOnRight) screenWidth += statusIconSize;
+				if (!statusIconsOnRight) screenHeight += statusIconSize;
 			}
 			else
 			{
-				screenWidth = metadata.ScreenSize.Y;
-				screenHeight = metadata.ScreenSize.X;
-				if (!statusIconsOnRight) screenWidth += metadata.StatusIconSize;
-				if (statusIconsOnRight) screenHeight += metadata.StatusIconSize;
+				screenWidth = screenSize.Y;
+				screenHeight = screenSize.X;
+				if (!statusIconsOnRight) screenWidth += statusIconSize;
+				if (statusIconsOnRight) screenHeight += statusIconSize;
 			}
 
 			var aspects = new Vector2(clientRect.Width / (float)screenWidth, clientRect.Height / (float)screenHeight);
@@ -307,17 +359,17 @@ namespace StoicGoose.Handlers
 			var adjustedX = (float)Math.Floor((clientRect.Width - adjustedWidth) / 2f);
 			var adjustedY = (float)Math.Floor((clientRect.Height - adjustedHeight) / 2f);
 
-			if ((!IsVerticalOrientation && !statusIconsOnRight) || (IsVerticalOrientation && statusIconsOnRight)) adjustedHeight -= metadata.StatusIconSize * multiplier;
-			else adjustedWidth -= metadata.StatusIconSize * multiplier;
+			if ((!IsVerticalOrientation && !statusIconsOnRight) || (IsVerticalOrientation && statusIconsOnRight)) adjustedHeight -= statusIconSize * multiplier;
+			else adjustedWidth -= statusIconSize * multiplier;
 
-			if (IsVerticalOrientation && statusIconsOnRight) adjustedY += metadata.StatusIconSize * multiplier;
+			if (IsVerticalOrientation && statusIconsOnRight) adjustedY += statusIconSize * multiplier;
 
 			displayPosition = new Vector2(adjustedX, adjustedY);
 			displaySize = new Vector2(adjustedWidth, adjustedHeight);
 
 			foreach (var (icon, _) in iconTextures)
 			{
-				var iconLocation = metadata.StatusIconsLocation + metadata.StatusIcons[icon].location;
+				var iconLocation = statusIconsLocation + statusIconData[machineType][icon].location;
 
 				float x, y;
 
@@ -329,15 +381,15 @@ namespace StoicGoose.Handlers
 				else
 				{
 					x = adjustedX + (iconLocation.Y * multiplier);
-					y = (!statusIconsOnRight ? adjustedY : 0) + ((-iconLocation.X + screenHeight - metadata.StatusIconSize) * multiplier);
+					y = (!statusIconsOnRight ? adjustedY : 0) + ((-iconLocation.X + screenHeight - statusIconSize) * multiplier);
 				}
 
-				var iconOffset = (metadata.StatusIconSize - (metadata.StatusIconSize * iconScale)) / 2f * multiplier;
+				var iconOffset = (statusIconSize - (statusIconSize * iconScale)) / 2f * multiplier;
 				x += iconOffset;
 				y += iconOffset;
 
 				iconModelviewMatrices[icon].Value =
-					Matrix4.CreateScale(metadata.StatusIconSize * multiplier * iconScale, metadata.StatusIconSize * multiplier * iconScale, 1f) *
+					Matrix4.CreateScale(statusIconSize * multiplier * iconScale, statusIconSize * multiplier * iconScale, 1f) *
 					Matrix4.CreateTranslation(x, y, 0f);
 			}
 
@@ -350,18 +402,18 @@ namespace StoicGoose.Handlers
 			if (!IsVerticalOrientation && !statusIconsOnRight)
 			{
 				iconBackgroundModelviewMatrix.Value =
-					Matrix4.CreateScale(adjustedWidth, metadata.StatusIconSize * multiplier, 1f) *
+					Matrix4.CreateScale(adjustedWidth, statusIconSize * multiplier, 1f) *
 					Matrix4.CreateTranslation(adjustedX, adjustedY + adjustedHeight, -0.5f);
 			}
 			else
 			{
 				iconBackgroundModelviewMatrix.Value =
-					Matrix4.CreateScale(metadata.StatusIconSize * multiplier, adjustedHeight, 1f) *
+					Matrix4.CreateScale(statusIconSize * multiplier, adjustedHeight, 1f) *
 					Matrix4.CreateTranslation(adjustedX + adjustedWidth, adjustedY, -0.5f);
 			}
 
 			outputViewport.Value = new Vector4(adjustedX, adjustedY, adjustedWidth, adjustedHeight);
-			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? metadata.ScreenSize.Y : metadata.ScreenSize.X, IsVerticalOrientation ? metadata.ScreenSize.X : metadata.ScreenSize.Y);
+			inputViewport.Value = new Vector4(0, 0, IsVerticalOrientation ? screenSize.Y : screenSize.X, IsVerticalOrientation ? screenSize.X : screenSize.Y);
 		}
 
 		public void ClearFrame()
@@ -377,6 +429,12 @@ namespace StoicGoose.Handlers
 				displayTextures[i].Bind((lastTextureUpdate + i) % commonBundleManifest.Samplers);
 		}
 
+		public void UpdateStatusIcons(List<string> icons)
+		{
+			activeStatusIcons.Clear();
+			activeStatusIcons.AddRange(icons);
+		}
+
 		public void DrawFrame()
 		{
 			renderState.Submit();
@@ -386,7 +444,7 @@ namespace StoicGoose.Handlers
 			renderMode.Value = (int)ShaderRenderMode.Display;
 			renderMode.SubmitToProgram(commonShaderProgram);
 
-			invertIcons.Value = metadata.StatusIconsInverted ? 1 : 0;
+			invertIcons.Value = statusIconsInverted ? 1 : 0;
 			invertIcons.SubmitToProgram(commonShaderProgram);
 
 			projectionMatrix.SubmitToProgram(commonShaderProgram);
@@ -413,17 +471,12 @@ namespace StoicGoose.Handlers
 			iconBackgroundTexture.Bind();
 			commonVertexArray.Draw(PrimitiveType.Triangles);
 
-			// TODO: verify the Clone() helps wrt collection-modified exceptions? (threading issue?)
-			var activeIcons = metadata.IsStatusIconActive.Clone().Where(x => x.Value).Select(x => x.Key);
-			if (activeIcons != null)
+			foreach (var icon in activeStatusIcons)
 			{
-				foreach (var icon in activeIcons)
-				{
-					iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
+				iconModelviewMatrices[icon].SubmitToProgram(commonShaderProgram);
 
-					iconTextures[icon].Bind();
-					commonVertexArray.Draw(PrimitiveType.Triangles);
-				}
+				iconTextures[icon].Bind();
+				commonVertexArray.Draw(PrimitiveType.Triangles);
 			}
 		}
 	}

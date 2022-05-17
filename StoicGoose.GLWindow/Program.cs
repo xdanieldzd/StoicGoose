@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -9,6 +11,7 @@ using OpenTK.Windowing.Common;
 
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.GLWindow
 {
@@ -35,6 +38,8 @@ namespace StoicGoose.GLWindow
 		public static string SaveDataPath { get; } = string.Empty;
 		public static string DebuggingDataPath { get; } = string.Empty;
 
+		public static Dictionary<Type, string> InternalEepromFilenames { get; } = new();
+
 		static Program()
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
@@ -42,6 +47,8 @@ namespace StoicGoose.GLWindow
 			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
+
+			IMachine.GetMachineTypes().ToList().ForEach(x => InternalEepromFilenames.Add(x, $"{x.Name}.eep"));
 		}
 
 		static void Main(string[] _)
