@@ -4,6 +4,16 @@ on: [push]
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        project: ['StoicGoose', 'StoicGoose.GLWindow']
+        include:
+          - project: StoicGoose
+            path: StoicGoose
+            csproj: StoicGoose/StoicGoose.csproj
+          - project: StoicGoose.GLWindow
+            path: StoicGoose.GLWindow
+            csproj: StoicGoose.GLWindow/StoicGoose.GLWindow.csproj
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
@@ -14,3 +24,10 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore
+      - name: Publish
+        run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact
+          path: ${{ matrix.path }}/bin/Release/net5.0/*
