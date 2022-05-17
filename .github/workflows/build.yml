@@ -9,11 +9,9 @@ jobs:
         project: ['StoicGoose', 'StoicGoose.GLWindow']
         include:
           - project: StoicGoose
-            path: StoicGoose/StoicGoose
-            csproj: StoicGoose/StoicGoose.csproj
+            csproj: StoicGoose\StoicGoose.csproj
           - project: StoicGoose.GLWindow
-            path: StoicGoose.GLWindow/StoicGoose.GLWindow
-            csproj: StoicGoose.GLWindow/StoicGoose.GLWindow.csproj
+            csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
@@ -30,4 +28,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artifact
-          path: ${{ matrix.path }}/release/*
+          path: D:\a\StoicGoose\StoicGoose\release\*
