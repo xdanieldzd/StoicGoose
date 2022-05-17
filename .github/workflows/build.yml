@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artifact
-          path: ${{ matrix.path }}/bin/Release/net5.0/*
+          path: ${{ matrix.path }}/Release/*
