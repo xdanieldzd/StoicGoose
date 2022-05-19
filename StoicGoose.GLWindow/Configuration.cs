@@ -23,6 +23,10 @@ namespace StoicGoose.GLWindow
 		[Description("Most recently loaded ROM image.")]
 		public string LastRomLoaded { get; set; } = string.Empty;
 
+		[DisplayName("Enable Patch Callbacks")]
+		[Description("Enable or disable callbacks functions for patches.")]
+		public bool EnablePatchCallbacks { get; set; } = false;
+
 		[DisplayName("Limit FPS")]
 		[Description("Toggle limiting the framerate to the system's native ~75.47 Hz.")]
 		public bool LimitFps { get; set; } = true;

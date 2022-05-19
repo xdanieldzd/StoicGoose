@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Interface;
 
@@ -18,6 +19,13 @@ namespace StoicGoose.GLWindow
 		MessageBox aboutBox = default;
 		StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
 		FileDialog openRomDialog = default;
+
+		BackgroundLogo backgroundGoose = default;
+
+		MenuHandler menuHandler = default;
+		MessageBoxHandler messageBoxHandler = default;
+		StatusBarHandler statusBarHandler = default;
+		FileDialogHandler fileDialogHandler = default;
 
 		private void InitializeUI()
 		{
@@ -119,7 +127,11 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
 					new("Mute",
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; })
+					(s) => { s.IsChecked = Program.Configuration.Mute; }),
+					new("-"),
+					new("Enable Patch Callbacks",
+					(_) => { ApplyMachineCallbackHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
+					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
 				}
 			};
 
@@ -140,7 +152,7 @@ namespace StoicGoose.GLWindow
 				$"{ThisAssembly.Git.RepositoryUrl}",
 				"Okay");
 
-			statusMessageItem = new(string.Empty) { ShowSeparator = false };
+			statusMessageItem = new($"{Program.ProductName} {Program.GetVersionString(true)} ready!") { ShowSeparator = false };
 			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 			statusFpsItem = new(string.Empty) { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 
@@ -152,6 +164,20 @@ namespace StoicGoose.GLWindow
 						LoadAndRunCartridge(fn);
 				}
 			};
+
+			backgroundGoose = new()
+			{
+				Texture = new(Resources.GetEmbeddedRgbaFile("Assets.Goose-Logo.rgba")),
+				Positioning = BackgroundLogoPositioning.BottomRight,
+				Offset = new(-32f),
+				Scale = new(0.5f),
+				Alpha = 32
+			};
+
+			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
+			messageBoxHandler = new(aboutBox);
+			statusBarHandler = new();
+			fileDialogHandler = new(openRomDialog);
 		}
 	}
 }

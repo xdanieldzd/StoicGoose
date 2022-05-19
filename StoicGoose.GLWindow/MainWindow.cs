@@ -10,10 +10,11 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using StoicGoose.Common.Console;
+using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
-using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
 using StoicGoose.Core.Machines;
+using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
@@ -24,15 +25,7 @@ namespace StoicGoose.GLWindow
 	{
 		/* UI */
 		readonly LogWindow logWindow = default;
-
 		ImGuiHandler imGuiHandler = default;
-
-		BackgroundLogo backgroundGoose = default;
-
-		MenuHandler menuHandler = default;
-		MessageBoxHandler messageBoxHandler = default;
-		StatusBarHandler statusBarHandler = default;
-		FileDialogHandler fileDialogHandler = default;
 
 		/* Graphics */
 		readonly State renderState = new();
@@ -48,9 +41,10 @@ namespace StoicGoose.GLWindow
 		IMachine machine = default;
 		Texture displayTexture = default;
 		double frameTimeElapsed = 0.0;
+		MemoryPatch[] memoryPatches = default;
 
 		/* Misc. runtime variables */
-		string bootstrapFilename = default, cartridgeFilename = default, cartSaveFilename = default;
+		string bootstrapFilename = default, cartridgeFilename = default, cartSaveFilename = default, cartPatchFilename = default;
 		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
@@ -88,22 +82,6 @@ namespace StoicGoose.GLWindow
 				if (type == null || imGuiHandler.GetWindow(type) is not WindowBase window) continue;
 				window.IsWindowOpen = true;
 			}
-
-			backgroundGoose = new()
-			{
-				Texture = new(Resources.GetEmbeddedRgbaFile("Assets.Goose-Logo.rgba")),
-				Positioning = BackgroundLogoPositioning.BottomRight,
-				Offset = new(-32f),
-				Scale = new(0.5f),
-				Alpha = 32
-			};
-
-			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
-			messageBoxHandler = new(aboutBox);
-			statusBarHandler = new();
-			fileDialogHandler = new(openRomDialog);
-
-			statusMessageItem.Label = $"{Program.ProductName} {Program.GetVersionString(true)} ready!";
 
 			renderState.SetClearColor(System.Drawing.Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
 			renderState.Enable(EnableCap.Blend);
@@ -228,6 +206,8 @@ namespace StoicGoose.GLWindow
 				return (buttonsPressed, buttonsHeld);
 			};
 
+			ApplyMachineCallbackHandlers(Program.Configuration.EnablePatchCallbacks);
+
 			inputHandler.SetVerticalRemapping(machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -241,6 +221,26 @@ namespace StoicGoose.GLWindow
 			systemControllerStatusWindow.SetComponentType(machine.GetType());
 			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());
 			soundControllerStatusWindow.SetComponentType(machine.SoundController.GetType());
+		}
+
+		private void ApplyMachineCallbackHandlers(bool enabled)
+		{
+			if (enabled)
+			{
+				machine.ReadMemoryCallback = MachineReadMemoryCallback;
+				machine.WriteMemoryCallback = MachineWriteMemoryCallback;
+				machine.ReadPortCallback = MachineReadPortCallback;
+				machine.WritePortCallback = MachineWritePortCallback;
+				machine.RunStepCallback = MachineRunStepCallback;
+			}
+			else
+			{
+				machine.ReadMemoryCallback = default;
+				machine.WriteMemoryCallback = default;
+				machine.ReadPortCallback = default;
+				machine.WritePortCallback = default;
+				machine.RunStepCallback = default;
+			}
 		}
 
 		private void DestroyMachine()
@@ -259,6 +259,56 @@ namespace StoicGoose.GLWindow
 		{
 			SaveCartridgeRam();
 			SaveInternalEeprom();
+
+			SaveMemoryPatches();
+		}
+
+		private byte MachineReadMemoryCallback(uint address, byte value)
+		{
+			/* Critical for performance b/c called on every memory read; do not use "heavy" functionality (ex. LINQ) */
+
+			if (memoryPatches == null || memoryPatches.Length == 0)
+				return value;
+
+			foreach (var patch in memoryPatches)
+			{
+				if (patch.Address != address || !patch.IsEnabled)
+					continue;
+
+				if (patch.Condition == MemoryPatchCondition.Always)
+					return patch.PatchedValue;
+				else if (patch.Condition == MemoryPatchCondition.LessThan && value < patch.CompareValue)
+					return patch.PatchedValue;
+				else if (patch.Condition == MemoryPatchCondition.LessThanOrEqual && value <= patch.CompareValue)
+					return patch.PatchedValue;
+				else if (patch.Condition == MemoryPatchCondition.GreaterThanOrEqual && value >= patch.CompareValue)
+					return patch.PatchedValue;
+				else if (patch.Condition == MemoryPatchCondition.GreaterThan && value > patch.CompareValue)
+					return patch.PatchedValue;
+			}
+
+			return value;
+		}
+
+		private void MachineWriteMemoryCallback(uint address, byte value)
+		{
+			// TODO?
+		}
+
+		private byte MachineReadPortCallback(ushort port, byte value)
+		{
+			// TODO?
+			return value;
+		}
+
+		private void MachineWritePortCallback(ushort port, byte value)
+		{
+			// TODO?
+		}
+
+		private void MachineRunStepCallback()
+		{
+			// TODO?
 		}
 
 		private void LoadAndRunCartridge(string filename)
@@ -273,6 +323,7 @@ namespace StoicGoose.GLWindow
 
 			cartridgeFilename = filename;
 			cartSaveFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}.sav";
+			cartPatchFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}_patches.json";
 
 			using var stream = new FileStream(cartridgeFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			var data = new byte[stream.Length];
@@ -284,6 +335,8 @@ namespace StoicGoose.GLWindow
 			LoadCartridgeRam();
 			LoadBootstrap();
 			LoadInternalEeprom();
+
+			LoadMemoryPatches();
 
 			displayWindow.IsWindowOpen = true;
 
@@ -337,6 +390,14 @@ namespace StoicGoose.GLWindow
 			if (data.Length != 0) machine.LoadInternalEeprom(data);
 		}
 
+		private void LoadMemoryPatches()
+		{
+			var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
+			if (!File.Exists(path)) return;
+
+			memoryPatches = path.DeserializeFromFile<MemoryPatch[]>();
+		}
+
 		private void SaveCartridgeRam()
 		{
 			if (machine == null) return;
@@ -361,6 +422,15 @@ namespace StoicGoose.GLWindow
 
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 			stream.Write(data, 0, data.Length);
+		}
+
+		private void SaveMemoryPatches()
+		{
+			if (memoryPatches.Length != 0)
+			{
+				var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
+				memoryPatches.SerializeToFile(path);
+			}
 		}
 	}
 }

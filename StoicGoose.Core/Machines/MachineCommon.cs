@@ -50,6 +50,12 @@ namespace StoicGoose.Core.Machines
 
 		public Func<(List<string> buttonsPressed, List<string> buttonsHeld)> ReceiveInput { get; set; } = default;
 
+		public Func<uint, byte, byte> ReadMemoryCallback { get; set; } = default;
+		public Action<uint, byte> WriteMemoryCallback { get; set; } = default;
+		public Func<ushort, byte, byte> ReadPortCallback { get; set; } = default;
+		public Action<ushort, byte> WritePortCallback { get; set; } = default;
+		public Action RunStepCallback { get; set; } = default;
+
 		public int CurrentClockCyclesInLine { get; protected set; } = 0;
 		public int CurrentClockCyclesInFrame { get; protected set; } = 0;
 
@@ -248,10 +254,12 @@ namespace StoicGoose.Core.Machines
 
 		public byte ReadMemory(uint address)
 		{
+			byte retVal;
+
 			if (!cartEnable && BootstrapRom != null && address >= (0x100000 - BootstrapRom.Length))
 			{
 				/* Bootstrap enabled */
-				return BootstrapRom[address & (BootstrapRom.Length - 1)];
+				retVal = BootstrapRom[address & (BootstrapRom.Length - 1)];
 			}
 			else
 			{
@@ -261,20 +269,27 @@ namespace StoicGoose.Core.Machines
 				{
 					/* Internal RAM -- returns 0x90 if unmapped */
 					if (address < InternalRamSize)
-						return InternalRam[address & InternalRamMask];
+						retVal = InternalRam[address & InternalRamMask];
 					else
-						return 0x90;
+						retVal = 0x90;
 				}
 				else
 				{
 					/* Cartridge */
-					return Cartridge.ReadMemory(address);
+					retVal = Cartridge.ReadMemory(address);
 				}
 			}
+
+			if (ReadMemoryCallback != null)
+				retVal = ReadMemoryCallback.Invoke(address, retVal);
+
+			return retVal;
 		}
 
 		public void WriteMemory(uint address, byte value)
 		{
+			WriteMemoryCallback?.Invoke(address, value);
+
 			address &= 0xFFFFF;
 			if ((address & 0xF0000) == 0x00000)
 			{

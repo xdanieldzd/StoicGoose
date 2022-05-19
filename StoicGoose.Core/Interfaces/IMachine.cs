@@ -36,6 +36,12 @@ namespace StoicGoose.Core.Interfaces
 
 		Func<(List<string> buttonsPressed, List<string> buttonsHeld)> ReceiveInput { get; set; }
 
+		Func<uint, byte, byte> ReadMemoryCallback { get; set; }
+		Action<uint, byte> WriteMemoryCallback { get; set; }
+		Func<ushort, byte, byte> ReadPortCallback { get; set; }
+		Action<ushort, byte> WritePortCallback { get; set; }
+		Action RunStepCallback { get; set; }
+
 		void Initialize();
 		void Reset();
 		void Shutdown();

@@ -84,6 +84,8 @@ namespace StoicGoose.Core.Machines
 
 		public override void RunStep()
 		{
+			RunStepCallback?.Invoke();
+
 			HandleInterrupts();
 
 			var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
@@ -250,11 +252,16 @@ namespace StoicGoose.Core.Machines
 					break;
 			}
 
+			if (ReadPortCallback != null)
+				retVal = ReadPortCallback.Invoke(port, retVal);
+
 			return retVal;
 		}
 
 		public override void WritePort(ushort port, byte value)
 		{
+			WritePortCallback?.Invoke(port, value);
+
 			switch (port)
 			{
 				/* Display controller, etc. (H/V timers, DISP_MODE) */
