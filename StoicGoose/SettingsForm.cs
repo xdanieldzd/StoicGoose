@@ -51,11 +51,6 @@ namespace StoicGoose
 				pageInputSystem.Append(CreateKeyInput(Configuration.Input, nameof(Configuration.Input.SystemControls), key));
 			pageInput.Append(pageInputSystem);
 			pageInput.Attach(tvSettings);
-
-			var pageDebug = new SettingsPage(Configuration, nameof(Configuration.Debugging));
-			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.StartInDebugUI)));
-			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.EnableBreakpoints)));
-			pageDebug.Attach(tvSettings);
 		}
 
 		private void tvSettings_BeforeSelect(object sender, TreeViewCancelEventArgs e)

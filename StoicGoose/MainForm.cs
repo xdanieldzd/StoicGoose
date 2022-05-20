@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -12,23 +13,17 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-using ImGuiNET;
-
 using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.Machines;
-//using StoicGoose.Debugging;
 using StoicGoose.Extensions;
 using StoicGoose.Handlers;
-using StoicGoose.Interface.Windows;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
 namespace StoicGoose
 {
-	// TODO restore cheats, breakpoints
-
 	public partial class MainForm : Form
 	{
 		/* Constants */
@@ -36,22 +31,17 @@ namespace StoicGoose
 		readonly static int maxRecentFiles = 15;
 		readonly static int statusIconSize = 12;
 
-		/* Log window */
-		readonly ImGuiLogWindow logWindow = default;
-
 		/* Various handlers */
 		DatabaseHandler databaseHandler = default;
 		GraphicsHandler graphicsHandler = default;
 		SoundHandler soundHandler = default;
 		InputHandler inputHandler = default;
-		ImGuiHandler imGuiHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
 		/* Misc. windows */
 		SoundRecorderForm soundRecorderForm = default;
 
 		/* Misc. runtime variables */
-		bool isInitialized = false;
 		Type machineType = default;
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
@@ -62,9 +52,8 @@ namespace StoicGoose
 		{
 			InitializeComponent();
 
-			if ((logWindow = new()) != null)
+			if (InitializeConsole())
 			{
-				Console.SetOut(logWindow.TextWriter);
 				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
 				Console.WriteLine("----------------------------------------");
@@ -148,8 +137,6 @@ namespace StoicGoose
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization done!");
-
-			isInitialized = true;
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
@@ -163,6 +150,30 @@ namespace StoicGoose
 			emulatorHandler.Shutdown();
 
 			Program.SaveConfiguration();
+		}
+
+		private static bool InitializeConsole()
+		{
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool AllocConsole();
+			[DllImport("kernel32.dll")]
+			static extern IntPtr GetStdHandle(uint nStdHandle);
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+
+			bool result = AllocConsole();
+			if (result)
+			{
+				var consoleHandle = GetStdHandle(0xFFFFFFF5); // STD_OUTPUT_HANDLE
+				if (GetConsoleMode(consoleHandle, out uint lpMode))
+					SetConsoleMode(consoleHandle, lpMode | 0x0004); // ENABLE_VIRTUAL_TERMINAL_PROCESSING
+			}
+			return result;
 		}
 
 		private void InitializeEmulatorHandler()
@@ -214,19 +225,6 @@ namespace StoicGoose
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
 				.ToDictionary(x => x[0], x => x[1]));
 
-			imGuiHandler = new ImGuiHandler(renderControl);
-			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI }, () => (graphicsHandler.DisplayTexture, isVerticalOrientation));
-
-			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI };
-			disassemblerWindow.PauseEmulation += (s, e) => { PauseEmulation(); };
-			disassemblerWindow.UnpauseEmulation += (s, e) => { UnpauseEmulation(); };
-			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
-			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
-			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Model} System", machineType), () => emulatorHandler.Machine);
-			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
-			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
-			imGuiHandler.RegisterWindow(new ImGuiSoundVisualizerWindow() { IsWindowOpen = true }, () => emulatorHandler.Machine.SoundController);
-
 			emulatorHandler.Machine.DisplayController.SendFramebuffer = graphicsHandler.UpdateScreen;
 			emulatorHandler.Machine.SoundController.SendSamples = soundHandler.EnqueueSamples;
 
@@ -235,9 +233,7 @@ namespace StoicGoose
 				var buttonsPressed = new List<string>();
 				var buttonsHeld = new List<string>();
 
-				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
-				if ((screenWindow.IsWindowOpen && screenWindow.IsFocused) || (!screenWindow.IsWindowOpen && !ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)))
-					inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
+				inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
 
 				if (buttonsPressed.Contains("Volume"))
 					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
@@ -245,16 +241,10 @@ namespace StoicGoose
 				return (buttonsPressed, buttonsHeld);
 			};
 
-			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
 			renderControl.Paint += (s, e) =>
 			{
-				var isScreenWindowOpen = imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen;
-
-				imGuiHandler.BeginFrame();
-
-				if (!isScreenWindowOpen) graphicsHandler.SetClearColor(Color.Black);
-				else graphicsHandler.SetClearColor(Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
+				graphicsHandler.SetClearColor(Color.Black);
 
 				graphicsHandler.ClearFrame();
 
@@ -279,12 +269,7 @@ namespace StoicGoose
 
 					graphicsHandler.UpdateStatusIcons(activeIcons);
 				}
-
-				if (!isScreenWindowOpen) graphicsHandler.DrawFrame();
-				else graphicsHandler.BindTextures();
-
-				logWindow.Draw(null);
-				imGuiHandler.EndFrame();
+				graphicsHandler.DrawFrame();
 			};
 
 			internalEepromPath = Path.Combine(Program.InternalDataPath, $"{machineType.Name}.eep");
@@ -299,8 +284,6 @@ namespace StoicGoose
 
 		private void SizeAndPositionWindow()
 		{
-			if (imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen && isInitialized) return;
-
 			if (WindowState == FormWindowState.Maximized)
 				WindowState = FormWindowState.Normal;
 
@@ -488,8 +471,6 @@ namespace StoicGoose
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
 			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
-
-			CreateDataBinding(enableBreakpointsToolStripMenuItem.DataBindings, nameof(enableBreakpointsToolStripMenuItem.Checked), Program.Configuration.Debugging, nameof(Program.Configuration.Debugging.EnableBreakpoints));
 
 			ofdOpenRom.Filter = $"WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc|All Files (*.*)|*.*";
 		}
@@ -715,32 +696,26 @@ namespace StoicGoose
 
 		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
 		}
 
 		private void screenWindowToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen = true;
 		}
 
 		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiMemoryWindow>().IsWindowOpen = true;
 		}
 
 		private void systemRegistersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiMachineStatusWindow>().IsWindowOpen = true;
 		}
 
 		private void displayRegistersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiDisplayStatusWindow>().IsWindowOpen = true;
 		}
 
 		private void soundRegistersToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			imGuiHandler.GetWindow<ImGuiSoundStatusWindow>().IsWindowOpen = true;
 		}
 
 		private void breakpointsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -750,33 +725,10 @@ namespace StoicGoose
 
 		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			logWindow.IsWindowOpen = true;
 		}
 
 		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			if (!emulatorHandler.IsRunning) return;
-
-			if (sender is ToolStripMenuItem traceLogMenuItem)
-			{
-				if (!traceLogMenuItem.Checked)
-				{
-					PauseEmulation();
-
-					if (MessageBox.Show("Trace logs are highly verbose and can consume a lot of storage space, even during short sessions.\n\nDo you still want to continue and enable logging?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-					{
-						//emulatorHandler.Machine.BeginTraceLog(Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
-						traceLogMenuItem.Checked = true;
-					}
-
-					UnpauseEmulation();
-				}
-				else
-				{
-					//emulatorHandler.Machine.EndTraceLog();
-					traceLogMenuItem.Checked = false;
-				}
-			}
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
