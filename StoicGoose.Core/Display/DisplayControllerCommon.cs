@@ -234,18 +234,10 @@ namespace StoicGoose.Core.Display
 			 * https://forum.fobby.net/index.php?t=msg&goto=6085 */
 
 			if (x0 > x1)
-			{
-				var tmp = x0;
-				x0 = x1;
-				x1 = tmp;
-			}
+				(x1, x0) = (x0, x1);
 
 			if (y0 > y1)
-			{
-				var tmp = y0;
-				y0 = y1;
-				y1 = tmp;
-			}
+				(y1, y0) = (y0, y1);
 		}
 
 		protected bool IsInsideSCR2Window(int y, int x)

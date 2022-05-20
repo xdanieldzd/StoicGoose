@@ -273,9 +273,9 @@ namespace StoicGoose.WinForms
 				ReadOnly = true,
 				BackColor = SystemColors.Window,
 				TabIndex = Array.IndexOf(dict.Keys.ToArray(), keyName),
-				Tag = dict[keyName]
+				Tag = dict[keyName],
+				TimerInterval = 100
 			};
-			textBoxEx.TimerInterval = 100;
 			textBoxEx.TimerTick += (s, e) =>
 			{
 				if (s is TextBoxEx textBoxEx && textBoxEx.Tag is List<string> keyValues)

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <LangVersion>latest</LangVersion>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
@@ -78,9 +78,9 @@
     <PackageReference Include="Gee.External.Capstone" Version="2.0.2" />
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="ImGui.NET" Version="1.87.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenTK" Version="4.7.1" />
+    <PackageReference Include="OpenTK" Version="4.7.2" />
     <PackageReference Include="OpenTK.WinForms" Version="4.0.0-pre.6" />
   </ItemGroup>
 

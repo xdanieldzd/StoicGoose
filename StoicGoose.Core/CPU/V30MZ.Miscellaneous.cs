@@ -42,9 +42,7 @@
 
 		private static void Exchange(ref ushort a, ref ushort b)
 		{
-			var temp = a;
-			a = b;
-			b = temp;
+			(b, a) = (a, b);
 		}
 	}
 }
