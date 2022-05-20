@@ -75,6 +75,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
+			imGuiHandler.RegisterWindow(memoryPatchWindow, () => memoryPatches);
 
 			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
 			{

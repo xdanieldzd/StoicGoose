@@ -14,6 +14,7 @@ namespace StoicGoose.GLWindow
 		SystemControllerStatusWindow systemControllerStatusWindow = default;
 		DisplayControllerStatusWindow displayControllerStatusWindow = default;
 		SoundControllerStatusWindow soundControllerStatusWindow = default;
+		MemoryPatchWindow memoryPatchWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
@@ -38,6 +39,8 @@ namespace StoicGoose.GLWindow
 			systemControllerStatusWindow = new();
 			displayControllerStatusWindow = new();
 			soundControllerStatusWindow = new();
+
+			memoryPatchWindow = new();
 
 			fileMenu = new("File")
 			{
@@ -98,6 +101,10 @@ namespace StoicGoose.GLWindow
 							(s) => { s.IsChecked = soundControllerStatusWindow.IsWindowOpen; })
 						}
 					},
+					new("-"),
+					new("Memory Patches",
+					(_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
 					new("-"),
 					new("Show Log",
 					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },

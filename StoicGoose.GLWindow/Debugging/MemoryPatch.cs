@@ -4,13 +4,13 @@
 	{
 		// ... basically, a cheat, but MemoryPatch sounds more like something belonging in the Debugging namespace :P
 
-		public bool IsEnabled { get; set; } = false;
-		public string Description { get; set; } = string.Empty;
-		public uint Address { get; set; } = 0;
-		public MemoryPatchCondition Condition { get; set; } = MemoryPatchCondition.Always;
-		public byte CompareValue { get; set; } = 0;
-		public byte PatchedValue { get; set; } = 0;
+		public bool IsEnabled = false;
+		public string Description = string.Empty;
+		public uint Address = 0;
+		public MemoryPatchCondition Condition = MemoryPatchCondition.Always;
+		public byte CompareValue = 0;
+		public byte PatchedValue = 0;
 	}
 
-	public enum MemoryPatchCondition { Always = 0, LessThan, LessThanOrEqual, GreaterThanOrEqual, GreaterThan }
+	public enum MemoryPatchCondition : int { Always = 0, LessThan, LessThanOrEqual, GreaterThanOrEqual, GreaterThan }
 }
