@@ -394,9 +394,10 @@ namespace StoicGoose.GLWindow
 		private void LoadMemoryPatches()
 		{
 			var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
-			if (!File.Exists(path)) return;
-
-			memoryPatches = path.DeserializeFromFile<MemoryPatch[]>();
+			if (File.Exists(path))
+				memoryPatches = path.DeserializeFromFile<MemoryPatch[]>();
+			else
+				memoryPatches = Array.Empty<MemoryPatch>();
 		}
 
 		private void SaveCartridgeRam()
@@ -427,7 +428,7 @@ namespace StoicGoose.GLWindow
 
 		private void SaveMemoryPatches()
 		{
-			if (memoryPatches.Length != 0)
+			if (memoryPatches != null && memoryPatches.Length != 0)
 			{
 				var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
 				memoryPatches.SerializeToFile(path);

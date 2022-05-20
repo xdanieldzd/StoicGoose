@@ -17,14 +17,24 @@ namespace StoicGoose.GLWindow.Interface
 		MemoryPatch newPatchToAdd = default;
 		int patchToEditIdx = -1, patchToDeleteIdx = -1;
 
+		bool isWindowDisabled = false;
+
 		public MemoryPatchWindow() : base("Memory Patches", new NumericsVector2(700f, 400f), ImGuiCond.FirstUseEver) { }
 
 		protected override void DrawWindow(object userData)
 		{
-			if (userData is not MemoryPatch[] patches) return;
+			if (userData is not MemoryPatch[] patches)
+			{
+				patches = Array.Empty<MemoryPatch>();
+				isWindowDisabled = true;
+			}
+			else
+				isWindowDisabled = false;
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
+				ImGui.BeginDisabled(isWindowDisabled);
+
 				var tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY | ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX;
 				var tableColumnFlags = ImGuiTableColumnFlags.NoSort | ImGuiTableColumnFlags.NoReorder | ImGuiTableColumnFlags.NoResize;
 
@@ -102,6 +112,8 @@ namespace StoicGoose.GLWindow.Interface
 				}
 
 				ImGui.PopStyleVar();
+
+				ImGui.EndDisabled();
 
 				ImGui.End();
 			}
