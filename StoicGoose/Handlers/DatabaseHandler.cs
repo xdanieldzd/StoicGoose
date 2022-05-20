@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Serialization;
 
 using StoicGoose.Common.Console;
@@ -16,10 +17,11 @@ namespace StoicGoose.Handlers
 		{
 			foreach (var file in Directory.EnumerateFiles(directory, "*.dat").OrderBy(x => x.Length))
 			{
-				XmlRootAttribute root = new("datafile") { IsNullable = true };
-				XmlSerializer serializer = new(typeof(DatFile), root);
+				var root = new XmlRootAttribute("datafile") { IsNullable = true };
+				var serializer = new XmlSerializer(typeof(DatFile), root);
 				using FileStream stream = new(Path.Combine(directory, file), FileMode.Open);
-				datFiles.Add(Path.GetFileName(file), (DatFile)serializer.Deserialize(stream));
+				var reader = XmlReader.Create(stream, new() { DtdProcessing = DtdProcessing.Ignore });
+				datFiles.Add(Path.GetFileName(file), (DatFile)serializer.Deserialize(reader));
 			}
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Loaded {datFiles.Count} .dat file(s) with {datFiles.Sum(x => x.Value.Game.Length)} known game(s).");
