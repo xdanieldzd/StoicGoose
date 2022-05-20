@@ -1,29 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <LangVersion>latest</LangVersion>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Version>0.7.0</Version>
+    <Company>xdaniel</Company>
+    <Authors />
+    <Description>16-bit handheld game system emulator</Description>
+    <Copyright>Written 2021-2022 by xdaniel</Copyright>
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.6.0</Version>
-    <Authors />
-    <Company>xdaniel</Company>
-    <Copyright>Written 2021-2022 by xdaniel</Copyright>
-    <Description>16-bit handheld game system emulator</Description>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <NeutralLanguage>en</NeutralLanguage>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
+    <StartupObject>StoicGoose.Program</StartupObject>
+    <UseWindowsForms>true</UseWindowsForms>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

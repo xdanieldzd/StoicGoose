@@ -1,14 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <Company>xdaniel</Company>
     <Version>0.1.0</Version>
+    <Company>xdaniel</Company>
+    <Authors />
     <Description>16-bit handheld game system emulator</Description>
     <Copyright>Written 2021-2022 by xdaniel</Copyright>
-    <NeutralLanguage>Englisch</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
     <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
+    <StartupObject>StoicGoose.GLWindow.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
