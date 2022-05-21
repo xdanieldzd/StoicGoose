@@ -40,7 +40,7 @@ namespace StoicGoose.Core.Interfaces
 		Action<uint, byte> WriteMemoryCallback { get; set; }
 		Func<ushort, byte, byte> ReadPortCallback { get; set; }
 		Action<ushort, byte> WritePortCallback { get; set; }
-		Action RunStepCallback { get; set; }
+		Func<bool> RunStepCallback { get; set; }
 
 		void Initialize();
 		void Reset();

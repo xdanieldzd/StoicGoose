@@ -54,7 +54,9 @@ namespace StoicGoose.Core.Machines
 		public Action<uint, byte> WriteMemoryCallback { get; set; } = default;
 		public Func<ushort, byte, byte> ReadPortCallback { get; set; } = default;
 		public Action<ushort, byte> WritePortCallback { get; set; } = default;
-		public Action RunStepCallback { get; set; } = default;
+		public Func<bool> RunStepCallback { get; set; } = default;
+
+		protected bool cancelFrameExecution = false;
 
 		public int CurrentClockCyclesInLine { get; protected set; } = 0;
 		public int CurrentClockCyclesInFrame { get; protected set; } = 0;
@@ -168,7 +170,11 @@ namespace StoicGoose.Core.Machines
 		public void RunFrame()
 		{
 			while (CurrentClockCyclesInFrame < TotalClockCyclesInFrame)
+			{
 				RunLine();
+
+				if (cancelFrameExecution) return;
+			}
 
 			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
 
@@ -178,7 +184,11 @@ namespace StoicGoose.Core.Machines
 		public void RunLine()
 		{
 			while (CurrentClockCyclesInLine < DisplayControllerCommon.HorizontalTotal)
+			{
 				RunStep();
+
+				if (cancelFrameExecution) return;
+			}
 
 			CurrentClockCyclesInFrame += CurrentClockCyclesInLine;
 			CurrentClockCyclesInLine = 0;

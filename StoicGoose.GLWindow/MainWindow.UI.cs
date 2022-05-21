@@ -16,6 +16,7 @@ namespace StoicGoose.GLWindow
 		DisplayControllerStatusWindow displayControllerStatusWindow = default;
 		SoundControllerStatusWindow soundControllerStatusWindow = default;
 		MemoryPatchWindow memoryPatchWindow = default;
+		BreakpointWindow breakpointWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
@@ -42,6 +43,7 @@ namespace StoicGoose.GLWindow
 			soundControllerStatusWindow = new();
 
 			memoryPatchWindow = new();
+			breakpointWindow = new();
 
 			void reinitMachineIfRunning()
 			{
@@ -128,6 +130,9 @@ namespace StoicGoose.GLWindow
 					new("Memory Patches",
 					(_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
+					new("Breakpoints",
+					(_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = breakpointWindow.IsWindowOpen; }),
 					new("-"),
 					new("Show Log",
 					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
@@ -179,9 +184,12 @@ namespace StoicGoose.GLWindow
 						}
 					},
 					new("-"),
-					new("Enable Patch Callbacks",
-					(_) => { ApplyMachineCallbackHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
-					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
+					new("Enable Breakpoints",
+					(_) => { ApplyMachineBreakpointHandlers(Program.Configuration.EnableBreakpoints = !Program.Configuration.EnableBreakpoints); },
+					(s) => { s.IsChecked = Program.Configuration.EnableBreakpoints; }),
+					new("Enable Memory Patches",
+					(_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
+					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; })
 				}
 			};
 

@@ -84,27 +84,32 @@ namespace StoicGoose.Core.Machines
 
 		public override void RunStep()
 		{
-			RunStepCallback?.Invoke();
+			if (RunStepCallback == null || RunStepCallback.Invoke() == false)
+			{
+				HandleInterrupts();
 
-			HandleInterrupts();
+				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 
-			var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
+				var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) RaiseInterrupt(4);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) RaiseInterrupt(5);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) RaiseInterrupt(6);
+				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) RaiseInterrupt(7);
 
-			var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) RaiseInterrupt(4);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) RaiseInterrupt(5);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) RaiseInterrupt(6);
-			if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.HBlankTimer)) RaiseInterrupt(7);
+				if (SoundDmaController.IsActive)
+					SoundDmaController.Step(currentCpuClockCycles);
 
-			if (SoundDmaController.IsActive)
-				SoundDmaController.Step(currentCpuClockCycles);
+				SoundController.Step(currentCpuClockCycles);
 
-			SoundController.Step(currentCpuClockCycles);
+				if (Cartridge.Step(currentCpuClockCycles)) RaiseInterrupt(2);
+				else LowerInterrupt(2);
 
-			if (Cartridge.Step(currentCpuClockCycles)) RaiseInterrupt(2);
-			else LowerInterrupt(2);
+				CurrentClockCyclesInLine += currentCpuClockCycles;
 
-			CurrentClockCyclesInLine += currentCpuClockCycles;
+				cancelFrameExecution = false;
+			}
+			else
+				cancelFrameExecution = true;
 		}
 
 		public override byte ReadPort(ushort port)

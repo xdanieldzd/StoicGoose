@@ -27,6 +27,10 @@ namespace StoicGoose.GLWindow
 		[Description("Enable or disable callbacks functions for patches.")]
 		public bool EnablePatchCallbacks { get; set; } = false;
 
+		[DisplayName("Enable Breakpoints")]
+		[Description("Enable or disable breakpoints.")]
+		public bool EnableBreakpoints { get; set; } = false;
+
 		[DisplayName("Limit FPS")]
 		[Description("Toggle limiting the framerate to the system's native ~75.47 Hz.")]
 		public bool LimitFps { get; set; } = true;

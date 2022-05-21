@@ -65,6 +65,48 @@ namespace StoicGoose.GLWindow.Interface
 			}
 		}
 
+		public static void OpenMessageBox(string title)
+		{
+			ImGui.OpenPopup(title);
+		}
+
+		public static int ProcessMessageBox(string message, string title, params string[] buttons)
+		{
+			var buttonIdx = -1;
+
+			var viewportCenter = ImGui.GetMainViewport().GetCenter();
+			ImGui.SetNextWindowPos(viewportCenter, ImGuiCond.Always, new NumericsVector2(0.5f, 0.5f));
+
+			var popupDummy = true;
+			if (ImGui.BeginPopupModal($"{title}", ref popupDummy, ImGuiWindowFlags.AlwaysAutoResize))
+			{
+				ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
+				ImGui.Text(message);
+
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+				ImGui.Separator();
+				ImGui.Dummy(new NumericsVector2(0f, 2f));
+
+				var buttonWidth = (ImGui.GetContentRegionAvail().X - (ImGui.GetStyle().ItemSpacing.X * (buttons.Length - 1))) / buttons.Length;
+				for (var i = 0; i < buttons.Length; i++)
+				{
+					if (ImGui.Button(buttons[i], new NumericsVector2(buttonWidth, 0f)))
+					{
+						ImGui.CloseCurrentPopup();
+						buttonIdx = i;
+						break;
+					}
+					ImGui.SameLine();
+				}
+
+				ImGui.PopStyleVar();
+
+				ImGui.EndPopup();
+			}
+
+			return buttonIdx;
+		}
+
 		public static float HelpMarkerWidth() => ImGui.CalcTextSize(helpMarker).X;
 
 		public static bool IsPointInsideRectangle(NumericsVector2 point, NumericsVector2 rectPos, NumericsVector2 rectSize)

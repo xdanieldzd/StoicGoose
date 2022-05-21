@@ -41,9 +41,12 @@ namespace StoicGoose.GLWindow
 		Texture displayTexture = default;
 		double frameTimeElapsed = 0.0;
 		MemoryPatch[] memoryPatches = default;
+		Breakpoint[] breakpoints = default;
+		BreakpointVariables breakpointVariables = default;
+		Breakpoint lastBreakpointHit = default;
 
 		/* Misc. runtime variables */
-		string bootstrapFilename = default, cartridgeFilename = default, cartSaveFilename = default, cartPatchFilename = default;
+		string bootstrapFilename = default, cartridgeFilename = default, cartSaveFilename = default, cartPatchFilename = default, cartBreakpointFilename = default;
 		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
@@ -70,6 +73,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
 			imGuiHandler.RegisterWindow(memoryPatchWindow, () => memoryPatches);
+			imGuiHandler.RegisterWindow(breakpointWindow, () => breakpoints);
 
 			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
 			{
@@ -133,6 +137,8 @@ namespace StoicGoose.GLWindow
 				if (isRunning && !isPaused &&
 					!fileDialogHandler.IsAnyDialogOpen && !messageBoxHandler.IsAnyMessageBoxOpen)
 				{
+					lastBreakpointHit = null;
+
 					machine.RunFrame();
 					soundHandler.Update();
 
@@ -201,7 +207,11 @@ namespace StoicGoose.GLWindow
 				return (buttonsPressed, buttonsHeld);
 			};
 
-			ApplyMachineCallbackHandlers(Program.Configuration.EnablePatchCallbacks);
+			ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks);
+			ApplyMachineBreakpointHandlers(Program.Configuration.EnableBreakpoints);
+
+			breakpointVariables = new(machine);
+			lastBreakpointHit = null;
 
 			inputHandler.SetVerticalRemapping(machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -218,7 +228,7 @@ namespace StoicGoose.GLWindow
 			soundControllerStatusWindow.SetComponentType(machine.SoundController.GetType());
 		}
 
-		private void ApplyMachineCallbackHandlers(bool enabled)
+		private void ApplyMachinePatchHandlers(bool enabled)
 		{
 			if (enabled)
 			{
@@ -226,7 +236,6 @@ namespace StoicGoose.GLWindow
 				machine.WriteMemoryCallback = MachineWriteMemoryCallback;
 				machine.ReadPortCallback = MachineReadPortCallback;
 				machine.WritePortCallback = MachineWritePortCallback;
-				machine.RunStepCallback = MachineRunStepCallback;
 			}
 			else
 			{
@@ -234,8 +243,15 @@ namespace StoicGoose.GLWindow
 				machine.WriteMemoryCallback = default;
 				machine.ReadPortCallback = default;
 				machine.WritePortCallback = default;
-				machine.RunStepCallback = default;
 			}
+		}
+
+		private void ApplyMachineBreakpointHandlers(bool enabled)
+		{
+			if (enabled)
+				machine.RunStepCallback = MachineRunStepCallback;
+			else
+				machine.RunStepCallback = default;
 		}
 
 		private void DestroyMachine()
@@ -256,6 +272,7 @@ namespace StoicGoose.GLWindow
 			SaveInternalEeprom();
 
 			SaveMemoryPatches();
+			SaveBreakpoints();
 		}
 
 		private byte MachineReadMemoryCallback(uint address, byte value)
@@ -287,23 +304,47 @@ namespace StoicGoose.GLWindow
 
 		private void MachineWriteMemoryCallback(uint address, byte value)
 		{
-			// TODO?
+			// TODO? -- remove callback?
 		}
 
 		private byte MachineReadPortCallback(ushort port, byte value)
 		{
-			// TODO?
+			// TODO? -- remove callback?
 			return value;
 		}
 
 		private void MachineWritePortCallback(ushort port, byte value)
 		{
-			// TODO?
+			// TODO? -- remove callback?
 		}
 
-		private void MachineRunStepCallback()
+		private bool MachineRunStepCallback()
 		{
-			// TODO?
+			/* EXTREMELY critical for performance b/c called on every machine step; do not use "heavy" functionality (ex. LINQ) */
+
+			if (breakpoints == null || breakpoints.Length == 0)
+				return false;
+
+			foreach (var bp in breakpoints)
+			{
+				if (!bp.Enabled || bp.Runner == null || lastBreakpointHit == bp)
+					continue;
+
+				if (bp.Runner(breakpointVariables).Result)
+				{
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Breakpoint hit: ({bp.Expression})");
+
+					isPaused = true;
+					lastBreakpointHit = bp;
+
+					imGuiHandler.GetWindow<LogWindow>().IsWindowOpen = true;
+					imGuiHandler.GetWindow<DisassemblerWindow>().IsWindowOpen = true;
+
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private void LoadAndRunCartridge(string filename)
@@ -319,6 +360,7 @@ namespace StoicGoose.GLWindow
 			cartridgeFilename = filename;
 			cartSaveFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}.sav";
 			cartPatchFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}_patches.json";
+			cartBreakpointFilename = $"{Path.GetFileNameWithoutExtension(cartridgeFilename)}_breakpoints.json";
 
 			using var stream = new FileStream(cartridgeFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 			var data = new byte[stream.Length];
@@ -332,6 +374,7 @@ namespace StoicGoose.GLWindow
 			LoadInternalEeprom();
 
 			LoadMemoryPatches();
+			LoadBreakpoints();
 
 			displayWindow.IsWindowOpen = true;
 
@@ -394,6 +437,19 @@ namespace StoicGoose.GLWindow
 				memoryPatches = Array.Empty<MemoryPatch>();
 		}
 
+		private void LoadBreakpoints()
+		{
+			var path = Path.Combine(Program.DebuggingDataPath, cartBreakpointFilename);
+			if (File.Exists(path))
+			{
+				var breakpoints = path.DeserializeFromFile<List<Breakpoint>>();
+				breakpoints.RemoveAll(x => !x.UpdateDelegate());
+				this.breakpoints = breakpoints.ToArray();
+			}
+			else
+				breakpoints = Array.Empty<Breakpoint>();
+		}
+
 		private void SaveCartridgeRam()
 		{
 			if (machine == null) return;
@@ -426,6 +482,15 @@ namespace StoicGoose.GLWindow
 			{
 				var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
 				memoryPatches.SerializeToFile(path);
+			}
+		}
+
+		private void SaveBreakpoints()
+		{
+			if (breakpoints != null && breakpoints.Length != 0)
+			{
+				var path = Path.Combine(Program.DebuggingDataPath, cartBreakpointFilename);
+				breakpoints.SerializeToFile(path);
 			}
 		}
 	}
