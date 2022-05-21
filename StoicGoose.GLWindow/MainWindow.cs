@@ -13,7 +13,6 @@ using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Interfaces;
-using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface;
 
@@ -57,11 +56,6 @@ namespace StoicGoose.GLWindow
 				Console.WriteLine($"{Ansi.Green}{message}");
 				Console.WriteLine(new string('-', message.Length));
 			}
-
-			// TODO
-			Program.Configuration.UseBootstrap = true;
-			Program.Configuration.BootstrapFiles[typeof(WonderSwan).FullName] = @"D:\Temp\Goose\WonderSwan Boot ROM.rom";
-			Program.Configuration.BootstrapFiles[typeof(WonderSwanColor).FullName] = @"D:\Temp\Goose\WonderSwan Color Boot ROM.rom";
 		}
 
 		protected override void OnLoad()

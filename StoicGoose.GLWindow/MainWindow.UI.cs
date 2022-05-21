@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 
 using StoicGoose.Common.Utilities;
@@ -19,7 +20,7 @@ namespace StoicGoose.GLWindow
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
 		StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
-		FileDialog openRomDialog = default;
+		FileDialog openRomDialog = default, selectBootstrapRomDialog = default;
 
 		BackgroundLogo backgroundGoose = default;
 
@@ -42,13 +43,35 @@ namespace StoicGoose.GLWindow
 
 			memoryPatchWindow = new();
 
+			void reinitMachineIfRunning()
+			{
+				if (machine != null && isRunning)
+				{
+					CreateMachine(Program.Configuration.PreferredSystem);
+					LoadAndRunCartridge(Program.Configuration.LastRomLoaded);
+				}
+			}
+
+			void initBootstrapRomDialog(Type machineType)
+			{
+				selectBootstrapRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.BootstrapFiles[machineType.FullName]);
+				selectBootstrapRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.BootstrapFiles[machineType.FullName]);
+				selectBootstrapRomDialog.Callback = (res, fn) =>
+				{
+					if (res == ImGuiFileDialogResult.Okay)
+					{
+						Program.Configuration.BootstrapFiles[machineType.FullName] = fn;
+						reinitMachineIfRunning();
+					}
+				};
+			}
+
 			fileMenu = new("File")
 			{
 				SubItems = new MenuItem[]
 				{
 					new("Open", (_) =>
 					{
-						openRomDialog.Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc";
 						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
 						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
 						openRomDialog.IsOpen = true;
@@ -136,6 +159,26 @@ namespace StoicGoose.GLWindow
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
 					(s) => { s.IsChecked = Program.Configuration.Mute; }),
 					new("-"),
+					new("Use Bootstrap ROMs",
+					(_) => { Program.Configuration.UseBootstrap = !Program.Configuration.UseBootstrap; reinitMachineIfRunning(); },
+					(s) => { s.IsChecked = Program.Configuration.UseBootstrap; }),
+					new("Select Bootstrap ROM")
+					{
+						SubItems = new MenuItem[]
+						{
+							new("WonderSwan", (_) =>
+							{
+								initBootstrapRomDialog(typeof(WonderSwan));
+								selectBootstrapRomDialog.IsOpen = true;
+							}),
+							new("WonderSwan Color", (_) =>
+							{
+								initBootstrapRomDialog(typeof(WonderSwanColor));
+								selectBootstrapRomDialog.IsOpen = true;
+							})
+						}
+					},
+					new("-"),
 					new("Enable Patch Callbacks",
 					(_) => { ApplyMachineCallbackHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
 					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
@@ -165,12 +208,15 @@ namespace StoicGoose.GLWindow
 
 			openRomDialog = new(ImGuiFileDialogType.Open, "Open ROM")
 			{
+				Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc",
 				Callback = (res, fn) =>
 				{
 					if (res == ImGuiFileDialogResult.Okay)
 						LoadAndRunCartridge(fn);
 				}
 			};
+
+			selectBootstrapRomDialog = new(ImGuiFileDialogType.Open, "Select Bootstrap ROM") { Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc" };
 
 			backgroundGoose = new()
 			{
@@ -184,7 +230,7 @@ namespace StoicGoose.GLWindow
 			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
 			messageBoxHandler = new(aboutBox);
 			statusBarHandler = new();
-			fileDialogHandler = new(openRomDialog);
+			fileDialogHandler = new(openRomDialog, selectBootstrapRomDialog);
 		}
 	}
 }

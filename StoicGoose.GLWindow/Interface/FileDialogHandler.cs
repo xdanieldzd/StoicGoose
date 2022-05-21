@@ -13,8 +13,6 @@ namespace StoicGoose.GLWindow.Interface
 	{
 		readonly List<FileDialog> fileDialogs = new();
 
-		bool firstOpen = true;
-
 		DriveInfo[] driveInfos = default;
 		List<string> driveLabels = default;
 		int selectedDriveInfo = -1;
@@ -157,7 +155,7 @@ namespace StoicGoose.GLWindow.Interface
 						if (isSelected)
 						{
 							ImGui.SetItemDefaultFocus();
-							if (firstOpen)
+							if (fileDialogs[i].IsFirstOpen)
 								ImGui.SetScrollHereY(0.5f);
 						}
 					}
@@ -203,7 +201,7 @@ namespace StoicGoose.GLWindow.Interface
 
 					ImGui.EndPopup();
 
-					firstOpen = false;
+					fileDialogs[i].IsFirstOpen = false;
 				}
 			}
 		}
@@ -235,8 +233,6 @@ namespace StoicGoose.GLWindow.Interface
 
 		private void ResetHandlerState()
 		{
-			firstOpen = true;
-
 			selectedDriveInfo = -1;
 
 			filters.Clear();
@@ -266,6 +262,7 @@ namespace StoicGoose.GLWindow.Interface
 		public Action<ImGuiFileDialogResult, string> Callback { get; set; } = null;
 
 		public bool IsOpen = false;
+		public bool IsFirstOpen = true;
 
 		public FileDialog(ImGuiFileDialogType dialogType, string title)
 		{
