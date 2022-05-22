@@ -14,10 +14,10 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using StoicGoose.Common.Console;
+using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.Machines;
-using StoicGoose.Extensions;
 using StoicGoose.Handlers;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
@@ -40,6 +40,7 @@ namespace StoicGoose
 
 		/* Misc. windows */
 		SoundRecorderForm soundRecorderForm = default;
+		CheatsForm cheatsForm = default;
 
 		/* Misc. runtime variables */
 		Type machineType = default;
@@ -47,6 +48,7 @@ namespace StoicGoose
 		bool isVerticalOrientation = false;
 		string internalEepromPath = string.Empty;
 		Vector2i statusIconsLocation = Vector2i.Zero;
+		Cheat[] cheats = default;
 
 		public MainForm()
 		{
@@ -226,7 +228,11 @@ namespace StoicGoose
 				.ToDictionary(x => x[0], x => x[1]));
 
 			emulatorHandler.Machine.DisplayController.SendFramebuffer = graphicsHandler.UpdateScreen;
-			emulatorHandler.Machine.SoundController.SendSamples = soundHandler.EnqueueSamples;
+			emulatorHandler.Machine.SoundController.SendSamples = (s) =>
+			{
+				soundHandler.EnqueueSamples(s);
+				soundRecorderForm.EnqueueSamples(s);
+			};
 
 			emulatorHandler.Machine.ReceiveInput += () =>
 			{
@@ -278,8 +284,14 @@ namespace StoicGoose
 		private void InitializeWindows()
 		{
 			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
-
-			//emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
+			cheatsForm = new()
+			{
+				Callback = (c) =>
+				{
+					if (emulatorHandler.IsRunning)
+						cheats = (Cheat[])c.Clone();
+				}
+			};
 		}
 
 		private void SizeAndPositionWindow()
@@ -471,8 +483,38 @@ namespace StoicGoose
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
 			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
+			enableCheatsToolStripMenuItem.CheckedChanged += (s, e) => { emulatorHandler.Machine.ReadMemoryCallback = Program.Configuration.General.EnableCheats ? MachineReadMemoryCallback : default; };
 
 			ofdOpenRom.Filter = $"WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc|All Files (*.*)|*.*";
+
+			cheatListToolStripMenuItem.Enabled = pauseToolStripMenuItem.Enabled = resetToolStripMenuItem.Enabled = false;
+		}
+
+		private byte MachineReadMemoryCallback(uint address, byte value)
+		{
+			/* Critical for performance b/c called on every memory read; do not use "heavy" functionality (ex. LINQ) */
+
+			if (cheats == null || cheats.Length == 0)
+				return value;
+
+			foreach (var cheat in cheats)
+			{
+				if (cheat.Address != address || !cheat.IsEnabled)
+					continue;
+
+				if (cheat.Condition == CheatCondition.Always)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.LessThan && value < cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.LessThanOrEqual && value <= cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.GreaterThanOrEqual && value >= cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.GreaterThan && value > cheat.CompareValue)
+					return cheat.PatchedValue;
+			}
+
+			return value;
 		}
 
 		private void LoadBootstrap(string filename)
@@ -520,6 +562,7 @@ namespace StoicGoose
 			CreateRecentFilesMenu();
 
 			LoadRam();
+			LoadCheats();
 
 			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
@@ -528,6 +571,8 @@ namespace StoicGoose
 
 			SizeAndPositionWindow();
 			SetWindowTitleAndStatus();
+
+			cheatListToolStripMenuItem.Enabled = pauseToolStripMenuItem.Enabled = resetToolStripMenuItem.Enabled = true;
 
 			Program.SaveConfiguration();
 		}
@@ -544,10 +589,29 @@ namespace StoicGoose
 				emulatorHandler.Machine.LoadSaveData(data);
 		}
 
+		private void LoadCheats()
+		{
+			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+			if (!File.Exists(path)) return;
+
+			cheats = path.DeserializeFromFile<Cheat[]>();
+			cheatsForm.SetCheatList(cheats);
+		}
+
 		private void SaveAllData()
 		{
 			SaveInternalEeprom();
 			SaveRam();
+			SaveCheats();
+		}
+
+		private void SaveInternalEeprom()
+		{
+			var data = emulatorHandler.Machine.GetInternalEeprom();
+			if (data.Length == 0) return;
+
+			using var stream = new FileStream(internalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+			stream.Write(data, 0, data.Length);
 		}
 
 		private void SaveRam()
@@ -561,13 +625,13 @@ namespace StoicGoose
 			stream.Write(data, 0, data.Length);
 		}
 
-		private void SaveInternalEeprom()
+		private void SaveCheats()
 		{
-			var data = emulatorHandler.Machine.GetInternalEeprom();
-			if (data.Length == 0) return;
-
-			using var stream = new FileStream(internalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-			stream.Write(data, 0, data.Length);
+			if (cheats != null && cheats.Length != 0)
+			{
+				var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+				cheats.SerializeToFile(path);
+			}
 		}
 
 		private void PauseEmulation()
@@ -691,44 +755,7 @@ namespace StoicGoose
 
 		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			//
-		}
-
-		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void screenWindowToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void systemRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void displayRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void soundRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void breakpointsToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			//
-		}
-
-		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-		}
-
-		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)
-		{
+			cheatsForm.Show();
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)

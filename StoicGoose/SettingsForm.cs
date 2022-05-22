@@ -1,7 +1,5 @@
 ﻿using System.Windows.Forms;
 
-using StoicGoose.DataStorage;
-
 using static StoicGoose.WinForms.ControlHelpers;
 
 namespace StoicGoose

@@ -1,7 +1,7 @@
-﻿using StoicGoose.IO;
-using StoicGoose.WinForms;
-using System;
+﻿using System;
 using System.Windows.Forms;
+
+using StoicGoose.IO;
 
 namespace StoicGoose
 {
@@ -16,8 +16,6 @@ namespace StoicGoose
 		public SoundRecorderForm(int sampleRate, int numChannels)
 		{
 			InitializeComponent();
-
-			if (GlobalVariables.EnableLocalDebugIO) ftbWaveFile.FileName = @"D:\Temp\Goose\sound.wav";
 
 			this.sampleRate = sampleRate;
 			this.numChannels = numChannels;
@@ -69,9 +67,10 @@ namespace StoicGoose
 			Hide();
 		}
 
-		public void EnqueueSamples(object sender, EnqueueSamplesEventArgs e)
+		public void EnqueueSamples(short[] samples)
 		{
-			waveFileWriter.Write(e.Samples);
+			if (IsRecording)
+				waveFileWriter?.Write(samples);
 		}
 	}
 }
