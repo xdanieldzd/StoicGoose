@@ -15,14 +15,14 @@ using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
-using StoicGoose.GLWindow.Interface;
+using StoicGoose.GLWindow.Interface.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 using Buffer = StoicGoose.Common.OpenGL.Buffer;
 using ShaderProgram = StoicGoose.Common.OpenGL.Shaders.Program;
 
-namespace StoicGoose.GLWindow
+namespace StoicGoose.GLWindow.Interface.Handlers
 {
 	/* Derived/adapted from...
 	 * - https://github.com/NogginBops/ImGui.NET_OpenTK_Sample

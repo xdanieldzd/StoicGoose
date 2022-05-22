@@ -6,7 +6,7 @@ using StoicGoose.GLWindow.Debugging;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface
+namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class BreakpointWindow : WindowBase
 	{
@@ -34,7 +34,7 @@ namespace StoicGoose.GLWindow.Interface
 
 			static void handleInvalidBreakpointMessageBox()
 			{
-				ImGuiHelpers.ProcessMessageBox("The entered expression is invalid.", invalidBreakpointMsgBoxTitleId, "Okay");
+				Helpers.ProcessMessageBox("The entered expression is invalid.", invalidBreakpointMsgBoxTitleId, "Okay");
 			}
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
@@ -119,7 +119,7 @@ namespace StoicGoose.GLWindow.Interface
 					ImGui.SetNextItemWidth(400f);
 					ImGui.InputText("Expression##add-desc", ref newBreakpointToAdd.Expression, 512, ImGuiInputTextFlags.EnterReturnsTrue);
 					ImGui.SameLine();
-					ImGuiHelpers.HelpMarker(expressionFormatHelpText);
+					Helpers.HelpMarker(expressionFormatHelpText);
 
 					ImGui.Dummy(new NumericsVector2(0f, 2f));
 					ImGui.Separator();
@@ -128,7 +128,7 @@ namespace StoicGoose.GLWindow.Interface
 					if (ImGui.Button("Add", new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f)))
 					{
 						if (!newBreakpointToAdd.UpdateDelegate())
-							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
+							Helpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
 						else
 						{
 							var breakpointToAddIdx = Array.FindIndex(breakpoints, x => x == null);
@@ -218,7 +218,7 @@ namespace StoicGoose.GLWindow.Interface
 					if (ImGui.InputText("Expression##edit-desc", ref newBreakpointExpression, 512, ImGuiInputTextFlags.EnterReturnsTrue))
 						applyBreakpointEdit = true;
 					ImGui.SameLine();
-					ImGuiHelpers.HelpMarker(expressionFormatHelpText);
+					Helpers.HelpMarker(expressionFormatHelpText);
 
 					ImGui.Dummy(new NumericsVector2(0f, 2f));
 					ImGui.Separator();
@@ -246,7 +246,7 @@ namespace StoicGoose.GLWindow.Interface
 						if (!breakpoints[breakpointToEditIdx].UpdateDelegate())
 						{
 							breakpoints[breakpointToEditIdx].Expression = oldExpression;
-							ImGuiHelpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
+							Helpers.OpenMessageBox(invalidBreakpointMsgBoxTitleId);
 
 							applyBreakpointEdit = false;
 						}

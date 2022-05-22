@@ -12,7 +12,7 @@ using StoicGoose.GLWindow.Debugging;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface
+namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class DisassemblerWindow : WindowBase, IDisposable
 	{
@@ -508,7 +508,7 @@ namespace StoicGoose.GLWindow.Interface
 			drawList.AddText(position, colorText, $"{label}H: 0x{register.High:X2}"); position.X += glyphSize.X * 8f;
 			drawList.AddText(position, colorDisabled, $"[{register.High}]"); position.X += glyphSize.X * 6f;
 
-			if (string.IsNullOrEmpty(doModifyRegisterName) && ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && ImGuiHelpers.IsPointInsideRectangle(mousePosition, rectPos, rectSize))
+			if (string.IsNullOrEmpty(doModifyRegisterName) && ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && Helpers.IsPointInsideRectangle(mousePosition, rectPos, rectSize))
 			{
 				drawList.AddRectFilled(rectPos, rectPos + rectSize, highlightColor1);
 				if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
@@ -530,7 +530,7 @@ namespace StoicGoose.GLWindow.Interface
 				{
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
-					ImGuiHelpers.InputHex("New Value##modify-value", ref newRegisterValue, 4, false);
+					Helpers.InputHex("New Value##modify-value", ref newRegisterValue, 4, false);
 
 					ImGui.Dummy(new(0f, 2f));
 					ImGui.Separator();

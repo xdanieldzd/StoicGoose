@@ -9,7 +9,7 @@ using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface
 {
-	public static class ImGuiHelpers
+	public static class Helpers
 	{
 		const string helpMarker = "(?)";
 
@@ -27,7 +27,7 @@ namespace StoicGoose.GLWindow.Interface
 
 		readonly static Dictionary<Type, MethodInfo> typeParseMethodDict = new();
 
-		static ImGuiHelpers()
+		static Helpers()
 		{
 			foreach (var type in typeList)
 			{

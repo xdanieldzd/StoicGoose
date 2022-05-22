@@ -9,7 +9,7 @@ using StoicGoose.Common.Attributes;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface
+namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class ComponentPortWindow : WindowBase
 	{

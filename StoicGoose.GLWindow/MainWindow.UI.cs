@@ -4,7 +4,9 @@ using System.Reflection;
 
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
-using StoicGoose.GLWindow.Interface;
+using StoicGoose.GLWindow.Interface.Handlers;
+using StoicGoose.GLWindow.Interface.Widgets;
+using StoicGoose.GLWindow.Interface.Windows;
 
 namespace StoicGoose.GLWindow
 {

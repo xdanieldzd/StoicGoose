@@ -6,7 +6,7 @@ using StoicGoose.GLWindow.Debugging;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface
+namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class MemoryPatchWindow : WindowBase
 	{
@@ -131,12 +131,12 @@ namespace StoicGoose.GLWindow.Interface
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.Checkbox($"Enabled?##add-enabled", ref newPatchToAdd.IsEnabled);
-					ImGuiHelpers.InputHex("Address##add-address", ref newPatchToAdd.Address, 6, false);
+					Helpers.InputHex("Address##add-address", ref newPatchToAdd.Address, 6, false);
 					int condition = (int)newPatchToAdd.Condition;
 					ImGui.Combo($"Condition##add-condition", ref condition, patchConditionDescriptive, patchConditionDescriptive.Length);
 					newPatchToAdd.Condition = (MemoryPatchCondition)condition;
-					ImGuiHelpers.InputHex("Compare Value##add-compvalue", ref newPatchToAdd.CompareValue, 2, false);
-					ImGuiHelpers.InputHex("Patched Value##add-patchvalue", ref newPatchToAdd.PatchedValue, 2, false);
+					Helpers.InputHex("Compare Value##add-compvalue", ref newPatchToAdd.CompareValue, 2, false);
+					Helpers.InputHex("Patched Value##add-patchvalue", ref newPatchToAdd.PatchedValue, 2, false);
 					ImGui.InputText("Description##add-desc", ref newPatchToAdd.Description, 64);
 
 					ImGui.Dummy(new NumericsVector2(0f, 2f));
@@ -234,12 +234,12 @@ namespace StoicGoose.GLWindow.Interface
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.Checkbox($"Enabled?##edit-enabled", ref patches[patchToEditIdx].IsEnabled);
-					ImGuiHelpers.InputHex("Address##edit-address", ref patches[patchToEditIdx].Address, 6, false);
+					Helpers.InputHex("Address##edit-address", ref patches[patchToEditIdx].Address, 6, false);
 					int condition = (int)patches[patchToEditIdx].Condition;
 					ImGui.Combo($"Condition##edit-condition", ref condition, patchConditionDescriptive, patchConditionDescriptive.Length);
 					patches[patchToEditIdx].Condition = (MemoryPatchCondition)condition;
-					ImGuiHelpers.InputHex("Compare Value##edit-compvalue", ref patches[patchToEditIdx].CompareValue, 2, false);
-					ImGuiHelpers.InputHex("Patched Value##edit-patchvalue", ref patches[patchToEditIdx].PatchedValue, 2, false);
+					Helpers.InputHex("Compare Value##edit-compvalue", ref patches[patchToEditIdx].CompareValue, 2, false);
+					Helpers.InputHex("Patched Value##edit-patchvalue", ref patches[patchToEditIdx].PatchedValue, 2, false);
 					ImGui.InputText("Description##edit-desc", ref patches[patchToEditIdx].Description, 64);
 
 					ImGui.Dummy(new NumericsVector2(0f, 2f));

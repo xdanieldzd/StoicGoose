@@ -14,7 +14,8 @@ using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Core.Interfaces;
 using StoicGoose.GLWindow.Debugging;
-using StoicGoose.GLWindow.Interface;
+using StoicGoose.GLWindow.Interface.Handlers;
+using StoicGoose.GLWindow.Interface.Windows;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 

@@ -1,4 +1,4 @@
-﻿namespace StoicGoose.GLWindow.Interface
+﻿namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class SoundControllerStatusWindow : ComponentPortWindow
 	{
