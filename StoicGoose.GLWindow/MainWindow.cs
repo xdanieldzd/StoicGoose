@@ -200,7 +200,7 @@ namespace StoicGoose.GLWindow
 				void printMagnetMessage() => ConsoleHelpers.WriteGradientLine(message, true, (0x3E, 0x4F, 0x65), (0xDA, 0xE1, 0xEA), (0xEE, 0x70, 0x7D));
 
 				if (isDateToday(31, 3)) /* 🏳️‍⚧️ */ ConsoleHelpers.WriteGradientLine(message, false, (91, 207, 250), (245, 171, 185), (255, 255, 255), (245, 171, 185), (17, 168, 205));
-				else if (isDateToday(19, 3)) /* 🧲 */ printMagnetMessage();
+				else if (isDateToday(19, 3) || isDateToday(12, 5)) /* 🧲 */ printMagnetMessage();
 				else if (isDateToday(24, 12)) /* 🎄 */ ConsoleHelpers.WriteGradientLine(message, false, (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40));
 				else
 				{
