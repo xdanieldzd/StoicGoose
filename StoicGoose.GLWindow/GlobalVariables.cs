@@ -11,6 +11,8 @@ namespace StoicGoose
 #else
 		public static readonly bool IsDebugBuild = false;
 #endif
+		public static readonly bool EnableEasterEggs = true;
+
 		public static string[] Dump()
 		{
 			var vars = new List<string>();

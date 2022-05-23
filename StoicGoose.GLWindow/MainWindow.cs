@@ -51,14 +51,17 @@ namespace StoicGoose.GLWindow
 		bool isRunning = false, isPaused = false, isVerticalOrientation = false;
 		double framesPerSecond = 0.0;
 
+		/* Easter egg variables */
+		readonly Random random = new(Guid.NewGuid().GetHashCode());
+
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
 			if ((logWindow = new()) != null)
 			{
 				Console.SetOut(logWindow.TextWriter);
-				var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
-				Console.WriteLine($"{Ansi.Green}{message}");
-				Console.WriteLine(new string('-', message.Length));
+
+				PrintStartupMessage();
+				PrintAssemblies();
 			}
 		}
 
@@ -182,6 +185,38 @@ namespace StoicGoose.GLWindow
 			SwapBuffers();
 
 			base.OnRenderFrame(args);
+		}
+
+		private void PrintStartupMessage()
+		{
+			var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
+			void printDefaultMessage() => Console.WriteLine($"{Ansi.Green}{message}");
+
+			if (!GlobalVariables.EnableEasterEggs)
+				printDefaultMessage();
+			else
+			{
+				bool isDateToday(int day, int month) => DateTime.Today.Day == day && DateTime.Today.Month == month;
+				void printMagnetMessage() => ConsoleHelpers.WriteGradientLine(message, true, (0x3E, 0x4F, 0x65), (0xDA, 0xE1, 0xEA), (0xEE, 0x70, 0x7D));
+
+				if (isDateToday(31, 3)) /* 🏳️‍⚧️ */ ConsoleHelpers.WriteGradientLine(message, false, (91, 207, 250), (245, 171, 185), (255, 255, 255), (245, 171, 185), (17, 168, 205));
+				else if (isDateToday(19, 3)) /* 🧲 */ printMagnetMessage();
+				else if (isDateToday(24, 12)) /* 🎄 */ ConsoleHelpers.WriteGradientLine(message, false, (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40));
+				else
+				{
+					var randomTime = DateTime.Today.AddMinutes(random.Next(24 * 60));
+					if (randomTime >= DateTime.Now && randomTime.AddMinutes(30) < DateTime.Now) /* 🧲 */ printMagnetMessage();
+					else printDefaultMessage();
+				}
+			}
+
+			Console.WriteLine(new string('-', message.Length));
+		}
+
+		private void PrintAssemblies()
+		{
+			foreach (var assemblyName in AppDomain.CurrentDomain.GetAssemblies().Where(x => x.FullName.StartsWith(nameof(StoicGoose)) && x.FullName != Assembly.GetEntryAssembly().FullName).Select(x => x.GetName()))
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Using Assembly {assemblyName.Name} v{assemblyName.Version.Major:D3}{(assemblyName.Version.Minor != 0 ? $".{assemblyName.Version.Minor}" : string.Empty)}.");
 		}
 
 		private void CreateMachine(string typeName)
