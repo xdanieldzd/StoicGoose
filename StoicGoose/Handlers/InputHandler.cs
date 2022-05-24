@@ -100,23 +100,24 @@ namespace StoicGoose.Handlers
 		{
 			var list = new List<string>();
 
-			// TODO
+			foreach (var (_, _) in buttonMapping)
+			{
+				// TODO
+			}
 
 			return list;
 		}
 
-		public void PollInput(object sender, PollInputEventArgs e)
+		public void PollInput(ref List<string> buttonsPressed, ref List<string> buttonsHeld)
 		{
 			if (buttonMapping.Count > 0)
 				ControllerManager.Update();
 
-			e.ButtonsHeld.Clear();
-
-			e.ButtonsHeld.AddRange(GetMappedKeysHeld().Concat(GetMappedButtonsHeld()).Distinct());
-			e.ButtonsPressed.AddRange(GetMappedKeysPressed().Concat(GetMappedButtonsPressed()).Distinct());
+			buttonsHeld.AddRange(GetMappedKeysHeld().Concat(GetMappedButtonsHeld()).Distinct());
+			buttonsPressed.AddRange(GetMappedKeysPressed().Concat(GetMappedButtonsPressed()).Distinct());
 
 			lastPollHeld.Clear();
-			lastPollHeld.AddRange(e.ButtonsHeld);
+			lastPollHeld.AddRange(buttonsHeld);
 		}
 	}
 }

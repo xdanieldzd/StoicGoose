@@ -5,23 +5,22 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-using ImGuiNET;
-
-using StoicGoose.Debugging;
-using StoicGoose.Emulation;
-using StoicGoose.Emulation.Machines;
-using StoicGoose.Extensions;
+using StoicGoose.Common.Console;
+using StoicGoose.Common.Extensions;
+using StoicGoose.Common.OpenGL;
+using StoicGoose.Core.Display;
+using StoicGoose.Core.Machines;
 using StoicGoose.Handlers;
-using StoicGoose.Interface.Windows;
-using StoicGoose.OpenGL;
 
-using CartridgeMetadata = StoicGoose.Emulation.Cartridges.Metadata;
+using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
 namespace StoicGoose
 {
@@ -30,35 +29,33 @@ namespace StoicGoose
 		/* Constants */
 		readonly static int maxScreenSizeFactor = 5;
 		readonly static int maxRecentFiles = 15;
-
-		/* Log window */
-		readonly ImGuiLogWindow logWindow = default;
+		readonly static int statusIconSize = 12;
 
 		/* Various handlers */
 		DatabaseHandler databaseHandler = default;
 		GraphicsHandler graphicsHandler = default;
 		SoundHandler soundHandler = default;
 		InputHandler inputHandler = default;
-		ImGuiHandler imGuiHandler = default;
 		EmulatorHandler emulatorHandler = default;
 
 		/* Misc. windows */
 		SoundRecorderForm soundRecorderForm = default;
+		CheatsForm cheatsForm = default;
 
 		/* Misc. runtime variables */
-		bool isInitialized = false;
 		Type machineType = default;
 		readonly List<Binding> uiDataBindings = new();
 		bool isVerticalOrientation = false;
 		string internalEepromPath = string.Empty;
+		Vector2i statusIconsLocation = Vector2i.Zero;
+		Cheat[] cheats = default;
 
 		public MainForm()
 		{
 			InitializeComponent();
 
-			if ((logWindow = new()) != null)
+			if (InitializeConsole())
 			{
-				Console.SetOut(logWindow.TextWriter);
 				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
 				Console.WriteLine("HONK, HONK, pork cheek!");
 				Console.WriteLine("----------------------------------------");
@@ -81,10 +78,10 @@ namespace StoicGoose
 
 			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
 
-			InitializeHandlers();
-			InitializeWindows();
-
+			InitializeEmulatorHandler();
 			VerifyConfiguration();
+			InitializeOtherHandlers();
+			InitializeWindows();
 
 			SizeAndPositionWindow();
 			SetWindowTitleAndStatus();
@@ -142,8 +139,6 @@ namespace StoicGoose
 				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization done!");
-
-			isInitialized = true;
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
@@ -159,102 +154,45 @@ namespace StoicGoose
 			Program.SaveConfiguration();
 		}
 
-		private void InitializeHandlers()
+		private static bool InitializeConsole()
 		{
-			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool AllocConsole();
+			[DllImport("kernel32.dll")]
+			static extern IntPtr GetStdHandle(uint nStdHandle);
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+			[DllImport("kernel32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
 
-			emulatorHandler = new EmulatorHandler(machineType);
-			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
-
-			graphicsHandler = new GraphicsHandler(emulatorHandler.Machine.Metadata) { IsVerticalOrientation = isVerticalOrientation };
-
-			soundHandler = new SoundHandler(44100, 2);
-			soundHandler.SetVolume(1.0f);
-			soundHandler.SetMute(Program.Configuration.Sound.Mute);
-			soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
-
-			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
-			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
-			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.Metadata.VerticalControlRemap
-				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-				.ToDictionary(x => x[0], x => x[1]));
-
-			imGuiHandler = new ImGuiHandler(renderControl);
-			imGuiHandler.RegisterWindow(new ImGuiScreenWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI }, () => (graphicsHandler.DisplayTexture, isVerticalOrientation));
-
-			var disassemblerWindow = new ImGuiDisassemblerWindow() { IsWindowOpen = Program.Configuration.Debugging.StartInDebugUI };
-			disassemblerWindow.PauseEmulation += (s, e) => { PauseEmulation(); };
-			disassemblerWindow.UnpauseEmulation += (s, e) => { UnpauseEmulation(); };
-			imGuiHandler.RegisterWindow(disassemblerWindow, () => emulatorHandler);
-			imGuiHandler.RegisterWindow(new ImGuiMemoryWindow(), () => emulatorHandler);
-			imGuiHandler.RegisterWindow(new ImGuiMachineStatusWindow($"{emulatorHandler.Machine.Metadata.Model} System", machineType), () => emulatorHandler.Machine);
-			imGuiHandler.RegisterWindow(new ImGuiDisplayStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Display Controller", emulatorHandler.Machine.DisplayController.GetType()), () => emulatorHandler.Machine.DisplayController);
-			imGuiHandler.RegisterWindow(new ImGuiSoundStatusWindow($"{emulatorHandler.Machine.Metadata.Model} Sound Controller", emulatorHandler.Machine.SoundController.GetType()), () => emulatorHandler.Machine.SoundController);
-			imGuiHandler.RegisterWindow(new ImGuiSoundVisualizerWindow() { IsWindowOpen = true }, () => emulatorHandler.Machine.SoundController);
-
-			emulatorHandler.Machine.DisplayController.UpdateScreen += graphicsHandler.UpdateScreen;
-			emulatorHandler.Machine.SoundController.EnqueueSamples += soundHandler.EnqueueSamples;
-			emulatorHandler.Machine.PollInput += (s, e) =>
+			bool result = AllocConsole();
+			if (result)
 			{
-				var screenWindow = imGuiHandler.GetWindow<ImGuiScreenWindow>();
-				if ((screenWindow.IsWindowOpen && screenWindow.IsFocused) || (!screenWindow.IsWindowOpen && !ImGui.IsWindowFocused(ImGuiFocusedFlags.AnyWindow)))
-					inputHandler.PollInput(s, e);
-
-				if (e.ButtonsPressed.Contains("Volume"))
-					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
-			};
-			emulatorHandler.Machine.EndOfFrame += (s, e) => { /* anything to do here...? */ };
-			emulatorHandler.Machine.BreakpointHit += (s, e) =>
-			{
-				PauseEmulation();
-				imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
-			};
-			emulatorHandler.ThreadHasPaused += emulatorHandler.Machine.ThreadHasPaused;
-			emulatorHandler.ThreadHasUnpaused += emulatorHandler.Machine.ThreadHasUnpaused;
-
-			renderControl.Resize += (s, e) => { if (s is Control control) imGuiHandler.Resize(control.ClientSize.Width, control.ClientSize.Height); };
-			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
-			renderControl.Paint += (s, e) =>
-			{
-				var isScreenWindowOpen = imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen;
-
-				imGuiHandler.BeginFrame();
-
-				if (!isScreenWindowOpen) graphicsHandler.SetClearColor(Color.Black);
-				else graphicsHandler.SetClearColor(Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
-
-				graphicsHandler.ClearFrame();
-
-				if (!isScreenWindowOpen) graphicsHandler.DrawFrame();
-				else graphicsHandler.BindTextures();
-
-				emulatorHandler.Machine.DrawCheatsAndBreakpointWindows(); // TODO: refactor cheats handling
-				logWindow.Draw(null);
-				imGuiHandler.EndFrame();
-			};
-
-			internalEepromPath = Path.Combine(Program.InternalDataPath, emulatorHandler.Machine.Metadata.InternalEepromFilename);
+				var consoleHandle = GetStdHandle(0xFFFFFFF5); // STD_OUTPUT_HANDLE
+				if (GetConsoleMode(consoleHandle, out uint lpMode))
+					SetConsoleMode(consoleHandle, lpMode | 0x0004); // ENABLE_VIRTUAL_TERMINAL_PROCESSING
+			}
+			return result;
 		}
 
-		private void InitializeWindows()
+		private void InitializeEmulatorHandler()
 		{
-			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
-
-			emulatorHandler.Machine.SoundController.EnqueueSamples += soundRecorderForm.EnqueueSamples;
+			emulatorHandler = new EmulatorHandler(machineType);
+			emulatorHandler.SetFpsLimiter(Program.Configuration.General.LimitFps);
 		}
 
 		private void VerifyConfiguration()
 		{
-			var metadata = emulatorHandler.Machine.Metadata;
-
-			foreach (var button in metadata.GameControls.Replace(" ", "").Split(','))
+			foreach (var button in emulatorHandler.Machine.GameControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.GameControls.ContainsKey(button))
 					Program.Configuration.Input.GameControls[button] = new();
 			}
 
-			foreach (var button in metadata.HardwareControls.Replace(" ", "").Split(','))
+			foreach (var button in emulatorHandler.Machine.HardwareControls.Replace(" ", "").Split(','))
 			{
 				if (!Program.Configuration.Input.SystemControls.ContainsKey(button))
 					Program.Configuration.Input.SystemControls[button] = new();
@@ -263,14 +201,101 @@ namespace StoicGoose
 			if (Program.Configuration.Video.ScreenSize < 2 || Program.Configuration.Video.ScreenSize > maxScreenSizeFactor)
 				Program.Configuration.Video.ResetToDefault(nameof(Program.Configuration.Video.ScreenSize));
 
-			if (Program.Configuration.Video.Shader == string.Empty || !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader))
+			if (string.IsNullOrEmpty(Program.Configuration.Video.Shader) || (graphicsHandler != null && !graphicsHandler.AvailableShaders.Contains(Program.Configuration.Video.Shader)))
 				Program.Configuration.Video.Shader = GraphicsHandler.DefaultShaderName;
+		}
+
+		private void InitializeOtherHandlers()
+		{
+			databaseHandler = new DatabaseHandler(Program.NoIntroDatPath);
+
+			statusIconsLocation = machineType == typeof(WonderSwan) ? new(0, DisplayControllerCommon.ScreenHeight) : new(DisplayControllerCommon.ScreenWidth, 0);
+			graphicsHandler = new GraphicsHandler(machineType, new(emulatorHandler.Machine.ScreenWidth, emulatorHandler.Machine.ScreenHeight), statusIconsLocation, statusIconSize, machineType != typeof(WonderSwan), Program.Configuration.Video.Shader)
+			{
+				IsVerticalOrientation = isVerticalOrientation
+			};
+
+			soundHandler = new SoundHandler(44100, 2);
+			soundHandler.SetVolume(1.0f);
+			soundHandler.SetMute(Program.Configuration.Sound.Mute);
+			soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
+
+			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
+			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
+			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.VerticalControlRemap
+				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+				.ToDictionary(x => x[0], x => x[1]));
+
+			emulatorHandler.Machine.DisplayController.SendFramebuffer = graphicsHandler.UpdateScreen;
+			emulatorHandler.Machine.SoundController.SendSamples = (s) =>
+			{
+				soundHandler.EnqueueSamples(s);
+				soundRecorderForm.EnqueueSamples(s);
+			};
+
+			emulatorHandler.Machine.ReceiveInput += () =>
+			{
+				var buttonsPressed = new List<string>();
+				var buttonsHeld = new List<string>();
+
+				inputHandler.PollInput(ref buttonsPressed, ref buttonsHeld);
+
+				if (buttonsPressed.Contains("Volume"))
+					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
+
+				return (buttonsPressed, buttonsHeld);
+			};
+
+			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };
+			renderControl.Paint += (s, e) =>
+			{
+				graphicsHandler.SetClearColor(Color.Black);
+
+				graphicsHandler.ClearFrame();
+
+				if (emulatorHandler.Machine is MachineCommon machine)
+				{
+					var activeIcons = new List<string>() { "Power" };
+
+					if (machine.BuiltInSelfTestOk) activeIcons.Add("Initialized");
+
+					if (machine.DisplayController.IconSleep) activeIcons.Add("Sleep");
+					if (machine.DisplayController.IconVertical) activeIcons.Add("Vertical");
+					if (machine.DisplayController.IconHorizontal) activeIcons.Add("Horizontal");
+					if (machine.DisplayController.IconAux1) activeIcons.Add("Aux1");
+					if (machine.DisplayController.IconAux2) activeIcons.Add("Aux2");
+					if (machine.DisplayController.IconAux3) activeIcons.Add("Aux3");
+
+					if (machine.SoundController.HeadphonesConnected) activeIcons.Add("Headphones");
+					if (machine.SoundController.MasterVolume == 0) activeIcons.Add("Volume0");
+					if (machine.SoundController.MasterVolume == 1) activeIcons.Add("Volume1");
+					if (machine.SoundController.MasterVolume == 2) activeIcons.Add("Volume2");
+					if (machine.SoundController.MasterVolume == 3 && machine is WonderSwanColor) activeIcons.Add("Volume3");
+
+					graphicsHandler.UpdateStatusIcons(activeIcons);
+				}
+				graphicsHandler.DrawFrame();
+			};
+
+			internalEepromPath = Path.Combine(Program.InternalDataPath, $"{machineType.Name}.eep");
+		}
+
+		private void InitializeWindows()
+		{
+			soundRecorderForm = new(soundHandler.SampleRate, soundHandler.NumChannels);
+			cheatsForm = new()
+			{
+				Callback = (c) =>
+				{
+					if (emulatorHandler.IsRunning)
+						cheats = (Cheat[])c.Clone();
+				}
+			};
 		}
 
 		private void SizeAndPositionWindow()
 		{
-			if (imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen && isInitialized) return;
-
 			if (WindowState == FormWindowState.Maximized)
 				WindowState = FormWindowState.Normal;
 
@@ -291,23 +316,23 @@ namespace StoicGoose
 			if (emulatorHandler == null || graphicsHandler == null)
 				return ClientSize;
 
-			var statusIconsOnRight = emulatorHandler.Machine.Metadata.StatusIconsLocation.X > emulatorHandler.Machine.Metadata.StatusIconsLocation.Y;
+			var statusIconsOnRight = statusIconsLocation.X > statusIconsLocation.Y;
 
 			int screenWidth, screenHeight;
 
 			if (!isVerticalOrientation)
 			{
-				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.X;
-				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.Y;
-				if (statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
-				if (!statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+				screenWidth = emulatorHandler.Machine.ScreenWidth;
+				screenHeight = emulatorHandler.Machine.ScreenHeight;
+				if (statusIconsOnRight) screenWidth += statusIconSize;
+				if (!statusIconsOnRight) screenHeight += statusIconSize;
 			}
 			else
 			{
-				screenWidth = emulatorHandler.Machine.Metadata.ScreenSize.Y;
-				screenHeight = emulatorHandler.Machine.Metadata.ScreenSize.X;
-				if (!statusIconsOnRight) screenWidth += emulatorHandler.Machine.Metadata.StatusIconSize;
-				if (statusIconsOnRight) screenHeight += emulatorHandler.Machine.Metadata.StatusIconSize;
+				screenWidth = emulatorHandler.Machine.ScreenWidth;
+				screenHeight = emulatorHandler.Machine.ScreenHeight;
+				if (!statusIconsOnRight) screenWidth += statusIconSize;
+				if (statusIconsOnRight) screenHeight += statusIconSize;
 			}
 
 			return new(screenWidth * screenSize, (screenHeight * screenSize) + menuStrip.Height + statusStrip.Height);
@@ -324,7 +349,7 @@ namespace StoicGoose
 				titleStringBuilder.Append($" - [{Path.GetFileName(Program.Configuration.General.RecentFiles.First())}]");
 
 				var statusStringBuilder = new StringBuilder();
-				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Metadata.Manufacturer} {emulatorHandler.Machine.Metadata.Model}, ");
+				statusStringBuilder.Append($"Emulating {emulatorHandler.Machine.Manufacturer} {emulatorHandler.Machine.Model}, ");
 				statusStringBuilder.Append($"playing {databaseHandler.GetGameTitle(emulatorHandler.Machine.Cartridge.Crc32, emulatorHandler.Machine.Cartridge.SizeInBytes)} ({emulatorHandler.Machine.Cartridge.Metadata.GameIdString})");
 
 				tsslStatus.Text = statusStringBuilder.ToString();
@@ -369,7 +394,7 @@ namespace StoicGoose
 			}
 		}
 
-		private void AddToRecentFiles(string filename)
+		private static void AddToRecentFiles(string filename)
 		{
 			if (Program.Configuration.General.RecentFiles.Contains(filename))
 			{
@@ -458,10 +483,38 @@ namespace StoicGoose
 			muteSoundToolStripMenuItem.CheckedChanged += (s, e) => { soundHandler.SetMute(Program.Configuration.Sound.Mute); };
 
 			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
+			enableCheatsToolStripMenuItem.CheckedChanged += (s, e) => { emulatorHandler.Machine.ReadMemoryCallback = Program.Configuration.General.EnableCheats ? MachineReadMemoryCallback : default; };
 
-			CreateDataBinding(enableBreakpointsToolStripMenuItem.DataBindings, nameof(enableBreakpointsToolStripMenuItem.Checked), Program.Configuration.Debugging, nameof(Program.Configuration.Debugging.EnableBreakpoints));
+			ofdOpenRom.Filter = $"WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc|All Files (*.*)|*.*";
 
-			ofdOpenRom.Filter = $"{emulatorHandler.Machine.Metadata.RomFileFilter}|All Files (*.*)|*.*";
+			cheatListToolStripMenuItem.Enabled = pauseToolStripMenuItem.Enabled = resetToolStripMenuItem.Enabled = false;
+		}
+
+		private byte MachineReadMemoryCallback(uint address, byte value)
+		{
+			/* Critical for performance b/c called on every memory read; do not use "heavy" functionality (ex. LINQ) */
+
+			if (cheats == null || cheats.Length == 0)
+				return value;
+
+			foreach (var cheat in cheats)
+			{
+				if (cheat.Address != address || !cheat.IsEnabled)
+					continue;
+
+				if (cheat.Condition == CheatCondition.Always)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.LessThan && value < cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.LessThanOrEqual && value <= cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.GreaterThanOrEqual && value >= cheat.CompareValue)
+					return cheat.PatchedValue;
+				else if (cheat.Condition == CheatCondition.GreaterThan && value > cheat.CompareValue)
+					return cheat.PatchedValue;
+			}
+
+			return value;
 		}
 
 		private void LoadBootstrap(string filename)
@@ -509,8 +562,7 @@ namespace StoicGoose
 			CreateRecentFilesMenu();
 
 			LoadRam();
-			LoadCheatList();
-			LoadBreakpoints();
+			LoadCheats();
 
 			LoadBootstrap(emulatorHandler.Machine is WonderSwan ? Program.Configuration.General.BootstrapFile : Program.Configuration.General.BootstrapFileWSC);
 			LoadInternalEeprom();
@@ -519,6 +571,8 @@ namespace StoicGoose
 
 			SizeAndPositionWindow();
 			SetWindowTitleAndStatus();
+
+			cheatListToolStripMenuItem.Enabled = pauseToolStripMenuItem.Enabled = resetToolStripMenuItem.Enabled = true;
 
 			Program.SaveConfiguration();
 		}
@@ -535,24 +589,29 @@ namespace StoicGoose
 				emulatorHandler.Machine.LoadSaveData(data);
 		}
 
-		private void LoadCheatList()
+		private void LoadCheats()
 		{
 			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
-			emulatorHandler.Machine.LoadCheatList(File.Exists(path) ? path.DeserializeFromFile<List<MachineCommon.Cheat>>() : new List<MachineCommon.Cheat>());
-		}
+			if (!File.Exists(path)) return;
 
-		private void LoadBreakpoints()
-		{
-			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
-			emulatorHandler.Machine.LoadBreakpoints(File.Exists(path) ? path.DeserializeFromFile<List<Breakpoint>>() : new List<Breakpoint>());
+			cheats = path.DeserializeFromFile<Cheat[]>();
+			cheatsForm.SetCheatList(cheats);
 		}
 
 		private void SaveAllData()
 		{
 			SaveInternalEeprom();
 			SaveRam();
-			SaveCheatList();
-			SaveBreakpoints();
+			SaveCheats();
+		}
+
+		private void SaveInternalEeprom()
+		{
+			var data = emulatorHandler.Machine.GetInternalEeprom();
+			if (data.Length == 0) return;
+
+			using var stream = new FileStream(internalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+			stream.Write(data, 0, data.Length);
 		}
 
 		private void SaveRam()
@@ -566,31 +625,13 @@ namespace StoicGoose
 			stream.Write(data, 0, data.Length);
 		}
 
-		private void SaveCheatList()
+		private void SaveCheats()
 		{
-			var data = emulatorHandler.Machine.GetCheatList();
-			if (data.Count == 0) return;
-
-			var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
-			data.SerializeToFile(path);
-		}
-
-		private void SaveBreakpoints()
-		{
-			var data = emulatorHandler.Machine.GetBreakpoints();
-			if (data.Count == 0) return;
-
-			var path = Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.breakpoints.json");
-			data.SerializeToFile(path);
-		}
-
-		private void SaveInternalEeprom()
-		{
-			var data = emulatorHandler.Machine.GetInternalEeprom();
-			if (data.Length == 0) return;
-
-			using var stream = new FileStream(internalEepromPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-			stream.Write(data, 0, data.Length);
+			if (cheats != null && cheats.Length != 0)
+			{
+				var path = Path.Combine(Program.CheatsDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}.json");
+				cheats.SerializeToFile(path);
+			}
 		}
 
 		private void PauseEmulation()
@@ -714,73 +755,7 @@ namespace StoicGoose
 
 		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			emulatorHandler.Machine.CheatsWindow.IsWindowOpen = true;
-		}
-
-		private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiDisassemblerWindow>().IsWindowOpen = true;
-		}
-
-		private void screenWindowToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiScreenWindow>().IsWindowOpen = true;
-		}
-
-		private void memoryEditorToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiMemoryWindow>().IsWindowOpen = true;
-		}
-
-		private void systemRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiMachineStatusWindow>().IsWindowOpen = true;
-		}
-
-		private void displayRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiDisplayStatusWindow>().IsWindowOpen = true;
-		}
-
-		private void soundRegistersToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			imGuiHandler.GetWindow<ImGuiSoundStatusWindow>().IsWindowOpen = true;
-		}
-
-		private void breakpointsToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			emulatorHandler.Machine.BreakpointWindow.IsWindowOpen = true;
-		}
-
-		private void logWindowToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			logWindow.IsWindowOpen = true;
-		}
-
-		private void traceLogToolStripMenuItem_Click(object sender, EventArgs e)
-		{
-			if (!emulatorHandler.IsRunning) return;
-
-			if (sender is ToolStripMenuItem traceLogMenuItem)
-			{
-				if (!traceLogMenuItem.Checked)
-				{
-					PauseEmulation();
-
-					if (MessageBox.Show("Trace logs are highly verbose and can consume a lot of storage space, even during short sessions.\n\nDo you still want to continue and enable logging?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-					{
-						emulatorHandler.Machine.BeginTraceLog(Path.Combine(Program.DebuggingDataPath, $"{Path.GetFileNameWithoutExtension(Program.Configuration.General.RecentFiles.First())}-{DateTime.Now:yyyyMMdd-HHmmss}.log"));
-						traceLogMenuItem.Checked = true;
-					}
-
-					UnpauseEmulation();
-				}
-				else
-				{
-					emulatorHandler.Machine.EndTraceLog();
-					traceLogMenuItem.Checked = false;
-				}
-			}
+			cheatsForm.Show();
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)

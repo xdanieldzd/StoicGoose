@@ -1,13 +1,13 @@
 # StoicGoose
-StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2019 under Windows 10 Pro 21H2, and uses .NET Framework 5.0 along with the following NuGet packages:
+StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET Framework 6.0 along with the following NuGet packages:
 
-* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.1 (for OpenGL rendering, OpenAL sound, etc.)
+* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.2 (for OpenGL rendering, OpenAL sound, etc.)
 * [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
 * [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.1 (for configuration, cheats and breakpoint storage)
 * [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugging UI)
 * [GitInfo](https://www.nuget.org/packages/GitInfo) 2.2.0 (for versioning information)
-* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.1.0 (for breakpoint support)
-* [Gee.External.Capstone](https://www.nuget.org/packages/Gee.External.Capstone) 2.0.2 (for x86 disassembly)
+* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
+* [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
 
 ## Screenshots
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
@@ -29,5 +29,4 @@ Various debugging features:
 ## Acknowledgements & Attribution
 * The XML data files in `Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
 * The file `WS-Icon.ico` is derived from "[WonderSwan-Black-Left.jpg](https://en.wikipedia.org/wiki/File:WonderSwan-Black-Left.jpg)" on [Wikipedia](https://en.wikipedia.org), in revision from 25 May 2014 by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos), used as public domain.
-* The file `Goose.png` is derived from "[Goose vectorized](https://openclipart.org/detail/282727/goose-vectorized)" on [Openclipart](https://openclipart.org/), uploaded on 7 July 2017 by [Firkin](https://openclipart.org/artist/Firkin), and used under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 * My personal thanks and gratitude to the late Near, who has always been encouraging and inspiring on my amateur emulator developer journey. They are sorely missed.

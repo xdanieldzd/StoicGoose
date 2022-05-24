@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <Company>xdaniel</Company>
+    <Authors />
+    <Description>16-bit handheld game system emulator</Description>
+    <Copyright>Written 2021-2022 by xdaniel</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
+    <StartupObject>StoicGoose.GLWindow.Program</StartupObject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Goose-Logo.rgba" />
+    <None Remove="Assets\WS-Icon.rgba" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
+    <EmbeddedResource Include="Assets\WS-Icon.rgba" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.2.0" />
+    <PackageReference Include="Iced" Version="1.17.0" />
+    <PackageReference Include="ImGui.NET" Version="1.87.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="OpenTK" Version="4.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StoicGoose.Common\StoicGoose.Common.csproj" />
+    <ProjectReference Include="..\StoicGoose.Core\StoicGoose.Core.csproj" />
+  </ItemGroup>
+
+</Project>

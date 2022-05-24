@@ -1,7 +1,5 @@
 ﻿using System.Windows.Forms;
 
-using StoicGoose.DataStorage;
-
 using static StoicGoose.WinForms.ControlHelpers;
 
 namespace StoicGoose
@@ -17,9 +15,6 @@ namespace StoicGoose
 			InitializeComponent();
 
 			InitializePages();
-
-			pbBackground.BackgroundImage = Utilities.GetEmbeddedBitmap("Assets.Goose.png");
-			pbBackground.BackgroundImageLayout = ImageLayout.Zoom;
 		}
 
 		private void InitializePages()
@@ -54,11 +49,6 @@ namespace StoicGoose
 				pageInputSystem.Append(CreateKeyInput(Configuration.Input, nameof(Configuration.Input.SystemControls), key));
 			pageInput.Append(pageInputSystem);
 			pageInput.Attach(tvSettings);
-
-			var pageDebug = new SettingsPage(Configuration, nameof(Configuration.Debugging));
-			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.StartInDebugUI)));
-			pageDebug.Append(CreateToggle(Configuration.Debugging, nameof(Configuration.Debugging.EnableBreakpoints)));
-			pageDebug.Attach(tvSettings);
 		}
 
 		private void tvSettings_BeforeSelect(object sender, TreeViewCancelEventArgs e)
@@ -74,7 +64,6 @@ namespace StoicGoose
 				}
 				lblNothing.Text = string.Empty;
 				lblNothing.Visible = false;
-				pbBackground.Visible = false;
 
 				tlpSettings.ResumeLayout();
 				tlpSettings.Visible = true;
@@ -85,7 +74,6 @@ namespace StoicGoose
 
 				lblNothing.Text = "Honk.";
 				lblNothing.Visible = true;
-				pbBackground.Visible = true;
 			}
 		}
 	}

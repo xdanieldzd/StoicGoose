@@ -1,0 +1,33 @@
+name: Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        project: ['StoicGoose', 'StoicGoose.GLWindow']
+        include:
+          - project: StoicGoose
+            csproj: StoicGoose\StoicGoose.csproj
+            artifacts: StoicGoose-artifacts
+          - project: StoicGoose.GLWindow
+            csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
+            artifacts: StoicGoose.GLWindow-artifacts
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Publish
+        run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifacts }}
+          path: D:\a\StoicGoose\StoicGoose\release\*
