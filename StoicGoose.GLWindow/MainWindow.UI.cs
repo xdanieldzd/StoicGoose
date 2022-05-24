@@ -19,6 +19,7 @@ namespace StoicGoose.GLWindow
 		SoundControllerStatusWindow soundControllerStatusWindow = default;
 		MemoryPatchWindow memoryPatchWindow = default;
 		BreakpointWindow breakpointWindow = default;
+		MemoryEditorWindow memoryEditorWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutBox = default;
@@ -46,6 +47,7 @@ namespace StoicGoose.GLWindow
 
 			memoryPatchWindow = new();
 			breakpointWindow = new();
+			memoryEditorWindow = new();
 
 			void reinitMachineIfRunning()
 			{
@@ -106,14 +108,17 @@ namespace StoicGoose.GLWindow
 			{
 				SubItems = new MenuItem[]
 				{
-					new("Display",
+					new(displayWindow.WindowTitle,
 					(_) => { displayWindow.IsWindowOpen = !displayWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = displayWindow.IsWindowOpen; }),
 					new("-"),
-					new("Disassembler",
+					new(disassemblerWindow.WindowTitle,
 					(_) => { disassemblerWindow.IsWindowOpen = !disassemblerWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = disassemblerWindow.IsWindowOpen; }),
-					new("Controller Status")
+					new(memoryEditorWindow.WindowTitle,
+					(_) => { memoryEditorWindow.IsWindowOpen = !memoryEditorWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = memoryEditorWindow.IsWindowOpen; }),
+					new("System Controllers")
 					{
 						SubItems = new MenuItem[]
 						{
@@ -129,14 +134,14 @@ namespace StoicGoose.GLWindow
 						}
 					},
 					new("-"),
-					new("Breakpoints",
+					new(breakpointWindow.WindowTitle,
 					(_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = breakpointWindow.IsWindowOpen; }),
-					new("Memory Patches",
+					new(memoryPatchWindow.WindowTitle,
 					(_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
 					new("-"),
-					new("Show Log",
+					new(logWindow.WindowTitle,
 					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
 				}

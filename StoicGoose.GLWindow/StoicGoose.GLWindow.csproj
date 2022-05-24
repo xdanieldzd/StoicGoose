@@ -16,6 +16,7 @@
     <OutputType>Exe</OutputType>
     <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
     <StartupObject>StoicGoose.GLWindow.Program</StartupObject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
