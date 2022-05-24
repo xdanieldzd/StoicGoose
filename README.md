@@ -4,12 +4,14 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.2 (for OpenGL rendering, OpenAL sound, etc.)
 * [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
 * [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.1 (for configuration, cheats and breakpoint storage)
-* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugging UI)
 * [GitInfo](https://www.nuget.org/packages/GitInfo) 2.2.0 (for versioning information)
-* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
+* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugger UI)
 * [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
+* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
 
-## Screenshots
+Two flavors are available: a Windows Forms application meant for playing games (StoicGoose), and a debugger with a user interface created with Dear ImGui.
+
+## Screenshots (v000.6 WIP)
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Logo.png" alt="Screenshot Bootstraps 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Menu.png" alt="Screenshot Bootstraps 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Logo.png" alt="Screenshot Bootstraps 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Menu.png" alt="Screenshot Bootstraps 4" width="50%">
@@ -22,7 +24,7 @@ Various WonderSwan Color games, using Dot-Matrix Color shader:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png" alt="Screenshot WSC Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png" alt="Screenshot WSC Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png" alt="Screenshot WSC Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png" alt="Screenshot WSC Games 4" width="50%">
 
-Various debugging features:
+Various debugging features (**outdated!**):
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/Debugger.png" alt="Screenshot Debugger">
 
