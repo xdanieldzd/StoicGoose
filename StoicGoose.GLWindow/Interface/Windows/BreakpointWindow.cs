@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 
 using ImGuiNET;
 
@@ -10,8 +13,10 @@ namespace StoicGoose.GLWindow.Interface.Windows
 {
 	public class BreakpointWindow : WindowBase
 	{
-		const string expressionFormatHelpText = "TODO: Help text goes here!";
 		const string invalidBreakpointMsgBoxTitleId = "Error##invalid-bp";
+		const int maxExpressionLength = 512;
+
+		string expressionFormatHelpText = string.Empty;
 
 		Breakpoint newBreakpointToAdd = default;
 		int breakpointToEditIdx = -1, breakpointToDeleteIdx = -1;
@@ -21,6 +26,26 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		bool isWindowDisabled = false;
 
 		public BreakpointWindow() : base("Breakpoints", new NumericsVector2(800f, 300f), ImGuiCond.FirstUseEver) { }
+
+		protected override void InitializeWindow(object userData)
+		{
+			var cpuRegisters = string.Join(", ", typeof(BreakpointVariables).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).Where(x => x.SetMethod == null).Select(x => x.Name));
+			var arrays = string.Join(", ", typeof(BreakpointVariables).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty).Where(x => x.SetMethod?.IsPrivate == true).Select(x => x.Name + "[]"));
+
+			var helpTextBuilder = new StringBuilder();
+			helpTextBuilder.AppendLine("Type a boolean expression here. C#-style logical operators are supported. Hexadecimal (0x-prefix), binary (0b-prefix) and decimal numbers are supported. Changing evaluation order via parentheses ( and ) is supported.");
+			helpTextBuilder.AppendLine();
+			helpTextBuilder.AppendLine("Supported CPU registers:");
+			helpTextBuilder.AppendLine($" {cpuRegisters}");
+			helpTextBuilder.AppendLine();
+			helpTextBuilder.AppendLine("Supported arrays:");
+			helpTextBuilder.AppendLine($" {arrays}");
+			helpTextBuilder.AppendLine();
+			helpTextBuilder.AppendLine("Example:");
+			helpTextBuilder.AppendLine($" {nameof(BreakpointVariables.cs)} == 0xD100 && {nameof(BreakpointVariables.ip)} == 0x0218 && {nameof(BreakpointVariables.memoryMap)}[0xBEEF] == 69");
+
+			expressionFormatHelpText = helpTextBuilder.ToString();
+		}
 
 		protected override void DrawWindow(object userData)
 		{
@@ -117,7 +142,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.SetNextItemWidth(400f);
-					ImGui.InputText("Expression##add-desc", ref newBreakpointToAdd.Expression, 512, ImGuiInputTextFlags.EnterReturnsTrue);
+					ImGui.InputText("Expression##add-desc", ref newBreakpointToAdd.Expression, maxExpressionLength, ImGuiInputTextFlags.EnterReturnsTrue);
 					ImGui.SameLine();
 					Helpers.HelpMarker(expressionFormatHelpText);
 
@@ -215,7 +240,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 					ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new NumericsVector2(5f));
 
 					ImGui.SetNextItemWidth(400f);
-					if (ImGui.InputText("Expression##edit-desc", ref newBreakpointExpression, 512, ImGuiInputTextFlags.EnterReturnsTrue))
+					if (ImGui.InputText("Expression##edit-desc", ref newBreakpointExpression, maxExpressionLength, ImGuiInputTextFlags.EnterReturnsTrue))
 						applyBreakpointEdit = true;
 					ImGui.SameLine();
 					Helpers.HelpMarker(expressionFormatHelpText);

@@ -37,7 +37,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 		public TextWriter TextWriter => logWriter;
 
-		public LogWindow() : base("Log", new NumericsVector2(450f, 500f), ImGuiCond.FirstUseEver)
+		public LogWindow() : base("Log", new NumericsVector2(500f, 530f), ImGuiCond.FirstUseEver)
 		{
 			clipperObject = new ImGuiListClipper();
 			clipperHandle = GCHandle.Alloc(clipperObject, GCHandleType.Pinned);

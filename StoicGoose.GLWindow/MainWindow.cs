@@ -73,12 +73,12 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));
+			imGuiHandler.RegisterWindow(breakpointWindow, () => breakpoints);
+			imGuiHandler.RegisterWindow(memoryEditorWindow, () => (machine, isRunning));
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
 			imGuiHandler.RegisterWindow(memoryPatchWindow, () => memoryPatches);
-			imGuiHandler.RegisterWindow(breakpointWindow, () => breakpoints);
-			imGuiHandler.RegisterWindow(memoryEditorWindow, () => (machine, isRunning));
 
 			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
 			{
@@ -113,6 +113,9 @@ namespace StoicGoose.GLWindow
 			Program.Configuration.WindowsToRestore = imGuiHandler.OpenWindows.Select(x => x.GetType().FullName).ToList();
 
 			Program.SaveConfiguration();
+
+			/* Ensure imgui.ini gets written */
+			ImGuiNET.ImGui.SaveIniSettingsToDisk(ImGuiNET.ImGui.GetIO().IniFilename);
 
 			soundHandler.Dispose();
 
@@ -371,10 +374,12 @@ namespace StoicGoose.GLWindow
 				{
 					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Breakpoint hit: ({bp.Expression})");
 
+					breakpointHitMessageBox.Message = $"Breakpoint with condition ({bp.Expression}) was hit.\n\nDisassembler window has been opened.";
+					breakpointHitMessageBox.IsOpen = true;
+
 					isPaused = true;
 					lastBreakpointHit = bp;
 
-					imGuiHandler.GetWindow<LogWindow>().IsWindowOpen = true;
 					imGuiHandler.GetWindow<DisassemblerWindow>().IsWindowOpen = true;
 
 					return true;

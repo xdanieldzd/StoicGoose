@@ -21,12 +21,12 @@ namespace StoicGoose.GLWindow.Debugging
 		public ushort es => machine.Cpu.ES;
 		public ushort ip => machine.Cpu.IP;
 
-		public BreakpointMemoryArray memory { get; private set; } = default;
+		public BreakpointMemoryArray memoryMap { get; private set; } = default;
 
 		public BreakpointVariables(IMachine machine)
 		{
 			this.machine = machine;
-			memory = new(this.machine);
+			memoryMap = new(this.machine);
 		}
 	}
 }

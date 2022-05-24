@@ -22,7 +22,7 @@ namespace StoicGoose.GLWindow
 		MemoryEditorWindow memoryEditorWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
-		MessageBox aboutBox = default;
+		MessageBox aboutMessageBox = default, breakpointHitMessageBox = default;
 		StatusBarItem statusMessageItem = default, statusRunningItem = default, statusFpsItem = default;
 		FileDialog openRomDialog = default, selectBootstrapRomDialog = default;
 
@@ -204,11 +204,11 @@ namespace StoicGoose.GLWindow
 			{
 				SubItems = new MenuItem[]
 				{
-					new("About...", (_) => { aboutBox.IsOpen = true; })
+					new("About...", (_) => { aboutMessageBox.IsOpen = true; })
 				}
 			};
 
-			aboutBox = new(
+			aboutMessageBox = new(
 				"About",
 				$"{Program.ProductName} {Program.GetVersionString(true)}\r\n" +
 				$"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description}\r\n" +
@@ -216,6 +216,8 @@ namespace StoicGoose.GLWindow
 				$"{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright}\r\n" +
 				$"{ThisAssembly.Git.RepositoryUrl}",
 				"Okay");
+
+			breakpointHitMessageBox = new("Breakpoint Hit", string.Empty, "Okay");
 
 			statusMessageItem = new($"{Program.ProductName} {Program.GetVersionString(true)} ready!") { ShowSeparator = false };
 			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
@@ -243,7 +245,7 @@ namespace StoicGoose.GLWindow
 			};
 
 			menuHandler = new(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
-			messageBoxHandler = new(aboutBox);
+			messageBoxHandler = new(aboutMessageBox, breakpointHitMessageBox);
 			statusBarHandler = new();
 			fileDialogHandler = new(openRomDialog, selectBootstrapRomDialog);
 		}
