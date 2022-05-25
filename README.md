@@ -9,7 +9,7 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
 * [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
 
-Two flavors are available: a Windows Forms application meant for playing games (StoicGoose), and a debugger with a user interface created with Dear ImGui.
+Two flavors are available: a Windows Forms application meant for playing games (StoicGoose), and a debugger with a user interface created with Dear ImGui (StoicGoose.GLWindow).
 
 ## Screenshots (v000.6 WIP)
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
