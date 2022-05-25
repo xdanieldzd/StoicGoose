@@ -13,7 +13,6 @@ using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Shaders.Bundles;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
-using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 
 using Buffer = StoicGoose.Common.OpenGL.Buffer;
@@ -153,7 +152,7 @@ namespace StoicGoose.Handlers
 		{
 			var shaderNames = new List<string>();
 
-			if (!string.IsNullOrEmpty(Resources.GetEmbeddedShaderFile($"{DefaultShaderName}.{DefaultManifestFilename}")))
+			if (!string.IsNullOrEmpty(Utilities.GetEmbeddedShaderFile($"{DefaultShaderName}.{DefaultManifestFilename}")))
 				shaderNames.Add(DefaultShaderName);
 
 			foreach (var file in new DirectoryInfo(Program.ShaderPath).EnumerateFiles("*.json", SearchOption.AllDirectories))
@@ -183,7 +182,7 @@ namespace StoicGoose.Handlers
 		{
 			foreach (var (name, (filename, _)) in statusIconData[machineType])
 			{
-				var texture = new Texture(Resources.GetEmbeddedSystemIcon(filename));
+				var texture = new Texture(Utilities.GetEmbeddedSystemIcon(filename));
 				texture.SetTextureFilter(TextureMinFilter.Linear, TextureMagFilter.Linear);
 
 				iconTextures.Add(name, texture);
@@ -211,16 +210,16 @@ namespace StoicGoose.Handlers
 
 		private void InitializeBaseShaders()
 		{
-			commonVertexShaderSource = Resources.GetEmbeddedShaderFile("Vertex.glsl");
-			commonFragmentShaderBaseSource = Resources.GetEmbeddedShaderFile("FragmentBase.glsl");
+			commonVertexShaderSource = Utilities.GetEmbeddedShaderFile("Vertex.glsl");
+			commonFragmentShaderBaseSource = Utilities.GetEmbeddedShaderFile("FragmentBase.glsl");
 		}
 
 		private (BundleManifest, ShaderProgram) LoadShaderBundle(string name)
 		{
 			string manifestJson, fragmentSource;
 
-			if (!string.IsNullOrEmpty(manifestJson = Resources.GetEmbeddedShaderFile($"{name}.{DefaultManifestFilename}")))
-				fragmentSource = Resources.GetEmbeddedShaderFile($"{name}.{DefaultSourceFilename}");
+			if (!string.IsNullOrEmpty(manifestJson = Utilities.GetEmbeddedShaderFile($"{name}.{DefaultManifestFilename}")))
+				fragmentSource = Utilities.GetEmbeddedShaderFile($"{name}.{DefaultSourceFilename}");
 			else
 			{
 				var externalManifestFile = Path.Combine(Program.ShaderPath, name, DefaultManifestFilename);

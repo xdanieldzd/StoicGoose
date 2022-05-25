@@ -5,6 +5,9 @@ using System.Runtime.Versioning;
 
 using Microsoft.Win32;
 
+using StoicGoose.Common.Drawing;
+using StoicGoose.Common.Utilities;
+
 namespace StoicGoose
 {
 	public static class Utilities
@@ -30,5 +33,8 @@ namespace StoicGoose
 			}
 			return null;
 		}
+
+		public static RgbaFile GetEmbeddedSystemIcon(string name) => Resources.GetEmbeddedRgbaFile($"Assets.Icons.{name}");
+		public static string GetEmbeddedShaderFile(string name) => Resources.GetEmbeddedText($"Assets.Shaders.{name}");
 	}
 }

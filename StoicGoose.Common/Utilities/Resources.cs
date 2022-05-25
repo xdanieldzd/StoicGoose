@@ -28,15 +28,5 @@ namespace StoicGoose.Common.Utilities
 			using var reader = new StreamReader(stream);
 			return reader.ReadToEnd();
 		}
-
-		public static RgbaFile GetEmbeddedSystemIcon(string name)
-		{
-			return GetEmbeddedRgbaFile($"Assets.Icons.{name}");
-		}
-
-		public static string GetEmbeddedShaderFile(string name)
-		{
-			return GetEmbeddedText($"Assets.Shaders.{name}");
-		}
 	}
 }

@@ -42,39 +42,37 @@ namespace StoicGoose
 
 		static Program()
 		{
-			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
-			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
-			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
-			Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
-			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
+				Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
+				Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+				Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
+				Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 
-			if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
-				throw new DirectoryNotFoundException("Shader directory missing");
+				if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
+					throw new DirectoryNotFoundException("Shader directory missing");
 
-			if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
-				throw new DirectoryNotFoundException("No-Intro .dat directory missing");
+				if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
+					throw new DirectoryNotFoundException("No-Intro .dat directory missing");
+			}
+			catch (DirectoryNotFoundException e)
+			{
+				MessageBox.Show($"Failed to start application: {e.Message}.\n\nPlease ensure that all files have been extracted.",
+					$"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Environment.Exit(-1);
+			}
 		}
 
 		[STAThread]
 		static void Main()
 		{
-			/*
-			var bmp = new System.Drawing.Bitmap(@"D:\User Data\Pictures\WS\Goose-Logo.png");
-			var b = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
-			var data = new byte[bmp.Width * bmp.Height * 4];
-			System.Runtime.InteropServices.Marshal.Copy(b.Scan0, data, 0, data.Length);
-			bmp.UnlockBits(b);
-			var tmp = new StoicGoose.Common.Drawing.RgbaFile((uint)bmp.Width, (uint)bmp.Height, data);
-			tmp.Save(@"D:\User Data\Pictures\WS\Goose-Logo.rgba");
-
-			return;
-			*/
-
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance)
 			{
-				MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.", $"{Application.ProductName} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.",
+					$"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Environment.Exit(-1);
 			}
 
