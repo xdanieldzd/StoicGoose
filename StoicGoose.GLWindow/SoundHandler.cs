@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using OpenTK.Audio.OpenAL;
+
+using StoicGoose.Common.Console;
 
 namespace StoicGoose.GLWindow
 {
 	public class SoundHandler : IDisposable
 	{
 		const int numBuffers = 4, maxQueueLength = 2;
+
+		public bool IsAvailable { get; private set; } = false;
 
 		public int SampleRate { get; private set; } = 0;
 		public int NumChannels { get; private set; } = 0;
@@ -27,15 +32,35 @@ namespace StoicGoose.GLWindow
 			SampleRate = sampleRate;
 			NumChannels = numChannels;
 
-			var device = ALC.OpenDevice(null);
-			context = ALC.CreateContext(device, new ALContextAttributes());
-			ALC.MakeContextCurrent(context);
+			try
+			{
+				var device = ALC.OpenDevice(null);
+				context = ALC.CreateContext(device, new ALContextAttributes());
+				ALC.MakeContextCurrent(context);
 
-			source = AL.GenSource();
+				source = AL.GenSource();
 
-			buffers = AL.GenBuffers(numBuffers);
-			for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
-			AL.SourcePlay(source);
+				buffers = AL.GenBuffers(numBuffers);
+				for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
+				AL.SourcePlay(source);
+
+				IsAvailable = true;
+
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization successful.");
+			}
+			catch (DllNotFoundException e)
+			{
+				if (e.TargetSite.Module.Assembly == typeof(AL).Assembly)
+				{
+					var filename = Regex.Match(e.Message, "'(.*?)'").Groups[1].Value;
+					var message = !string.IsNullOrEmpty(filename) ? $"Initialization failed; '{filename}' missing." : "Initialization failed; OpenAL implementation missing.";
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, message);
+
+					IsAvailable = false;
+				}
+				else
+					throw;
+			}
 		}
 
 		~SoundHandler()
@@ -45,14 +70,17 @@ namespace StoicGoose.GLWindow
 
 		public void Dispose()
 		{
-			foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
-				AL.DeleteBuffer(buffer);
+			if (IsAvailable)
+				foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
+					AL.DeleteBuffer(buffer);
 
 			GC.SuppressFinalize(this);
 		}
 
 		public void Update()
 		{
+			if (!IsAvailable) return;
+
 			AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
 			while (buffersProcessed-- > 0)
 			{
@@ -68,11 +96,15 @@ namespace StoicGoose.GLWindow
 
 		public void SetVolume(float value)
 		{
+			if (!IsAvailable) return;
+
 			AL.Source(source, ALSourcef.Gain, volume = value);
 		}
 
 		public void SetMute(bool mute)
 		{
+			if (!IsAvailable) return;
+
 			AL.Source(source, ALSourcef.Gain, mute ? 0.0f : volume);
 		}
 
@@ -104,6 +136,8 @@ namespace StoicGoose.GLWindow
 		{
 			if (sampleQueue.Count > 0)
 				lastSamples = sampleQueue.Dequeue();
+
+			if (!IsAvailable) return;
 
 			if (lastSamples != null)
 			{

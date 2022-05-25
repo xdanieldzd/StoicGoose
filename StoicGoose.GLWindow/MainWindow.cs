@@ -32,10 +32,10 @@ namespace StoicGoose.GLWindow
 		byte[] initialScreenImage = default;
 
 		/* Sound */
-		readonly SoundHandler soundHandler = new(44100, 2);
+		SoundHandler soundHandler = default;
 
 		/* Input */
-		readonly InputHandler inputHandler = new();
+		InputHandler inputHandler = default;
 
 		/* Emulation */
 		IMachine machine = default;
@@ -68,6 +68,9 @@ namespace StoicGoose.GLWindow
 		protected override void OnLoad()
 		{
 			InitializeUI();
+
+			soundHandler = new(44100, 2);
+			inputHandler = new();
 
 			imGuiHandler = new(this);
 			imGuiHandler.RegisterWindow(logWindow, () => null);

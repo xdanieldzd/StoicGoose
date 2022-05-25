@@ -1,16 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 
+using StoicGoose.Common.Console;
+
 namespace StoicGoose.Handlers
 {
 	public class SoundHandler
 	{
 		readonly static string threadName = $"{Application.ProductName}Audio";
+
+		public bool IsAvailable { get; private set; } = false;
 
 		Thread thread = default;
 		volatile bool threadRunning = false, threadPaused = false;
@@ -41,10 +47,33 @@ namespace StoicGoose.Handlers
 			SampleRate = sampleRate;
 			NumChannels = numChannels;
 
-			InitializeOpenAL();
-			InitializeFilters();
+			try
+			{
+				InitializeOpenAL();
+				InitializeFilters();
+
+				IsAvailable = true;
+			}
+			catch (DllNotFoundException e)
+			{
+				if (e.TargetSite.Module.Assembly == typeof(AL).Assembly)
+				{
+					var filename = Regex.Match(e.Message, "'(.*?)'").Groups[1].Value;
+					var message = !string.IsNullOrEmpty(filename) ?
+						$"The OpenAL library '{filename}' was not found.\n\nSound emulation will be disabled." :
+						"An OpenAL implementation was not found.\n\nSound emulation will be disabled.";
+
+					MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+					IsAvailable = false;
+				}
+				else
+					throw;
+			}
 
 			Startup();
+
+			ConsoleHelpers.WriteLog(IsAvailable ? ConsoleLogSeverity.Success : ConsoleLogSeverity.Error, this, $"Initialization {(IsAvailable ? "successful" : "failed")}.");
 		}
 
 		private void InitializeOpenAL()
@@ -66,9 +95,12 @@ namespace StoicGoose.Handlers
 
 		public void Startup()
 		{
-			buffers = AL.GenBuffers(numBuffers);
-			for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
-			AL.SourcePlay(source);
+			if (IsAvailable)
+			{
+				buffers = AL.GenBuffers(numBuffers);
+				for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
+				AL.SourcePlay(source);
+			}
 
 			threadRunning = true;
 			threadPaused = false;
@@ -96,8 +128,9 @@ namespace StoicGoose.Handlers
 
 			thread?.Join();
 
-			foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
-				AL.DeleteBuffer(buffer);
+			if (IsAvailable)
+				foreach (var buffer in buffers.Where(x => AL.IsBuffer(x)))
+					AL.DeleteBuffer(buffer);
 
 			sampleQueue.Clear();
 		}
@@ -114,7 +147,7 @@ namespace StoicGoose.Handlers
 					isPauseRequested = false;
 				}
 
-				if (!threadPaused)
+				if (IsAvailable && !threadPaused)
 				{
 					AL.GetSource(source, ALGetSourcei.BuffersProcessed, out int buffersProcessed);
 					while (buffersProcessed-- > 0)
@@ -133,16 +166,22 @@ namespace StoicGoose.Handlers
 
 		public void SetVolume(float value)
 		{
+			if (!IsAvailable) return;
+
 			AL.Source(source, ALSourcef.Gain, volume = value);
 		}
 
 		public void SetMute(bool mute)
 		{
+			if (!IsAvailable) return;
+
 			AL.Source(source, ALSourcef.Gain, mute ? 0.0f : volume);
 		}
 
 		public void SetLowPassFilter(bool enable)
 		{
+			if (!IsAvailable) return;
+
 			AL.Source(source, ALSourcei.EfxDirectFilter, enable ? filter : 0);
 		}
 
@@ -174,6 +213,8 @@ namespace StoicGoose.Handlers
 		{
 			if (sampleQueue.Count > 0)
 				lastSamples = sampleQueue.Dequeue();
+
+			if (!IsAvailable) return;
 
 			if (lastSamples != null)
 			{
