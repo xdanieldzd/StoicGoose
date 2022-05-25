@@ -1,5 +1,5 @@
 # StoicGoose
-StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET Framework 6.0 along with the following NuGet packages:
+StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET 6.0 along with the following NuGet packages:
 
 * [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.2 (for OpenGL rendering, OpenAL sound, etc.)
 * [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
@@ -10,6 +10,14 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
 
 Two flavors are available: a Windows Forms application meant for playing games (StoicGoose), and a debugger with a user interface created with Dear ImGui (StoicGoose.GLWindow).
+
+## Requirements
+
+* A GPU supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later)
+* [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
+* A working implementation of OpenAL
+  * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
+* Optionally, copies of the WonderSwan and WonderSwan Color bootstrap ROMs (supported but not required)
 
 ## Screenshots (v000.6 WIP)
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
