@@ -13,7 +13,7 @@ Two flavors are available: a Windows Forms application meant for playing games (
 
 ## Requirements
 
-* A GPU supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later)
+* A GPU and appropriate drivers supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later)
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * A working implementation of OpenAL
   * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
