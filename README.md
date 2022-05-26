@@ -13,7 +13,7 @@ Two flavors are available: a Windows Forms application meant for playing games (
 
 ## Requirements
 
-* A GPU and appropriate drivers supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later)
+* A GPU supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later) and appropriate drivers
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * A working implementation of OpenAL
   * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
@@ -31,11 +31,11 @@ Various WonderSwan games, using Dot-Matrix shader:
 Various WonderSwan Color games, using Dot-Matrix Color shader:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png" alt="Screenshot WSC Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png" alt="Screenshot WSC Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png" alt="Screenshot WSC Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png" alt="Screenshot WSC Games 4" width="50%">
-
+<!--
 Various debugging features (**outdated!**):
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/Debugger.png" alt="Screenshot Debugger">
-
+-->
 ## Acknowledgements & Attribution
 * The XML data files in `Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
 * The file `WS-Icon.ico` is derived from "[WonderSwan-Black-Left.jpg](https://en.wikipedia.org/wiki/File:WonderSwan-Black-Left.jpg)" on [Wikipedia](https://en.wikipedia.org), in revision from 25 May 2014 by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos), used as public domain.
