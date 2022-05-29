@@ -23,6 +23,10 @@ namespace StoicGoose.GLWindow
 {
 	public partial class MainWindow : GameWindow
 	{
+		/* Constants */
+		const int maxMemoryPatches = 256;
+		const int maxBreakpoints = 256;
+
 		/* UI */
 		readonly LogWindow logWindow = default;
 		ImGuiHandler imGuiHandler = default;
@@ -41,8 +45,8 @@ namespace StoicGoose.GLWindow
 		IMachine machine = default;
 		Texture displayTexture = default;
 		double frameTimeElapsed = 0.0;
-		MemoryPatch[] memoryPatches = default;
-		Breakpoint[] breakpoints = default;
+		readonly MemoryPatch[] memoryPatches = new MemoryPatch[maxMemoryPatches];
+		readonly Breakpoint[] breakpoints = new Breakpoint[maxBreakpoints];
 		BreakpointVariables breakpointVariables = default;
 		Breakpoint lastBreakpointHit = default;
 
@@ -76,12 +80,12 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));
-			imGuiHandler.RegisterWindow(breakpointWindow, () => breakpoints);
+			imGuiHandler.RegisterWindow(breakpointWindow, () => (breakpoints, isRunning));
 			imGuiHandler.RegisterWindow(memoryEditorWindow, () => (machine, isRunning));
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
-			imGuiHandler.RegisterWindow(memoryPatchWindow, () => memoryPatches);
+			imGuiHandler.RegisterWindow(memoryPatchWindow, () => (memoryPatches, isRunning));
 
 			foreach (var windowTypeName in Program.Configuration.WindowsToRestore)
 			{
@@ -322,11 +326,14 @@ namespace StoicGoose.GLWindow
 		{
 			/* Critical for performance b/c called on every memory read; do not use "heavy" functionality (ex. LINQ) */
 
-			if (memoryPatches == null || memoryPatches.Length == 0)
+			if (memoryPatches == null || memoryPatches.Length == 0 || (memoryPatches.Length > 0 && memoryPatches[0] == null))
 				return value;
 
 			foreach (var patch in memoryPatches)
 			{
+				if (patch == null)
+					break;
+
 				if (patch.Address != address || !patch.IsEnabled)
 					continue;
 
@@ -365,11 +372,14 @@ namespace StoicGoose.GLWindow
 		{
 			/* EXTREMELY critical for performance b/c called on every machine step; do not use "heavy" functionality (ex. LINQ) */
 
-			if (breakpoints == null || breakpoints.Length == 0)
+			if (breakpoints == null || breakpoints.Length == 0 || (breakpoints.Length > 0 && breakpoints[0] == null))
 				return false;
 
 			foreach (var bp in breakpoints)
 			{
+				if (bp == null)
+					break;
+
 				if (!bp.Enabled || bp.Runner == null || lastBreakpointHit == bp)
 					continue;
 
@@ -475,24 +485,36 @@ namespace StoicGoose.GLWindow
 
 		private void LoadMemoryPatches()
 		{
+			for (var i = 0; i < memoryPatches.Length; i++) memoryPatches[i] = null;
+
 			var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
 			if (File.Exists(path))
-				memoryPatches = path.DeserializeFromFile<MemoryPatch[]>();
-			else
-				memoryPatches = Array.Empty<MemoryPatch>();
+			{
+				var memoryPatchList = path.DeserializeFromFile<List<MemoryPatch>>();
+				if (memoryPatchList == null) return;
+
+				memoryPatchList.RemoveAll(x => x == null);
+
+				for (var i = 0; i < Math.Min(memoryPatchList.Count, memoryPatches.Length); i++)
+					memoryPatches[i] = memoryPatchList[i];
+			}
 		}
 
 		private void LoadBreakpoints()
 		{
+			for (var i = 0; i < breakpoints.Length; i++) breakpoints[i] = null;
+
 			var path = Path.Combine(Program.DebuggingDataPath, cartBreakpointFilename);
 			if (File.Exists(path))
 			{
-				var breakpoints = path.DeserializeFromFile<List<Breakpoint>>();
-				breakpoints.RemoveAll(x => !x.UpdateDelegate());
-				this.breakpoints = breakpoints.ToArray();
+				var breakpointList = path.DeserializeFromFile<List<Breakpoint>>();
+				if (breakpointList == null) return;
+
+				breakpointList.RemoveAll(x => x == null || !x.UpdateDelegate());
+
+				for (var i = 0; i < Math.Min(breakpointList.Count, breakpoints.Length); i++)
+					breakpoints[i] = breakpointList[i];
 			}
-			else
-				breakpoints = Array.Empty<Breakpoint>();
 		}
 
 		private void SaveCartridgeRam()
@@ -523,19 +545,19 @@ namespace StoicGoose.GLWindow
 
 		private void SaveMemoryPatches()
 		{
-			if (memoryPatches != null && memoryPatches.Length != 0)
+			if (memoryPatches?.Any(x => x != null) == true)
 			{
 				var path = Path.Combine(Program.DebuggingDataPath, cartPatchFilename);
-				memoryPatches.SerializeToFile(path);
+				memoryPatches.Where(x => x != null).SerializeToFile(path);
 			}
 		}
 
 		private void SaveBreakpoints()
 		{
-			if (breakpoints != null && breakpoints.Length != 0)
+			if (breakpoints?.Any(x => x != null) == true)
 			{
 				var path = Path.Combine(Program.DebuggingDataPath, cartBreakpointFilename);
-				breakpoints.SerializeToFile(path);
+				breakpoints.Where(x => x != null).SerializeToFile(path);
 			}
 		}
 	}

@@ -23,8 +23,6 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		string newBreakpointExpression = string.Empty;
 		bool applyBreakpointEdit = false;
 
-		bool isWindowDisabled = false;
-
 		public BreakpointWindow() : base("Breakpoints", new NumericsVector2(800f, 300f), ImGuiCond.FirstUseEver) { }
 
 		protected override void InitializeWindow(object userData)
@@ -49,13 +47,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 		protected override void DrawWindow(object userData)
 		{
-			if (userData is not Breakpoint[] breakpoints)
-			{
-				breakpoints = Array.Empty<Breakpoint>();
-				isWindowDisabled = true;
-			}
-			else
-				isWindowDisabled = false;
+			if (userData is not (Breakpoint[] breakpoints, bool isRunning)) return;
 
 			static void handleInvalidBreakpointMessageBox()
 			{
@@ -64,7 +56,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 			if (ImGui.Begin(WindowTitle, ref isWindowOpen))
 			{
-				ImGui.BeginDisabled(isWindowDisabled);
+				ImGui.BeginDisabled(!isRunning);
 
 				var tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY | ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX;
 				var tableColumnFlags = ImGuiTableColumnFlags.NoSort | ImGuiTableColumnFlags.NoReorder | ImGuiTableColumnFlags.NoResize;
@@ -109,22 +101,27 @@ namespace StoicGoose.GLWindow.Interface.Windows
 				ImGui.Separator();
 				ImGui.Dummy(new NumericsVector2(0f, 2f));
 
+				ImGui.EndDisabled();
+
 				if (ImGui.BeginChild("##controls-frame", NumericsVector2.Zero))
 				{
+					ImGui.BeginDisabled(!isRunning);
+
 					if (ImGui.Button($"Add##add", new NumericsVector2(ImGui.GetContentRegionAvail().X / 4f, 0f))) newBreakpointToAdd = new();
 					ImGui.SameLine();
 					ImGui.Dummy(new NumericsVector2(ImGui.GetContentRegionAvail().X / 3f, 0f));
 					ImGui.SameLine();
 					ImGui.Dummy(new NumericsVector2(ImGui.GetContentRegionAvail().X / 2f, 0f));
 					ImGui.SameLine();
+
+					ImGui.EndDisabled();
+
 					if (ImGui.Button($"Close##close", new NumericsVector2(ImGui.GetContentRegionAvail().X, 0f))) isWindowOpen = false;
 
 					ImGui.EndChild();
 				}
 
 				ImGui.PopStyleVar();
-
-				ImGui.EndDisabled();
 
 				ImGui.End();
 			}
