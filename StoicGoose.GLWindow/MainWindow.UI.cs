@@ -12,6 +12,7 @@ namespace StoicGoose.GLWindow
 {
 	partial class MainWindow
 	{
+		InputSettingsWindow inputSettingsWindow = default;
 		DisplayWindow displayWindow = default;
 		DisassemblerWindow disassemblerWindow = default;
 		SystemControllerStatusWindow systemControllerStatusWindow = default;
@@ -35,6 +36,8 @@ namespace StoicGoose.GLWindow
 
 		private void InitializeUI()
 		{
+			inputSettingsWindow = new();
+
 			displayWindow = new DisplayWindow() { WindowScale = Program.Configuration.DisplaySize };
 
 			disassemblerWindow = new DisassemblerWindow();
@@ -196,7 +199,11 @@ namespace StoicGoose.GLWindow
 					(s) => { s.IsChecked = Program.Configuration.EnableBreakpoints; }),
 					new("Enable Memory Patches",
 					(_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
-					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; })
+					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
+					new("-"),
+					new(inputSettingsWindow.WindowTitle,
+					(_) => { inputSettingsWindow.IsWindowOpen = !inputSettingsWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = inputSettingsWindow.IsWindowOpen; })
 				}
 			};
 
