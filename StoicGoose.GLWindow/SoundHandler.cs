@@ -35,6 +35,8 @@ namespace StoicGoose.GLWindow
 			try
 			{
 				var device = ALC.OpenDevice(null);
+				IsAvailable = device.Handle != IntPtr.Zero;
+
 				context = ALC.CreateContext(device, new ALContextAttributes());
 				ALC.MakeContextCurrent(context);
 
@@ -43,8 +45,6 @@ namespace StoicGoose.GLWindow
 				buffers = AL.GenBuffers(numBuffers);
 				for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
 				AL.SourcePlay(source);
-
-				IsAvailable = true;
 
 				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization successful.");
 			}
