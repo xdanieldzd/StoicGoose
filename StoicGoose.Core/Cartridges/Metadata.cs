@@ -57,7 +57,7 @@ namespace StoicGoose.Core.Cartridges
 
 		readonly Dictionary<byte, (string code, string name)> publishers = new()
 		{
-			{ 0x00, ("---", "Misc. (invalid)") },
+			{ 0x00, ("???", "Misc. (invalid)") },
 			{ 0x01, ("BAN", "Bandai") },
 			{ 0x02, ("TAT", "Taito") },
 			{ 0x03, ("TMY", "Tomy") },
@@ -126,7 +126,7 @@ namespace StoicGoose.Core.Cartridges
 		public byte RtcPresentFlag { get; private set; }
 		public ushort Checksum { get; private set; }
 
-		public string PublisherCode => publishers.ContainsKey(PublisherId) ? publishers[PublisherId].code : "---";
+		public string PublisherCode => publishers.ContainsKey(PublisherId) ? publishers[PublisherId].code : "???";
 		public string PublisherName => publishers.ContainsKey(PublisherId) ? publishers[PublisherId].name : "(Unknown)";
 
 		public string GameIdString => $"SWJ-{PublisherCode}{(SystemType == SystemTypes.WonderSwan ? "0" : "C")}{GameId:X2}";
