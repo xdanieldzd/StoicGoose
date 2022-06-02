@@ -109,6 +109,8 @@ namespace StoicGoose.GLWindow
 
 			CreateMachine(Program.Configuration.PreferredSystem);
 
+			HandleCommandLineArguments(Environment.GetCommandLineArgs().Skip(1));
+
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnLoad)} override finished.");
 
 			base.OnLoad();
@@ -139,6 +141,14 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.Resize(e.Width, e.Height);
 
 			base.OnResize(e);
+		}
+
+		protected override void OnFileDrop(FileDropEventArgs e)
+		{
+			if (TryLoadAndRunCartridge(e.FileNames.First()))
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via file drop.");
+			else
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "File drop contained unrecognized file.");
 		}
 
 		protected override void OnUpdateFrame(FrameEventArgs args)
@@ -401,6 +411,27 @@ namespace StoicGoose.GLWindow
 			}
 
 			return false;
+		}
+
+		private void HandleCommandLineArguments(IEnumerable<string> args)
+		{
+			var arguments = args.ToArray();
+
+			/* Assume single argument means ROM filepath */
+			if (arguments.Length == 1)
+			{
+				if (TryLoadAndRunCartridge(arguments[0]))
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via command line.");
+				else
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "Command line contained unrecognized file.");
+			}
+		}
+
+		private bool TryLoadAndRunCartridge(string filename)
+		{
+			var result = openRomDialog.GetFilterExtensions(0).Contains(Path.GetExtension(filename)) && File.Exists(filename);
+			if (result) LoadAndRunCartridge(filename);
+			return result;
 		}
 
 		private void LoadAndRunCartridge(string filename)

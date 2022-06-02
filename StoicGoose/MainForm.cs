@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 using OpenTK.Mathematics;
@@ -135,8 +136,7 @@ namespace StoicGoose
 				Console.WriteLine();
 			}
 
-			if (GlobalVariables.EnableAutostartLastRom)
-				LoadAndRunCartridge(Program.Configuration.General.RecentFiles.First());
+			HandleCommandLineArguments(Environment.GetCommandLineArgs().Skip(1));
 
 			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization done!");
 		}
@@ -144,6 +144,22 @@ namespace StoicGoose
 		private void MainForm_Shown(object sender, EventArgs e)
 		{
 			renderControl.Focus();
+		}
+
+		private void MainForm_DragEnter(object sender, DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+				e.Effect = DragDropEffects.Copy;
+		}
+
+		private void MainForm_DragDrop(object sender, DragEventArgs e)
+		{
+			if (e.Data.GetData(DataFormats.FileDrop) is not string[] filenames) return;
+
+			if (TryLoadAndRunCartridge(filenames.First()))
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via file drop.");
+			else
+				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "File drop contained unrecognized file.");
 		}
 
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -517,6 +533,20 @@ namespace StoicGoose
 			return value;
 		}
 
+		private void HandleCommandLineArguments(IEnumerable<string> args)
+		{
+			var arguments = args.ToArray();
+
+			/* Assume single argument means ROM filepath */
+			if (arguments.Length == 1)
+			{
+				if (TryLoadAndRunCartridge(arguments[0]))
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via command line.");
+				else
+					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "Command line contained unrecognized file.");
+			}
+		}
+
 		private void LoadBootstrap(string filename)
 		{
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
@@ -540,6 +570,15 @@ namespace StoicGoose
 				stream.Read(data, 0, data.Length);
 				emulatorHandler.Machine.LoadInternalEeprom(data);
 			}
+		}
+
+		private bool TryLoadAndRunCartridge(string filename)
+		{
+			string[] getFilterExtensions(int index) => Regex.Matches(ofdOpenRom.Filter, @"[^|]+\|[^|]+")[index].Value.Split('|')[1].Split(';').Select(x => x[x.LastIndexOf('.')..]).ToArray();
+
+			var result = getFilterExtensions(0).Contains(Path.GetExtension(filename)) && File.Exists(filename);
+			if (result) LoadAndRunCartridge(filename);
+			return result;
 		}
 
 		private void LoadAndRunCartridge(string filename)

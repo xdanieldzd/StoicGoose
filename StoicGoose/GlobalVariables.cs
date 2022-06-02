@@ -16,8 +16,6 @@ namespace StoicGoose
 		public static readonly bool EnableSuperVerbosity = false;
 		public static readonly bool EnableOpenGLDebug = false;
 
-		public static readonly bool EnableAutostartLastRom = false;
-
 		public static readonly bool EnableSkipBootstrapIfFound = false;
 
 		public static string[] Dump()

@@ -52,7 +52,7 @@ namespace StoicGoose.GLWindow
 			IMachine.GetMachineTypes().ToList().ForEach(x => InternalEepromFilenames.Add(x, $"{x.Name}.eep"));
 		}
 
-		static void Main(string[] _)
+		static void Main()
 		{
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance) Environment.Exit(-1);

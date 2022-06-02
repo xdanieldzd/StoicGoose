@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using ImGuiNET;
 
@@ -269,5 +270,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 			DialogType = dialogType;
 			Title = title;
 		}
+
+		public string[] GetFilterExtensions(int index) => Regex.Matches(Filter, @"[^|]+\|[^|]+")[index].Value.Split('|')[1].Split(';').Select(x => x[x.LastIndexOf('.')..]).ToArray();
 	}
 }
