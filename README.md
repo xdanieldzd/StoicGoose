@@ -15,12 +15,17 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugger UI)
 * [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
 * [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
+* [Serilog](https://www.nuget.org/packages/Serilog/2.11.0) 2.11.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/5.0.0) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/4.0.1) 4.0.1 (for error and general messag logging)
 
-Two flavors are available: a Windows Forms application meant for playing games (StoicGoose), and a debugger with a user interface created with Dear ImGui (StoicGoose.GLWindow).
+## Versions
+
+Two flavors of StoicGoose are available:
+- **StoicGoose** is the Windows Forms-based interface, meant for playing games. This build supports shaders, XInput controllers, etc.
+- **StoicGoose.GLWindow** is the Dear ImGui-based interface, meant solely for debugging and disassembling games.
 
 ## Requirements
 
-* A GPU supporting OpenGL 4.6 (ex. Nvidia GeForce 400 series or later, Radeon HD 7000 series or later) and appropriate drivers
+* A GPU supporting OpenGL 4.1 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later) _and_ appropriate drivers
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * A working implementation of OpenAL
   * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
@@ -40,6 +45,8 @@ Various WonderSwan Color games, using Dot-Matrix Color shader:
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png" alt="Screenshot WSC Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png" alt="Screenshot WSC Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png" alt="Screenshot WSC Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png" alt="Screenshot WSC Games 4" width="50%">
 <!--
 Various debugging features (**outdated!**):
+
+UPDATE ME ALREADY, YOU STUPID LAZY AMATEUR CODER!
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/Debugger.png" alt="Screenshot Debugger">
 -->
