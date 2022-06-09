@@ -15,7 +15,7 @@ StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator
 * [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugger UI)
 * [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
 * [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
-* [Serilog](https://www.nuget.org/packages/Serilog/2.11.0) 2.11.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/5.0.0) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/4.0.1) 4.0.1 (for error and general messag logging)
+* [Serilog](https://www.nuget.org/packages/Serilog/2.11.0) 2.11.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File/5.0.0) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console/4.0.1) 4.0.1 (for error and general message logging)
 
 ## Versions
 
