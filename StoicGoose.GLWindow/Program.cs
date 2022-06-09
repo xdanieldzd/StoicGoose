@@ -11,6 +11,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 
 using StoicGoose.Common.Extensions;
+using StoicGoose.Common.Localization;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
 
@@ -48,7 +49,9 @@ namespace StoicGoose.GLWindow
 
 		static Program()
 		{
-			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+			Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+
+			Localizer.Initialize(Resources.GetEmbeddedText("Assets.Localization.json"));
 
 			Log.Initialize(Path.Combine(programDataDirectory, logFileName));
 
@@ -88,7 +91,7 @@ namespace StoicGoose.GLWindow
 			}
 			catch (GLFWException ex)
 			{
-				ShutdownOnFatalError(ex, $"{ProductName} requires GPU and drivers supporting OpenGL {requiredGLVersion.Major}.{requiredGLVersion.Minor}.");
+				ShutdownOnFatalError(ex, Localizer.GetString("Program.WrongOpenGLVersion", new { ProductName, MajorGLVersion = requiredGLVersion.Major, MinorGLVersion = requiredGLVersion.Minor }));
 			}
 			catch (Exception ex)
 			{
@@ -100,7 +103,7 @@ namespace StoicGoose.GLWindow
 		{
 			Log.WriteFatal($"{ex.GetType().Name}: {ex.Message}");
 			if (otherMessage != null) Log.WriteFatal(otherMessage);
-			Log.WriteFatal("Shutting down.");
+			Log.WriteFatal(Localizer.GetString("Program.ShuttingDown"));
 			Process.Start(new ProcessStartInfo(Log.LogPath) { UseShellExecute = true });
 			Environment.Exit(-1);
 		}

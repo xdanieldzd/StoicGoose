@@ -8,7 +8,9 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+
 using StoicGoose.Common.Extensions;
+using StoicGoose.Common.Localization;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
@@ -145,9 +147,9 @@ namespace StoicGoose.GLWindow
 		protected override void OnFileDrop(FileDropEventArgs e)
 		{
 			if (TryLoadAndRunCartridge(e.FileNames.First()))
-				Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via file drop.");
+				Log.WriteEvent(LogSeverity.Information, this, Localizer.GetString("MainWindow.RomLoadFileDropSuccess"));
 			else
-				Log.WriteEvent(LogSeverity.Warning, this, "File drop contained unrecognized file.");
+				Log.WriteEvent(LogSeverity.Warning, this, Localizer.GetString("MainWindow.RomLoadFileDropFailed"));
 		}
 
 		protected override void OnUpdateFrame(FrameEventArgs args)
@@ -175,7 +177,7 @@ namespace StoicGoose.GLWindow
 				frameTimeElapsed = 0.0;
 			}
 
-			statusRunningItem.Label = isPaused ? "Paused" : (isRunning ? "Running" : "Stopped");
+			statusRunningItem.Label = isPaused ? Localizer.GetString("MainWindow.StatusRunningPaused") : (isRunning ? Localizer.GetString("MainWindow.StatusRunningRunning") : Localizer.GetString("MainWindow.StatusRunningStopped"));
 			statusRunningItem.IsEnabled = isRunning && !isPaused;
 
 			statusFpsItem.Label = $"{framesPerSecond:0} fps";
@@ -422,9 +424,9 @@ namespace StoicGoose.GLWindow
 			if (arguments.Length == 1)
 			{
 				if (TryLoadAndRunCartridge(arguments[0]))
-					Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via command line.");
+					Log.WriteEvent(LogSeverity.Information, this, Localizer.GetString("MainWindow.RomLoadCommandLineSuccess"));
 				else
-					Log.WriteEvent(LogSeverity.Warning, this, "Command line contained unrecognized file.");
+					Log.WriteEvent(LogSeverity.Warning, this, Localizer.GetString("MainWindow.RomLoadCommandLineFailed"));
 			}
 		}
 
@@ -468,7 +470,7 @@ namespace StoicGoose.GLWindow
 
 			machine.Reset();
 
-			statusMessageItem.Label = $"Emulating {machine.Manufacturer} {machine.Model}, running '{cartridgeFilename}' ({machine.Cartridge.Metadata.GameIdString})";
+			statusMessageItem.Label = Localizer.GetString("MainWindow.StatusMessageEmulating", new { machine.Manufacturer, machine.Model, Filename = cartridgeFilename, GameId = machine.Cartridge.Metadata.GameIdString });
 
 			Program.Configuration.LastRomLoaded = cartridgeFilename;
 

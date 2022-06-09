@@ -22,11 +22,15 @@
 
   <ItemGroup>
     <None Remove="Assets\Goose-Logo.rgba" />
+    <None Remove="Assets\Localization.json" />
     <None Remove="Assets\WS-Icon.rgba" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
+    <EmbeddedResource Include="Assets\Localization.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Assets\WS-Icon.rgba" />
   </ItemGroup>
 

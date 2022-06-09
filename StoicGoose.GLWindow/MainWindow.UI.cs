@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 
+using StoicGoose.Common.Localization;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 using StoicGoose.GLWindow.Interface.Handlers;
@@ -75,118 +76,118 @@ namespace StoicGoose.GLWindow
 				};
 			}
 
-			fileMenu = new("File")
+			fileMenu = new(Localizer.GetString("MainWindow.Menus.File"))
 			{
 				SubItems = new MenuItem[]
 				{
-					new("Open", (_) =>
+					new(Localizer.GetString("MainWindow.Menus.Open"), (_) =>
 					{
 						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
 						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
 						openRomDialog.IsOpen = true;
 					}),
 					new("-"),
-					new("Exit", (_) => { Close(); })
+					new(Localizer.GetString("MainWindow.Menus.Exit"), (_) => { Close(); })
 				}
 			};
 
-			emulationMenu = new("Emulation")
+			emulationMenu = new(Localizer.GetString("MainWindow.Menus.Emulation"))
 			{
 				SubItems = new MenuItem[]
 				{
-					new("Pause",
+					new(Localizer.GetString("MainWindow.Menus.Pause"),
 					(_) => { isPaused = !isPaused; },
 					(s) => { s.IsEnabled = isRunning; s.IsChecked = isPaused; }),
-					new("Reset",
+					new(Localizer.GetString("MainWindow.Menus.Reset"),
 					(_) => { if (isRunning) { SaveVolatileData(); machine?.Reset(); } },
 					(s) => { s.IsEnabled = isRunning; }),
 					new("-"),
-					new("Shutdown",
+					new(Localizer.GetString("MainWindow.Menus.Shutdown"),
 					(_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
 					(s) => { s.IsEnabled = isRunning; })
 				}
 			};
 
-			windowsMenu = new("Windows")
+			windowsMenu = new(Localizer.GetString("MainWindow.Menus.Windows"))
 			{
 				SubItems = new MenuItem[]
 				{
-					new(displayWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.Display"),
 					(_) => { displayWindow.IsWindowOpen = !displayWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = displayWindow.IsWindowOpen; }),
 					new("-"),
-					new(disassemblerWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.Disassembler"),
 					(_) => { disassemblerWindow.IsWindowOpen = !disassemblerWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = disassemblerWindow.IsWindowOpen; }),
-					new(memoryEditorWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.MemoryEditor"),
 					(_) => { memoryEditorWindow.IsWindowOpen = !memoryEditorWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = memoryEditorWindow.IsWindowOpen; }),
-					new("System Controllers")
+					new(Localizer.GetString("MainWindow.Menus.SystemControllers"))
 					{
 						SubItems = new MenuItem[]
 						{
-							new(systemControllerStatusWindow.WindowTitle,
+							new(Localizer.GetString("MainWindow.Menus.SystemController"),
 							(_) => { systemControllerStatusWindow.IsWindowOpen = !systemControllerStatusWindow.IsWindowOpen; },
 							(s) => { s.IsChecked = systemControllerStatusWindow.IsWindowOpen; }),
-							new(displayControllerStatusWindow.WindowTitle,
+							new(Localizer.GetString("MainWindow.Menus.DisplayController"),
 							(_) => { displayControllerStatusWindow.IsWindowOpen = !displayControllerStatusWindow.IsWindowOpen; },
 							(s) => { s.IsChecked = displayControllerStatusWindow.IsWindowOpen; }),
-							new(soundControllerStatusWindow.WindowTitle,
+							new(Localizer.GetString("MainWindow.Menus.SoundController"),
 							(_) => { soundControllerStatusWindow.IsWindowOpen = !soundControllerStatusWindow.IsWindowOpen; },
 							(s) => { s.IsChecked = soundControllerStatusWindow.IsWindowOpen; })
 						}
 					},
 					new("-"),
-					new(breakpointWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.Breakpoints"),
 					(_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = breakpointWindow.IsWindowOpen; }),
-					new(memoryPatchWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.MemoryPatches"),
 					(_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
 					new("-"),
-					new(logWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.Log"),
 					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
 				}
 			};
 
-			optionsMenu = new("Options")
+			optionsMenu = new(Localizer.GetString("MainWindow.Menus.Options"))
 			{
 				SubItems = new MenuItem[]
 				{
-					new("Preferred System")
+					new(Localizer.GetString("MainWindow.Menus.PreferredSystem"))
 					{
 						SubItems = new MenuItem[]
 						{
-							new("WonderSwan",
+							new(Localizer.GetString("MainWindow.Menus.WonderSwan"),
 							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
 							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
-							new("WonderSwan Color",
+							new(Localizer.GetString("MainWindow.Menus.WonderSwanColor"),
 							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
 							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwanColor).FullName; })
 						}
 					},
 					new("-"),
-					new("Limit FPS",
+					new(Localizer.GetString("MainWindow.Menus.LimitFPS"),
 					(_) => { Program.Configuration.LimitFps = !Program.Configuration.LimitFps; },
 					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
-					new("Mute",
+					new(Localizer.GetString("MainWindow.Menus.Mute"),
 					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
 					(s) => { s.IsChecked = Program.Configuration.Mute; }),
 					new("-"),
-					new("Use Bootstrap ROMs",
+					new(Localizer.GetString("MainWindow.Menus.UseBootstrapROMs"),
 					(_) => { Program.Configuration.UseBootstrap = !Program.Configuration.UseBootstrap; reinitMachineIfRunning(); },
 					(s) => { s.IsChecked = Program.Configuration.UseBootstrap; }),
-					new("Select Bootstrap ROM")
+					new(Localizer.GetString("MainWindow.Menus.SelectBootstrapROM"))
 					{
 						SubItems = new MenuItem[]
 						{
-							new("WonderSwan", (_) =>
+							new(Localizer.GetString("MainWindow.Menus.WonderSwan"), (_) =>
 							{
 								initBootstrapRomDialog(typeof(WonderSwan));
 								selectBootstrapRomDialog.IsOpen = true;
 							}),
-							new("WonderSwan Color", (_) =>
+							new(Localizer.GetString("MainWindow.Menus.WonderSwanColor"), (_) =>
 							{
 								initBootstrapRomDialog(typeof(WonderSwanColor));
 								selectBootstrapRomDialog.IsOpen = true;
@@ -194,24 +195,24 @@ namespace StoicGoose.GLWindow
 						}
 					},
 					new("-"),
-					new("Enable Breakpoints",
+					new(Localizer.GetString("MainWindow.Menus.EnableBreakpoints"),
 					(_) => { ApplyMachineBreakpointHandlers(Program.Configuration.EnableBreakpoints = !Program.Configuration.EnableBreakpoints); },
 					(s) => { s.IsChecked = Program.Configuration.EnableBreakpoints; }),
-					new("Enable Memory Patches",
+					new(Localizer.GetString("MainWindow.Menus.EnableMemoryPatches"),
 					(_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
 					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
 					new("-"),
-					new(inputSettingsWindow.WindowTitle,
+					new(Localizer.GetString("MainWindow.Menus.InputSettings"),
 					(_) => { inputSettingsWindow.IsWindowOpen = !inputSettingsWindow.IsWindowOpen; },
 					(s) => { s.IsChecked = inputSettingsWindow.IsWindowOpen; })
 				}
 			};
 
-			helpMenu = new("Help")
+			helpMenu = new(Localizer.GetString("MainWindow.Menus.Help"))
 			{
 				SubItems = new MenuItem[]
 				{
-					new("About...", (_) => { aboutMessageBox.IsOpen = true; })
+					new(Localizer.GetString("MainWindow.Menus.About"), (_) => { aboutMessageBox.IsOpen = true; })
 				}
 			};
 
@@ -226,11 +227,11 @@ namespace StoicGoose.GLWindow
 
 			breakpointHitMessageBox = new("Breakpoint Hit", string.Empty, "Okay");
 
-			statusMessageItem = new($"{Program.ProductName} {Program.GetVersionString(true)} ready!") { ShowSeparator = false };
+			statusMessageItem = new(Localizer.GetString("MainWindow.StatusMessageReady", new { Program.ProductName, ProductVersion = Program.GetVersionString(true) })) { ShowSeparator = false };
 			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 			statusFpsItem = new(string.Empty) { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 
-			openRomDialog = new(ImGuiFileDialogType.Open, "Open ROM")
+			openRomDialog = new(ImGuiFileDialogType.Open, Localizer.GetString("MainWindow.Dialogs.OpenROMTitle"))
 			{
 				Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc",
 				Callback = (res, fn) =>
@@ -240,7 +241,7 @@ namespace StoicGoose.GLWindow
 				}
 			};
 
-			selectBootstrapRomDialog = new(ImGuiFileDialogType.Open, "Select Bootstrap ROM") { Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc" };
+			selectBootstrapRomDialog = new(ImGuiFileDialogType.Open, Localizer.GetString("MainWindow.Dialogs.SelectBootstrapROMTitle")) { Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc" };
 
 			backgroundGoose = new()
 			{
