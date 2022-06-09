@@ -5,7 +5,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 
-using StoicGoose.Common.Console;
+using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.Handlers
 {
@@ -24,9 +24,9 @@ namespace StoicGoose.Handlers
 				datFiles.Add(Path.GetFileName(file), (DatFile)serializer.Deserialize(reader));
 			}
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Loaded {datFiles.Count} .dat file(s) with {datFiles.Sum(x => x.Value.Game.Length)} known game(s).");
+			Log.WriteEvent(LogSeverity.Information, this, $"Loaded {datFiles.Count} .dat file(s) with {datFiles.Sum(x => x.Value.Game.Length)} known game(s).");
 			foreach (var datFile in datFiles.Select(x => x.Value))
-				Console.WriteLine($" '{datFile.Header.Name} ({datFile.Header.Version})' from {datFile.Header.Homepage}");
+				Log.WriteLine($" '{datFile.Header.Name} ({datFile.Header.Version})' from {datFile.Header.Homepage}");
 		}
 
 		private DatGame GetGame(uint romCrc32, int romSize)

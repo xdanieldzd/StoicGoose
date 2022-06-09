@@ -279,8 +279,6 @@ namespace StoicGoose.WinForms
 
 						var doUpdate = false;
 
-						//ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, typeof(Controller), $"Xinput #{i} L-thumb: {controller.LeftThumbstick}");
-
 						if (controller.Buttons != Buttons.None && (((int)controller.Buttons & ((int)controller.Buttons - 1)) == 0))
 						{
 							keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{controller.Buttons}").OrderBy(x => x).Distinct().ToList();

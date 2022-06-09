@@ -14,9 +14,9 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.Machines;
 using StoicGoose.Handlers;
@@ -57,9 +57,9 @@ namespace StoicGoose
 
 			if (InitializeConsole())
 			{
-				Console.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
-				Console.WriteLine("HONK, HONK, pork cheek!");
-				Console.WriteLine("----------------------------------------");
+				Log.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
+				Log.WriteLine("HONK, HONK, pork cheek!");
+				Log.WriteLine("----------------------------------------");
 			}
 
 			if (GlobalVariables.EnableOpenGLDebug)
@@ -67,15 +67,17 @@ namespace StoicGoose
 				GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
 				renderControl.Flags |= ContextFlags.Debug;
 
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Enabled OpenGL debugging.");
+				Log.WriteEvent(LogSeverity.Information, this, "Enabled OpenGL debugging.");
 			}
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Constructor done.");
+			Log.WriteEvent(LogSeverity.Information, this, "Constructor done.");
 		}
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initializing emulator and UI...");
+			Log.WriteEvent(LogSeverity.Information, this, "Initializing emulator and UI...");
+
+			ContextInfo.WriteToLog(this, false);
 
 			machineType = Program.Configuration.General.PreferOriginalWS ? typeof(WonderSwan) : typeof(WonderSwanColor);
 
@@ -95,50 +97,47 @@ namespace StoicGoose
 
 			if (GlobalVariables.IsDebugBuild && GlobalVariables.EnableSuperVerbosity)
 			{
-				Console.WriteLine($"~ {Ansi.Cyan}Global variables{Ansi.Reset} ~");
-				foreach (var var in GlobalVariables.Dump()) Console.WriteLine($" {var}");
+				Log.WriteLine($"~ {Ansi.Cyan}Global variables{Ansi.Reset} ~");
+				foreach (var var in GlobalVariables.Dump()) Log.WriteLine($" {var}");
 			}
 
 			if (GlobalVariables.EnableOpenGLDebug)
 			{
-				Console.WriteLine($"~ {Ansi.Yellow}OpenGL debugging enabled{Ansi.Reset} ~");
+				Log.WriteLine($"~ {Ansi.Yellow}OpenGL debugging enabled{Ansi.Reset} ~");
 				if (GlobalVariables.EnableSuperVerbosity)
 				{
-					Console.WriteLine($"~ {Ansi.Cyan}GL context info{Ansi.Reset} ~");
-					Console.WriteLine($" Version: {ContextInfo.GLVersion}");
-					Console.WriteLine($" Vendor: {ContextInfo.GLVendor}");
-					Console.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
-					Console.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
-					Console.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
+					Log.WriteLine($"~ {Ansi.Cyan}GL context info{Ansi.Reset} ~");
+					Log.WriteLine($" Version: {ContextInfo.GLVersion}");
+					Log.WriteLine($" Vendor: {ContextInfo.GLVendor}");
+					Log.WriteLine($" Renderer: {ContextInfo.GLRenderer}");
+					Log.WriteLine($" GLSL version: {ContextInfo.GLShadingLanguageVersion}");
+					Log.WriteLine($" {ContextInfo.GLExtensions.Length} extensions supported");
 				}
 			}
 
 			if (GlobalVariables.IsAuthorsMachine && GlobalVariables.EnableSuperVerbosity)
 			{
-				Console.WriteLine();
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.White}########################################");
-				Console.WriteLine($"{Ansi.White}########################################");
-				Console.WriteLine($"{Ansi.White}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.Magenta}########################################");
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine($"{Ansi.Cyan}########################################");
-				Console.WriteLine();
-				Console.WriteLine($"Ze goose sez: {Ansi.Cyan}TRANS {Ansi.Magenta}RIGHTS {Ansi.White}ARE {Ansi.Magenta}HUMAN {Ansi.Cyan}RIGHTS{Ansi.Reset}!");
-				Console.WriteLine();
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.White}########################################");
+				Log.WriteLine($"{Ansi.White}########################################");
+				Log.WriteLine($"{Ansi.White}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.Magenta}########################################");
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"{Ansi.Cyan}########################################");
+				Log.WriteLine($"Ze goose sez: {Ansi.Cyan}TRANS {Ansi.Magenta}RIGHTS {Ansi.White}ARE {Ansi.Magenta}HUMAN {Ansi.Cyan}RIGHTS{Ansi.Reset}!");
 			}
 
 			HandleCommandLineArguments(Environment.GetCommandLineArgs().Skip(1));
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization done!");
+			Log.WriteEvent(LogSeverity.Information, this, "Initialization done!");
 		}
 
 		private void MainForm_Shown(object sender, EventArgs e)
@@ -157,9 +156,9 @@ namespace StoicGoose
 			if (e.Data.GetData(DataFormats.FileDrop) is not string[] filenames) return;
 
 			if (TryLoadAndRunCartridge(filenames.First()))
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via file drop.");
+				Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via file drop.");
 			else
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "File drop contained unrecognized file.");
+				Log.WriteEvent(LogSeverity.Warning, this, "File drop contained unrecognized file.");
 		}
 
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -541,9 +540,9 @@ namespace StoicGoose
 			if (arguments.Length == 1)
 			{
 				if (TryLoadAndRunCartridge(arguments[0]))
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via command line.");
+					Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via command line.");
 				else
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "Command line contained unrecognized file.");
+					Log.WriteEvent(LogSeverity.Warning, this, "Command line contained unrecognized file.");
 			}
 		}
 

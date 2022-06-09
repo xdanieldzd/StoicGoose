@@ -1,4 +1,4 @@
-﻿#version 460
+﻿#version 410
 
 const int renderModeDisplay = 0;
 const int renderModeIcons = 1;

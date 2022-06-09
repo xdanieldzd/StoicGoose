@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
-namespace StoicGoose.Common.Console
+namespace StoicGoose.Common.Utilities
 {
-	public enum ConsoleLogSeverity { Success, Information, Warning, Error }
-
-	public static class ConsoleHelpers
+	public static class Ansi
 	{
-		readonly static Dictionary<ConsoleLogSeverity, string> logSeverityAnsiColors = new()
-		{
-			{ ConsoleLogSeverity.Success, Ansi.Green },
-			{ ConsoleLogSeverity.Information, Ansi.Cyan },
-			{ ConsoleLogSeverity.Warning, Ansi.Yellow },
-			{ ConsoleLogSeverity.Error, Ansi.Red }
-		};
+		public readonly static string Reset = "\x1B[0m";
+		public readonly static string Black = "\x1B[30m";
+		public readonly static string Red = "\x1B[31m";
+		public readonly static string Green = "\x1B[32m";
+		public readonly static string Yellow = "\x1B[33m";
+		public readonly static string Blue = "\x1B[34m";
+		public readonly static string Magenta = "\x1B[35m";
+		public readonly static string Cyan = "\x1B[36m";
+		public readonly static string White = "\x1B[37m";
 
-		public static void WriteLog(ConsoleLogSeverity severity, object source, string message)
-		{
-			System.Console.WriteLine($"{logSeverityAnsiColors[severity]}[{source.GetType().Name}]{Ansi.Reset}: {message}");
-		}
+		public static string RGB(byte r, byte g, byte b) => $"\x1B[38;2;{r};{g};{b}m";
 
 		// Such a stupid gimmick... but hey, I like stupid gimmicks and I especially like making them, so whatever~
-		public static void WriteGradientLine(string text, bool useHsl, params (byte r, byte g, byte b)[] colors)
+		public static string Gradient(string text, bool useHsl, params (byte r, byte g, byte b)[] colors)
 		{
 			var stepsPerColor = (int)Math.Round(text.Length / (colors.Length - 1f), MidpointRounding.AwayFromZero);
 			var steps = Math.Max(stepsPerColor * (colors.Length - 1), text.Length);
@@ -30,6 +28,9 @@ namespace StoicGoose.Common.Console
 
 			for (int i = 0, c = 0; i < steps; i += stepsPerColor, c++)
 			{
+				// TODO: this is a workaround for a out-of-range bug, but ugh, it's for a mere gimmick barely anyone will ever see, soooooo... whatever!
+				if (c + 1 >= colors.Length) c--;
+
 				if (useHsl)
 				{
 					var (h1, s1, l1) = RgbToHsl(colors[c + 0].r, colors[c + 0].g, colors[c + 0].b);
@@ -37,7 +38,7 @@ namespace StoicGoose.Common.Console
 
 					for (var j = 0; j < stepsPerColor; j++)
 					{
-						var by = Math.Clamp((j / 1f) / ((stepsPerColor - 1) / 1f), 0f, 1f);
+						var by = Math.Clamp(j / 1f / ((stepsPerColor - 1) / 1f), 0f, 1f);
 						var (h, s, l) = Lerp(h1, s1, l1, h2, s2, l2, by);
 						gradient.Add(HslToRgb(h, s, l));
 					}
@@ -49,15 +50,16 @@ namespace StoicGoose.Common.Console
 
 					for (var j = 0; j < stepsPerColor; j++)
 					{
-						var by = Math.Clamp((j / 1f) / ((stepsPerColor - 1) / 1f), 0f, 1f);
+						var by = Math.Clamp(j / 1f / ((stepsPerColor - 1) / 1f), 0f, 1f);
 						gradient.Add(((byte)(Lerp(r1, r2, by) * 255), (byte)(Lerp(g1, g2, by) * 255), (byte)(Lerp(b1, b2, by) * 255)));
 					}
 				}
 			}
 
+			var builder = new StringBuilder();
 			for (var i = 0; i < Math.Min(gradient.Count, text.Length); i++)
-				System.Console.Write($"{Ansi.RGB(gradient[i].r, gradient[i].g, gradient[i].b)}{text[i]}");
-			System.Console.Write(Environment.NewLine);
+				builder.Append($"{RGB(gradient[i].r, gradient[i].g, gradient[i].b)}{text[i]}");
+			return builder.ToString();
 		}
 
 		private static float Lerp(float v1, float v2, float by) => v1 * (1f - by) + v2 * by;
@@ -88,13 +90,13 @@ namespace StoicGoose.Common.Console
 				if (l < 0.5f) s = deltaMax / (max + min);
 				else s = deltaMax / (2f - max - min);
 
-				var deltaR = (((max - r) / 6f) + (deltaMax / 2f)) / deltaMax;
-				var deltaG = (((max - g) / 6f) + (deltaMax / 2f)) / deltaMax;
-				var deltaB = (((max - b) / 6f) + (deltaMax / 2f)) / deltaMax;
+				var deltaR = ((max - r) / 6f + deltaMax / 2f) / deltaMax;
+				var deltaG = ((max - g) / 6f + deltaMax / 2f) / deltaMax;
+				var deltaB = ((max - b) / 6f + deltaMax / 2f) / deltaMax;
 
 				if (r == max) h = deltaB - deltaG;
-				else if (g == max) h = (1f / 3f) + deltaR - deltaB;
-				else if (b == max) h = (2f / 3f) + deltaG - deltaR;
+				else if (g == max) h = 1f / 3f + deltaR - deltaB;
+				else if (b == max) h = 2f / 3f + deltaG - deltaR;
 
 				if (h < 0f) h++;
 				if (h > 1f) h--;
@@ -119,13 +121,13 @@ namespace StoicGoose.Common.Console
 				float v1, v2;
 
 				if (lightness < 0.5f) v2 = lightness * (1f + saturation);
-				else v2 = (lightness + saturation) - (saturation * lightness);
+				else v2 = lightness + saturation - saturation * lightness;
 
 				v1 = 2f * lightness - v2;
 
-				r = (byte)(255 * HueToRgb(v1, v2, hue + (1f / 3f)));
+				r = (byte)(255 * HueToRgb(v1, v2, hue + 1f / 3f));
 				g = (byte)(255 * HueToRgb(v1, v2, hue));
-				b = (byte)(255 * HueToRgb(v1, v2, hue - (1f / 3f)));
+				b = (byte)(255 * HueToRgb(v1, v2, hue - 1f / 3f));
 			}
 
 			return (r, g, b);
@@ -136,9 +138,9 @@ namespace StoicGoose.Common.Console
 			if (vh < 0f) vh++;
 			if (vh > 1) vh--;
 
-			if ((6f * vh) < 1f) return v1 + (v2 - v1) * 6f * vh;
-			if ((2f * vh) < 1f) return v2;
-			if ((3f * vh) < 2f) return v1 + (v2 - v1) * ((2f / 3f) - vh) * 6f;
+			if (6f * vh < 1f) return v1 + (v2 - v1) * 6f * vh;
+			if (2f * vh < 1f) return v2;
+			if (3f * vh < 2f) return v1 + (v2 - v1) * (2f / 3f - vh) * 6f;
 			return v1;
 		}
 	}

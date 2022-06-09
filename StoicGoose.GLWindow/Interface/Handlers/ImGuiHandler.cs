@@ -10,11 +10,11 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using ImGuiNET;
 
-using StoicGoose.Common.Console;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
+using StoicGoose.Common.Utilities;
 using StoicGoose.GLWindow.Interface.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
@@ -263,7 +263,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 		{
 			windowList.Add((window, getUserData));
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Registered {window.GetType().Name}.");
+			Log.WriteEvent(LogSeverity.Information, this, $"Registered {window.GetType().Name}.");
 		}
 
 		public T GetWindow<T>() where T : WindowBase
@@ -280,7 +280,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 		{
 			windowList.RemoveAll(x => x.window is T);
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Deregistered all {typeof(T).Name}.");
+			Log.WriteEvent(LogSeverity.Information, this, $"Deregistered all {typeof(T).Name}.");
 		}
 
 		public void BeginFrame(float deltaTime)

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 using StoicGoose.Common.Attributes;
-using StoicGoose.Common.Console;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Cartridges;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
@@ -88,7 +88,7 @@ namespace StoicGoose.Core.Machines
 
 			InitializeEepromToDefaults();
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine initialized.");
+			Log.WriteEvent(LogSeverity.Information, this, "Machine initialized.");
 		}
 
 		public virtual void Reset()
@@ -107,7 +107,7 @@ namespace StoicGoose.Core.Machines
 
 			ResetRegisters();
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine reset.");
+			Log.WriteEvent(LogSeverity.Information, this, "Machine reset.");
 		}
 
 		public virtual void ResetRegisters()
@@ -136,7 +136,7 @@ namespace StoicGoose.Core.Machines
 			SoundController?.Shutdown();
 			InternalEeprom?.Shutdown();
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Machine shutdown.");
+			Log.WriteEvent(LogSeverity.Information, this, "Machine shutdown.");
 		}
 
 		protected virtual void InitializeEepromToDefaults()

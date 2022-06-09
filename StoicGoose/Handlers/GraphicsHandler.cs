@@ -6,13 +6,13 @@ using System.IO;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Shaders.Bundles;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 
 using Buffer = StoicGoose.Common.OpenGL.Buffer;
@@ -158,7 +158,7 @@ namespace StoicGoose.Handlers
 			foreach (var file in new DirectoryInfo(Program.ShaderPath).EnumerateFiles("*.json", SearchOption.AllDirectories))
 				shaderNames.Add(file.Directory.Name);
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Found {shaderNames.Count} shader(s).");
+			Log.WriteEvent(LogSeverity.Information, this, $"Found {shaderNames.Count} shader(s).");
 
 			return shaderNames;
 		}
@@ -241,7 +241,7 @@ namespace StoicGoose.Handlers
 			if (shaderBundle.Samplers > maxTextureSamplerCount)
 				shaderBundle.Samplers = maxTextureSamplerCount;
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Loaded shader '{name}'.");
+			Log.WriteEvent(LogSeverity.Information, this, $"Loaded shader '{name}'.");
 
 			return (shaderBundle, shaderProgram);
 		}
@@ -287,7 +287,7 @@ namespace StoicGoose.Handlers
 				GL.Uniform1(commonShaderProgram.GetUniformLocation($"textureSamplers[{i}]"), i);
 			}
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Generated {commonBundleManifest.Samplers} display texture(s).");
+			Log.WriteEvent(LogSeverity.Information, this, $"Generated {commonBundleManifest.Samplers} display texture(s).");
 
 			lastTextureUpdate = 0;
 		}
@@ -317,7 +317,7 @@ namespace StoicGoose.Handlers
 				for (var i = 0; i < commonBundleManifest.Samplers; i++)
 					displayTextures[i].Update(framebuffer);
 
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"Shader changed successfully.");
+				Log.WriteEvent(LogSeverity.Information, this, $"Shader changed successfully.");
 
 				wasShaderChanged = false;
 			}

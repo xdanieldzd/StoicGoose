@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 
-using StoicGoose.Common.Console;
+using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.Handlers
 {
@@ -73,7 +73,7 @@ namespace StoicGoose.Handlers
 
 			Startup();
 
-			ConsoleHelpers.WriteLog(IsAvailable ? ConsoleLogSeverity.Success : ConsoleLogSeverity.Error, this, $"Initialization {(IsAvailable ? "successful" : "failed")}.");
+			Log.WriteEvent(IsAvailable ? LogSeverity.Information : LogSeverity.Error, this, $"Initialization {(IsAvailable ? "successful" : "failed")}.");
 		}
 
 		private void InitializeOpenAL()

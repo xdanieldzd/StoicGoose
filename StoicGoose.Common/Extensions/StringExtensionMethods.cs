@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace StoicGoose.Common.Extensions
 {
@@ -19,5 +20,10 @@ namespace StoicGoose.Common.Extensions
 				idxs.Add(i);
 			}
 		}
+
+		public static string EnsureEndsWithPeriod(this string str) => str + (!str.EndsWith('.') ? "." : string.Empty);
+
+		/* Regex via https://superuser.com/a/380778 */
+		public static string RemoveAnsi(this string str) => Regex.Replace(str, @"\x1b\[[0-9;]*[mGKHF]", "");
 	}
 }

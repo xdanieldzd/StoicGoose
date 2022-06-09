@@ -14,11 +14,16 @@ using StoicGoose.Common.Extensions;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
 
+using GLFWException = OpenTK.Windowing.GraphicsLibraryFramework.GLFWException;
+
 namespace StoicGoose.GLWindow
 {
 	static class Program
 	{
+		readonly static Version requiredGLVersion = new(4, 1, 0);
+
 		const string jsonConfigFileName = "Config.json";
+		const string logFileName = "Log.txt";
 
 		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
@@ -45,6 +50,8 @@ namespace StoicGoose.GLWindow
 		{
 			Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
+			Log.Initialize(Path.Combine(programDataDirectory, logFileName));
+
 			Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 			Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 			Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
@@ -57,25 +64,45 @@ namespace StoicGoose.GLWindow
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance) Environment.Exit(-1);
 
-			var windowIcon = Resources.GetEmbeddedRgbaFile("Assets.WS-Icon.rgba");
+			try
+			{
+				var windowIcon = Resources.GetEmbeddedRgbaFile("Assets.WS-Icon.rgba");
 
-			using var mainWindow = new MainWindow(new()
+				using var mainWindow = new MainWindow(new()
+				{
+					RenderFrequency = 0.0,
+					UpdateFrequency = 0.0
+				}, new()
+				{
+					Size = new(1280, 720),
+					Title = $"{assemblyVersionInfo.ProductName} {GetVersionString(false)}",
+					Flags = ContextFlags.Default,
+					API = ContextAPI.OpenGL,
+					APIVersion = requiredGLVersion,
+					Icon = new(new Image((int)windowIcon.Width, (int)windowIcon.Height, windowIcon.PixelData))
+				})
+				{
+					VSync = VSyncMode.Off
+				};
+				mainWindow.Run();
+			}
+			catch (GLFWException ex)
 			{
-				RenderFrequency = 0.0,
-				UpdateFrequency = 0.0
-			}, new()
+				ShutdownOnFatalError(ex, $"{ProductName} requires GPU and drivers supporting OpenGL {requiredGLVersion.Major}.{requiredGLVersion.Minor}.");
+			}
+			catch (Exception ex)
 			{
-				Size = new(1280, 720),
-				Title = $"{assemblyVersionInfo.ProductName} {GetVersionString(false)}",
-				Flags = ContextFlags.Default,
-				API = ContextAPI.OpenGL,
-				APIVersion = new(4, 6, 0),
-				Icon = new(new Image((int)windowIcon.Width, (int)windowIcon.Height, windowIcon.PixelData))
-			})
-			{
-				VSync = VSyncMode.Off
-			};
-			mainWindow.Run();
+				ShutdownOnFatalError(ex);
+			}
+		}
+
+		private static void ShutdownOnFatalError(Exception ex, string otherMessage = null)
+		{
+			Log.WriteFatal($"{ex.GetType().Name}: {ex.Message}");
+			if (otherMessage != null) Log.WriteFatal(otherMessage);
+			Log.WriteFatal("Shutting down.");
+			Process.Start(new ProcessStartInfo(Log.LogPath) { UseShellExecute = true });
+			Environment.Exit(-1);
 		}
 
 		private static Configuration LoadConfiguration(string filename)

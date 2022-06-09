@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 using OpenTK.Audio.OpenAL;
 
-using StoicGoose.Common.Console;
+using StoicGoose.Common.Utilities;
 
 namespace StoicGoose.GLWindow
 {
@@ -46,7 +46,7 @@ namespace StoicGoose.GLWindow
 				for (int i = 0; i < buffers.Length; i++) GenerateBuffer(buffers[i]);
 				AL.SourcePlay(source);
 
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "Initialization successful.");
+				Log.WriteEvent(LogSeverity.Information, this, "Initialization successful.");
 			}
 			catch (DllNotFoundException e)
 			{
@@ -54,7 +54,7 @@ namespace StoicGoose.GLWindow
 				{
 					var filename = Regex.Match(e.Message, "'(.*?)'").Groups[1].Value;
 					var message = !string.IsNullOrEmpty(filename) ? $"Initialization failed; '{filename}' missing." : "Initialization failed; OpenAL implementation missing.";
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, message);
+					Log.WriteEvent(LogSeverity.Error, this, message);
 
 					IsAvailable = false;
 				}

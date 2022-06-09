@@ -1,6 +1,6 @@
 ﻿using System;
 
-using StoicGoose.Common.Console;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.EEPROMs;
 using StoicGoose.Core.Interfaces;
 
@@ -88,23 +88,23 @@ namespace StoicGoose.Core.Cartridges
 
 			Crc32 = Common.Utilities.Crc32.Calculate(rom);
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, "ROM loaded.");
-			Console.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
-			Console.WriteLine($" Publisher ID: {Metadata.PublisherCode}, {Metadata.PublisherName} [0x{Metadata.PublisherId:X2}]");
-			Console.WriteLine($" System type: {Metadata.SystemType}");
-			Console.WriteLine($" Game ID: 0x{Metadata.GameId:X2}");
-			Console.WriteLine($"  Calculated ID string: {Metadata.GameIdString}");
-			Console.WriteLine($" Game revision: 0x{Metadata.GameRevision:X2}");
-			Console.WriteLine($" ROM size: {Metadata.RomSize} [0x{(byte)Metadata.RomSize:X2}]");
-			Console.WriteLine($" Save type/size: {Metadata.SaveType}/{Metadata.SaveSize} [0x{(byte)Metadata.SaveType:X2}]");
-			Console.WriteLine($" Misc flags: 0x{Metadata.MiscFlags:X2}");
-			Console.WriteLine($"  Orientation: {Metadata.Orientation}");
-			Console.WriteLine($"  ROM bus width: {Metadata.RomBusWidth}");
-			Console.WriteLine($"  ROM access speed: {Metadata.RomAccessSpeed}");
-			Console.WriteLine($" RTC present: {Metadata.IsRtcPresent} [0x{Metadata.RtcPresentFlag:X2}]");
-			Console.WriteLine($" Checksum (from metadata): 0x{Metadata.Checksum:X4}");
-			Console.WriteLine($"  Checksum (calculated): 0x{Metadata.CalculatedChecksum:X4}");
-			Console.WriteLine($"  Checksum is {(metadata.IsChecksumValid ? $"{Ansi.Green}valid" : $"{Ansi.Red}invalid")}{Ansi.Reset}!");
+			Log.WriteEvent(LogSeverity.Information, this, "ROM loaded.");
+			Log.WriteLine($"~ {Ansi.Cyan}Cartridge metadata{Ansi.Reset} ~");
+			Log.WriteLine($" Publisher ID: {Metadata.PublisherCode}, {Metadata.PublisherName} [0x{Metadata.PublisherId:X2}]");
+			Log.WriteLine($" System type: {Metadata.SystemType}");
+			Log.WriteLine($" Game ID: 0x{Metadata.GameId:X2}");
+			Log.WriteLine($"  Calculated ID string: {Metadata.GameIdString}");
+			Log.WriteLine($" Game revision: 0x{Metadata.GameRevision:X2}");
+			Log.WriteLine($" ROM size: {Metadata.RomSize} [0x{(byte)Metadata.RomSize:X2}]");
+			Log.WriteLine($" Save type/size: {Metadata.SaveType}/{Metadata.SaveSize} [0x{(byte)Metadata.SaveType:X2}]");
+			Log.WriteLine($" Misc flags: 0x{Metadata.MiscFlags:X2}");
+			Log.WriteLine($"  Orientation: {Metadata.Orientation}");
+			Log.WriteLine($"  ROM bus width: {Metadata.RomBusWidth}");
+			Log.WriteLine($"  ROM access speed: {Metadata.RomAccessSpeed}");
+			Log.WriteLine($" RTC present: {Metadata.IsRtcPresent} [0x{Metadata.RtcPresentFlag:X2}]");
+			Log.WriteLine($" Checksum (from metadata): 0x{Metadata.Checksum:X4}");
+			Log.WriteLine($"  Checksum (calculated): 0x{Metadata.CalculatedChecksum:X4}");
+			Log.WriteLine($"  Checksum is {(metadata.IsChecksumValid ? $"{Ansi.Green}valid" : $"{Ansi.Red}invalid")}{Ansi.Reset}!");
 
 			if (metadata.PublisherId == 0x01 && metadata.GameId == 0x27)
 			{
@@ -114,7 +114,7 @@ namespace StoicGoose.Core.Cartridges
 				rom[0xFFFEA] = 0x00;
 				rom[0xFFFEB] = 0x00;
 				rom[0xFFFEC] = 0x20;
-				Console.WriteLine($"~ {Ansi.Red}Conan prefetch hack enabled{Ansi.Reset} ~");
+				Log.WriteLine($"~ {Ansi.Red}Conan prefetch hack enabled{Ansi.Reset} ~");
 			}
 		}
 

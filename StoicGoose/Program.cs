@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -7,11 +8,14 @@ using System.Windows.Forms;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.Utilities;
 
+using GLFWException = OpenTK.Windowing.GraphicsLibraryFramework.GLFWException;
+
 namespace StoicGoose
 {
 	static class Program
 	{
 		const string jsonConfigFileName = "Config.json";
+		const string logFileName = "Log.txt";
 
 		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
@@ -40,11 +44,15 @@ namespace StoicGoose
 		public static string ShaderPath { get; } = string.Empty;
 		public static string NoIntroDatPath { get; } = string.Empty;
 
+		static MainForm mainForm = default;
+
 		static Program()
 		{
 			try
 			{
 				Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+
+				Log.Initialize(Path.Combine(programDataDirectory, logFileName));
 
 				Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 				Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
@@ -79,7 +87,36 @@ namespace StoicGoose
 			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new MainForm());
+
+			if (!Debugger.IsAttached)
+			{
+				Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+				Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+				AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+			}
+
+			Application.Run(mainForm = new MainForm());
+		}
+
+		static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+		{
+			if (e.Exception is GLFWException glEx)
+			{
+				var renderControl = mainForm.Controls["renderControl"] as OpenGL.RenderControl;
+				MessageBox.Show($"{glEx.Message.EnsureEndsWithPeriod()}\n\n{Application.ProductName} requires GPU and drivers supporting OpenGL {renderControl.APIVersion.Major}.{renderControl.APIVersion.Minor}.", $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			else
+			{
+				MessageBox.Show(e.Exception.Message.EnsureEndsWithPeriod(), $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+
+			Environment.Exit(-1);
+		}
+
+		static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			MessageBox.Show((e.ExceptionObject as Exception).Message, $"{Application.ProductName} Startup Error");
+			Environment.Exit(-1);
 		}
 
 		private static Configuration LoadConfiguration(string filename)

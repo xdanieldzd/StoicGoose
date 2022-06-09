@@ -8,10 +8,9 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-
-using StoicGoose.Common.Console;
 using StoicGoose.Common.Extensions;
 using StoicGoose.Common.OpenGL;
+using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
 using StoicGoose.GLWindow.Debugging;
 using StoicGoose.GLWindow.Interface.Handlers;
@@ -61,17 +60,17 @@ namespace StoicGoose.GLWindow
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{
 			if ((logWindow = new()) != null)
-			{
-				Console.SetOut(logWindow.TextWriter);
+				Log.AttachTextWriter(logWindow.TextWriter);
 
-				PrintStartupMessage();
-				PrintAssemblies();
-			}
+			PrintStartupMessage();
+			PrintAssemblies();
 		}
 
 		protected override void OnLoad()
 		{
 			InitializeUI();
+
+			ContextInfo.WriteToLog(this, false);
 
 			soundHandler = new(44100, 2);
 			inputHandler = new();
@@ -111,7 +110,7 @@ namespace StoicGoose.GLWindow
 
 			HandleCommandLineArguments(Environment.GetCommandLineArgs().Skip(1));
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnLoad)} override finished.");
+			Log.WriteEvent(LogSeverity.Information, this, $"{nameof(OnLoad)} override finished.");
 
 			base.OnLoad();
 		}
@@ -129,7 +128,7 @@ namespace StoicGoose.GLWindow
 
 			soundHandler.Dispose();
 
-			ConsoleHelpers.WriteLog(ConsoleLogSeverity.Success, this, $"{nameof(OnUnload)} override finished.");
+			Log.WriteEvent(LogSeverity.Information, this, $"{nameof(OnUnload)} override finished.");
 
 			base.OnUnload();
 		}
@@ -146,9 +145,9 @@ namespace StoicGoose.GLWindow
 		protected override void OnFileDrop(FileDropEventArgs e)
 		{
 			if (TryLoadAndRunCartridge(e.FileNames.First()))
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via file drop.");
+				Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via file drop.");
 			else
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "File drop contained unrecognized file.");
+				Log.WriteEvent(LogSeverity.Warning, this, "File drop contained unrecognized file.");
 		}
 
 		protected override void OnUpdateFrame(FrameEventArgs args)
@@ -212,18 +211,20 @@ namespace StoicGoose.GLWindow
 		private void PrintStartupMessage()
 		{
 			var message = $"{Program.ProductName} {Program.GetVersionString(true)}";
-			void printDefaultMessage() => Console.WriteLine($"{Ansi.Green}{message}");
+			Log.WriteLine(new string('-', message.Length));
+
+			void printDefaultMessage() => Log.WriteLine($"{Ansi.Green}{message}");
 
 			if (!GlobalVariables.EnableEasterEggs)
 				printDefaultMessage();
 			else
 			{
 				bool isDateToday(int day, int month) => DateTime.Today.Day == day && DateTime.Today.Month == month;
-				void printMagnetMessage() => ConsoleHelpers.WriteGradientLine(message, true, (0x3E, 0x4F, 0x65), (0xDA, 0xE1, 0xEA), (0xEE, 0x70, 0x7D));
+				void printMagnetMessage() => Log.WriteLine(Ansi.Gradient(message, true, (0x3E, 0x4F, 0x65), (0xDA, 0xE1, 0xEA), (0xEE, 0x70, 0x7D)));
 
-				if (isDateToday(31, 3)) /* 🏳️‍⚧️ */ ConsoleHelpers.WriteGradientLine(message, false, (91, 207, 250), (245, 171, 185), (255, 255, 255), (245, 171, 185), (17, 168, 205));
+				if (isDateToday(31, 3)) /* 🏳️‍⚧️ */ Log.WriteLine(Ansi.Gradient(message, false, (91, 207, 250), (245, 171, 185), (255, 255, 255), (245, 171, 185), (17, 168, 205)));
 				else if (isDateToday(19, 3) || isDateToday(12, 5)) /* 🧲 */ printMagnetMessage();
-				else if (isDateToday(24, 12)) /* 🎄 */ ConsoleHelpers.WriteGradientLine(message, false, (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40));
+				else if (isDateToday(24, 12)) /* 🎄 */ Log.WriteLine(Ansi.Gradient(message, false, (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40), (0x40, 0xFF, 0x40), (0xFF, 0x40, 0x40)));
 				else
 				{
 					var randomTime = DateTime.Today.AddMinutes(random.Next(24 * 60));
@@ -232,13 +233,13 @@ namespace StoicGoose.GLWindow
 				}
 			}
 
-			Console.WriteLine(new string('-', message.Length));
+			Log.WriteLine(new string('-', message.Length));
 		}
 
 		private void PrintAssemblies()
 		{
 			foreach (var assemblyName in AppDomain.CurrentDomain.GetAssemblies().Where(x => x.FullName.StartsWith(nameof(StoicGoose)) && x.FullName != Assembly.GetEntryAssembly().FullName).Select(x => x.GetName()))
-				ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Using Assembly {assemblyName.Name} v{assemblyName.Version.Major:D3}{(assemblyName.Version.Minor != 0 ? $".{assemblyName.Version.Minor}" : string.Empty)}.");
+				Log.WriteEvent(LogSeverity.Debug, this, $"Using Assembly {assemblyName.Name} v{assemblyName.Version.Major:D3}{(assemblyName.Version.Minor != 0 ? $".{assemblyName.Version.Minor}" : string.Empty)}.");
 		}
 
 		private void CreateMachine(string typeName)
@@ -396,7 +397,7 @@ namespace StoicGoose.GLWindow
 
 				if (bp.Runner(breakpointVariables).Result)
 				{
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, $"Breakpoint hit: ({bp.Expression})");
+					Log.WriteEvent(LogSeverity.Information, this, $"Breakpoint hit: ({bp.Expression})");
 
 					breakpointHitMessageBox.Message = $"Breakpoint with condition ({bp.Expression}) was hit.\n\nDisassembler window has been opened.";
 					breakpointHitMessageBox.IsOpen = true;
@@ -421,9 +422,9 @@ namespace StoicGoose.GLWindow
 			if (arguments.Length == 1)
 			{
 				if (TryLoadAndRunCartridge(arguments[0]))
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Information, this, "Loaded ROM via command line.");
+					Log.WriteEvent(LogSeverity.Information, this, "Loaded ROM via command line.");
 				else
-					ConsoleHelpers.WriteLog(ConsoleLogSeverity.Error, this, "Command line contained unrecognized file.");
+					Log.WriteEvent(LogSeverity.Warning, this, "Command line contained unrecognized file.");
 			}
 		}
 
