@@ -86,6 +86,7 @@ namespace StoicGoose.GLWindow
 			imGuiHandler.RegisterWindow(systemControllerStatusWindow, () => machine);
 			imGuiHandler.RegisterWindow(displayControllerStatusWindow, () => machine.DisplayController);
 			imGuiHandler.RegisterWindow(soundControllerStatusWindow, () => machine.SoundController);
+			imGuiHandler.RegisterWindow(tilemapViewerWindow, () => machine);
 			imGuiHandler.RegisterWindow(memoryPatchWindow, () => (memoryPatches, isRunning));
 			imGuiHandler.RegisterWindow(inputSettingsWindow, () => (Program.Configuration.GameControls, Program.Configuration.SystemControls));
 

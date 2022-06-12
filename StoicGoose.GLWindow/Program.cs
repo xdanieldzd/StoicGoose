@@ -101,11 +101,22 @@ namespace StoicGoose.GLWindow
 
 		private static void ShutdownOnFatalError(Exception ex, string otherMessage = null)
 		{
-			Log.WriteFatal($"{ex.GetType().Name}: {ex.Message}");
+			Log.WriteFatal(ConstructFatalErrorMessage(ex));
 			if (otherMessage != null) Log.WriteFatal(otherMessage);
 			Log.WriteFatal(Localizer.GetString("Program.ShuttingDown"));
 			Process.Start(new ProcessStartInfo(Log.LogPath) { UseShellExecute = true });
 			Environment.Exit(-1);
+		}
+
+		private static string ConstructFatalErrorMessage(Exception ex)
+		{
+			var stackFrame = new StackTrace(ex, true).GetFrame(0);
+			if (stackFrame.HasMethod() && stackFrame.HasSource())
+				return $"{ex.GetType().Name} in {stackFrame.GetMethod().DeclaringType.FullName} {stackFrame.GetMethod()} ({Path.GetFileName(stackFrame.GetFileName())}:{stackFrame.GetFileLineNumber()}): {ex.Message}";
+			else if (stackFrame.HasMethod())
+				return $"{ex.GetType().Name} in {stackFrame.GetMethod().DeclaringType.FullName} {stackFrame.GetMethod()}: {ex.Message}";
+			else
+				return $"{ex.GetType().Name}: {ex.Message}";
 		}
 
 		private static Configuration LoadConfiguration(string filename)

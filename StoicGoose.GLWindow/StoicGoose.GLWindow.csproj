@@ -28,9 +28,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
-    <EmbeddedResource Include="Assets\Localization.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\Localization.json" />
     <EmbeddedResource Include="Assets\WS-Icon.rgba" />
   </ItemGroup>
 

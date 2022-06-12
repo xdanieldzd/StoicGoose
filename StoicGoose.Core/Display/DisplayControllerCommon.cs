@@ -765,6 +765,9 @@ namespace StoicGoose.Core.Display
 		[BitDescription("V-blank timer counter")]
 		public ushort VBlankTimerCounter => vBlankTimer.Counter;
 
-		// TODO: reorganize palmono stuff & add public accessors
+		// TODO: reorganize palmono stuff & add attributes
+
+		public byte[] PalMonoPools => palMonoPools;
+		public byte[][] PalMonoData => palMonoData;
 	}
 }

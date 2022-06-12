@@ -22,6 +22,7 @@ namespace StoicGoose.GLWindow
 		MemoryPatchWindow memoryPatchWindow = default;
 		BreakpointWindow breakpointWindow = default;
 		MemoryEditorWindow memoryEditorWindow = default;
+		TilemapViewerWindow tilemapViewerWindow = default;
 
 		MenuItem fileMenu = default, emulationMenu = default, windowsMenu = default, optionsMenu = default, helpMenu = default;
 		MessageBox aboutMessageBox = default, breakpointHitMessageBox = default;
@@ -52,6 +53,8 @@ namespace StoicGoose.GLWindow
 			memoryPatchWindow = new();
 			breakpointWindow = new();
 			memoryEditorWindow = new();
+
+			tilemapViewerWindow = new();
 
 			void reinitMachineIfRunning()
 			{
@@ -137,6 +140,10 @@ namespace StoicGoose.GLWindow
 							(s) => { s.IsChecked = soundControllerStatusWindow.IsWindowOpen; })
 						}
 					},
+					new("-"),
+					new(Localizer.GetString("MainWindow.Menus.TilemapViewer"),
+					(_) => { tilemapViewerWindow.IsWindowOpen = !tilemapViewerWindow.IsWindowOpen; },
+					(s) => { s.IsChecked = tilemapViewerWindow.IsWindowOpen; }),
 					new("-"),
 					new(Localizer.GetString("MainWindow.Menus.Breakpoints"),
 					(_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
