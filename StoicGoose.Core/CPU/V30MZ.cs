@@ -6,6 +6,9 @@ namespace StoicGoose.Core.CPU
 	{
 		// TODO: attempt prefetch emulation (Meitantei Conan - Nishi no Meitantei Saidai no Kiki; cart changes banks on startup, can no longer execute jump, execs garbage)
 
+		/* Parent machine instance */
+		readonly IMachine machine = default;
+
 		/* General registers */
 		Register16 ax, bx, cx, dx;
 		ushort sp, bp, si, di;
@@ -35,12 +38,9 @@ namespace StoicGoose.Core.CPU
 
 		public bool IsHalted { get => halted; set => halted = value; }
 
-		public V30MZ(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite, PortReadDelegate portRead, PortWriteDelegate portWrite)
+		public V30MZ(IMachine machine)
 		{
-			memoryReadDelegate = memoryRead;
-			memoryWriteDelegate = memoryWrite;
-			portReadDelegate = portRead;
-			portWriteDelegate = portWrite;
+			this.machine = machine;
 
 			Reset();
 		}

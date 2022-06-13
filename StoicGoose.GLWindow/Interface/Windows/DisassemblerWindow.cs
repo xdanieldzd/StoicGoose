@@ -20,7 +20,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		const int maxInternalRamSize = 0x10000;
 
 		/* Disassembler */
-		readonly Disassembler disassembler = new();
+		Disassembler disassembler = default;
 
 		/* Positioning/sizing/coloring variables */
 		NumericsVector2 controlsItemSpacing = NumericsVector2.One, glyphSize = NumericsVector2.Zero;
@@ -72,7 +72,9 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 		protected override void InitializeWindow(object userData)
 		{
-			if (userData is not (IMachine machine, bool isRunning, bool isPaused)) return;
+			if (userData is not (IMachine machine, bool _, bool _)) return;
+
+			disassembler = new(machine);
 
 			var style = ImGui.GetStyle();
 
@@ -93,8 +95,6 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 			colorText = ImGui.GetColorU32(ImGuiCol.Text);
 			colorDisabled = ImGui.GetColorU32(ImGuiCol.TextDisabled);
-
-			disassembler.ReadMemoryFunction = machine.ReadMemory;
 		}
 
 		protected override void DrawWindow(object userData)

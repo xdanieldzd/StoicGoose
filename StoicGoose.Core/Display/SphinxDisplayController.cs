@@ -1,4 +1,5 @@
 ﻿using StoicGoose.Common.Attributes;
+using StoicGoose.Core.Interfaces;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 
@@ -6,6 +7,8 @@ namespace StoicGoose.Core.Display
 {
 	public sealed class SphinxDisplayController : DisplayControllerCommon
 	{
+		// TODO: reimplement high contrast mode; also, get a WSC, figure out how it's supposed to look?
+
 		/* REG_BACK_COLOR */
 		byte backColorPalette;
 		/* REG_LCD_CTRL */
@@ -13,7 +16,7 @@ namespace StoicGoose.Core.Display
 		/* REG_DISP_MODE */
 		bool displayColorFlagSet, display4bppFlagSet;
 
-		public SphinxDisplayController(MemoryReadDelegate memoryRead) : base(memoryRead) { }
+		public SphinxDisplayController(IMachine machine) : base(machine) { }
 
 		protected override void ResetRegisters()
 		{
@@ -26,15 +29,15 @@ namespace StoicGoose.Core.Display
 
 		protected override void RenderSleep(int y, int x)
 		{
-			WriteToFramebuffer(y, x, 0, 0, 0);
+			DisplayUtilities.CopyPixel((0, 0, 0), outputFramebuffer, y, x, HorizontalDisp);
 		}
 
 		protected override void RenderBackColor(int y, int x)
 		{
 			if (displayColorFlagSet || display4bppFlagSet)
-				WriteToFramebuffer(y, x, backColorPalette, backColorIndex);
+				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, backColorPalette, backColorIndex)), outputFramebuffer, x, y, HorizontalDisp);
 			else
-				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColorIndex & 0b0111]));
+				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[backColorIndex & 0b0111])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderSCR1(int y, int x)
@@ -49,14 +52,13 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet || display4bppFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-			if (color != 0 || (!(displayColorFlagSet || display4bppFlagSet) && color == 0 && !IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
+			if (pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2)))
 			{
 				if (displayColorFlagSet || display4bppFlagSet)
-					WriteToFramebuffer(y, x, tilePal, color);
+					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 				else
-					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 			}
 		}
 
@@ -72,17 +74,17 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet || display4bppFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-			if (color != 0 || (!(displayColorFlagSet || display4bppFlagSet) && color == 0 && !IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
+			if (pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2)))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
 					isUsedBySCR2[(y * HorizontalDisp) + x] = true;
+
 					if (displayColorFlagSet || display4bppFlagSet)
-						WriteToFramebuffer(y, x, tilePal, color);
+						DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 					else
-						WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+						DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 				}
 			}
 		}
@@ -114,77 +116,19 @@ namespace StoicGoose.Core.Display
 					var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 					var spriteY = (activeSprite >> 16) & 0xFF;
 
-					var color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
-
-					if ((color != 0 || (!(displayColorFlagSet || display4bppFlagSet) && color == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
+					if ((pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 						{
 							if (displayColorFlagSet || display4bppFlagSet)
-								WriteToFramebuffer(y, x, tilePal, color);
+								DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 							else
-								WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+								DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 						}
 					}
 				}
 			}
-		}
-
-		protected override byte GetPixelColor(ushort tile, int y, int x)
-		{
-			if (!displayColorFlagSet || !display4bppFlagSet)
-			{
-				/* 2bpp, like WS */
-				if (!displayPackedFormatSet)
-				{
-					var data = ReadMemory16((uint)(0x2000 + ((tile & 0x01FF) << 4) + ((y % 8) << 1)));
-					return (byte)((((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b11);
-				}
-				else
-				{
-					var data = ReadMemory8((uint)(0x2000 + ((tile & 0x01FF) << 4) + ((y % 8) << 1) + ((x % 8) >> 2)));
-					return (byte)((data >> 6 - (((x % 8) & 0b11) << 1)) & 0b11);
-				}
-			}
-			else
-			{
-				/* 4bpp, Color-only */
-				if (!displayPackedFormatSet)
-				{
-					var data = ReadMemory32((uint)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2)));
-					return (byte)((((data >> 31 - (x % 8)) & 0b1) << 3 | ((data >> 23 - (x % 8)) & 0b1) << 2 | ((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b1111);
-				}
-				else
-				{
-					var data = ReadMemory8((ushort)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2) + ((x % 8) >> 1)));
-					return (byte)((data >> 4 - (((x % 8) & 0b1) << 2)) & 0b1111);
-				}
-			}
-		}
-
-		private void WriteToFramebuffer(int y, int x, byte palette, byte color)
-		{
-			var pixel = ReadMemory16((uint)(0x0FE00 + (palette << 5) + (color << 1)));
-
-			int b = (pixel >> 0) & 0b1111;
-			int g = (pixel >> 4) & 0b1111;
-			int r = (pixel >> 8) & 0b1111;
-
-			// TODO: get a WSC, figure out how high contrast is supposed to look?
-			if (lcdContrastHigh)
-			{
-				b = (b | b << 2) << 2;
-				g = (g | g << 2) << 2;
-				r = (r | r << 2) << 2;
-			}
-			else
-			{
-				b |= b << 4;
-				g |= g << 4;
-				r |= r << 4;
-			}
-
-			WriteToFramebuffer(y, x, (byte)r, (byte)g, (byte)b);
 		}
 
 		public override byte ReadPort(ushort port)

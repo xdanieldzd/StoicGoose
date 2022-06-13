@@ -46,10 +46,10 @@ namespace StoicGoose.Core.Machines
 
 		public override void Initialize()
 		{
-			DisplayController = new SphinxDisplayController(ReadMemory);
-			SoundController = new SphinxSoundController(ReadMemory, 44100, 2);
-			DmaController = new SphinxGeneralDMAController(ReadMemory, WriteMemory);
-			SoundDmaController = new SphinxSoundDMAController(ReadMemory, WritePort);
+			DisplayController = new SphinxDisplayController(this);
+			SoundController = new SphinxSoundController(this, 44100, 2);
+			DmaController = new SphinxGeneralDMAController(this);
+			SoundDmaController = new SphinxSoundDMAController(this);
 
 			base.Initialize();
 		}

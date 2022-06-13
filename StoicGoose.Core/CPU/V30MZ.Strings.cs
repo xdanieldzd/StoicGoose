@@ -12,7 +12,7 @@
 			var increment = GetIncrement(is16Bit, IsFlagSet(Flags.Direction));
 
 			if (!is16Bit)
-				WriteMemory8(es, di, ReadPort8(dx.Word));
+				WriteMemory8(es, di, machine.ReadPort(dx.Word));
 			else
 				WriteMemory16(es, di, ReadPort16(dx.Word));
 
@@ -26,7 +26,7 @@
 			var temp = GetSegmentViaOverride(SegmentNumber.DS);
 
 			if (!is16Bit)
-				WritePort8(dx.Word, ReadMemory8(temp, si));
+				machine.WritePort(dx.Word, ReadMemory8(temp, si));
 			else
 				WritePort16(dx.Word, ReadMemory16(temp, si));
 

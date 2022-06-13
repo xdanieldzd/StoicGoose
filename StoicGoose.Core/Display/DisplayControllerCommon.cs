@@ -49,7 +49,7 @@ namespace StoicGoose.Core.Display
 
 		public Action<byte[]> SendFramebuffer { get; set; } = default;
 
-		readonly MemoryReadDelegate memoryReadDelegate = default;
+		protected readonly IMachine machine = default;
 
 		/* REG_DISP_CTRL */
 		protected bool scr1Enable, scr2Enable, sprEnable, sprWindowEnable, scr2WindowDisplayOutside, scr2WindowEnable;
@@ -82,9 +82,9 @@ namespace StoicGoose.Core.Display
 		/* REG_xTMR_xxx */
 		protected readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
 
-		public DisplayControllerCommon(MemoryReadDelegate memoryRead)
+		public DisplayControllerCommon(IMachine machine)
 		{
-			memoryReadDelegate = memoryRead;
+			this.machine = machine;
 
 			palMonoPools = new byte[8];
 			palMonoData = new byte[16][];
@@ -151,7 +151,7 @@ namespace StoicGoose.Core.Display
 					for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
 					{
 						var k = (uint)((sprBase << 9) + (j << 2));
-						spriteDataNextFrame[spriteCountNextFrame++] = (uint)(memoryReadDelegate(k + 3) << 24 | memoryReadDelegate(k + 2) << 16 | memoryReadDelegate(k + 1) << 8 | memoryReadDelegate(k + 0));
+						spriteDataNextFrame[spriteCountNextFrame++] = (uint)(machine.ReadMemory(k + 3) << 24 | machine.ReadMemory(k + 2) << 16 | machine.ReadMemory(k + 1) << 8 | machine.ReadMemory(k + 0));
 					}
 				}
 
@@ -226,8 +226,6 @@ namespace StoicGoose.Core.Display
 		protected abstract void RenderSCR2(int y, int x);
 		protected abstract void RenderSprites(int y, int x);
 
-		protected abstract byte GetPixelColor(ushort tile, int y, int x);
-
 		protected static void ValidateWindowCoordinates(ref int x0, ref int x1, ref int y0, ref int y1)
 		{
 			/* Thank you for this fix, for the encouragement and hints and advice, for just having been there... Thank you for everything, Near.
@@ -278,25 +276,9 @@ namespace StoicGoose.Core.Display
 				((y >= y0 && y <= y1) || (y >= y1 && y <= y0));
 		}
 
-		protected void WriteToFramebuffer(int y, int x, byte pixel)
-		{
-			byte r, g, b;
-			r = g = b = (byte)((pixel << 4) | pixel);
-			WriteToFramebuffer(y, x, r, g, b);
-		}
-
-		protected void WriteToFramebuffer(int y, int x, byte r, byte g, byte b)
-		{
-			var outputAddress = ((y * HorizontalDisp) + x) * 4;
-			outputFramebuffer[outputAddress + 0] = r;
-			outputFramebuffer[outputAddress + 1] = g;
-			outputFramebuffer[outputAddress + 2] = b;
-			outputFramebuffer[outputAddress + 3] = 255;
-		}
-
-		protected byte ReadMemory8(uint address) => memoryReadDelegate(address);
-		protected ushort ReadMemory16(uint address) => (ushort)(memoryReadDelegate(address + 1) << 8 | memoryReadDelegate(address));
-		protected uint ReadMemory32(uint address) => (uint)(memoryReadDelegate(address + 3) << 24 | memoryReadDelegate(address + 2) << 16 | memoryReadDelegate(address + 1) << 8 | memoryReadDelegate(address));
+		protected byte ReadMemory8(uint address) => machine.ReadMemory(address);
+		protected ushort ReadMemory16(uint address) => (ushort)(machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
+		protected uint ReadMemory32(uint address) => (uint)(machine.ReadMemory(address + 3) << 24 | machine.ReadMemory(address + 2) << 16 | machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
 
 		public virtual byte ReadPort(ushort port)
 		{

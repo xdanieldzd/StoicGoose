@@ -8,8 +8,7 @@ namespace StoicGoose.Core.DMA
 	{
 		// TODO: verify behavior!
 
-		readonly MemoryReadDelegate memoryReadDelegate;
-		readonly MemoryWriteDelegate memoryWriteDelegate;
+		readonly IMachine machine = default;
 
 		/* REG_DMA_SRC(_HI) */
 		uint dmaSource;
@@ -24,10 +23,9 @@ namespace StoicGoose.Core.DMA
 
 		bool isDecrementMode => IsBitSet(dmaControl, 6);
 
-		public SphinxGeneralDMAController(MemoryReadDelegate memoryRead, MemoryWriteDelegate memoryWrite)
+		public SphinxGeneralDMAController(IMachine machine)
 		{
-			memoryReadDelegate = memoryRead;
-			memoryWriteDelegate = memoryWrite;
+			this.machine = machine;
 		}
 
 		public void Reset()
@@ -60,8 +58,8 @@ namespace StoicGoose.Core.DMA
 				if (((dmaSource >> 16) & 0x0F) != 0x01)
 				{
 					/* Perform DMA if source is not SRAM */
-					memoryWriteDelegate((uint)(dmaDestination + 0), memoryReadDelegate(dmaSource + 0));
-					memoryWriteDelegate((uint)(dmaDestination + 1), memoryReadDelegate(dmaSource + 1));
+					machine.WriteMemory((uint)(dmaDestination + 0), machine.ReadMemory(dmaSource + 0));
+					machine.WriteMemory((uint)(dmaDestination + 1), machine.ReadMemory(dmaSource + 1));
 				}
 
 				dmaSource += (uint)(isDecrementMode ? -2 : 2);

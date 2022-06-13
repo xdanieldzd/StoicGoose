@@ -159,7 +159,8 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		private void UpdateTilemapTexture(IMachine machine)
 		{
 			var sphinxDisplay = machine.DisplayController as SphinxDisplayController;
-			var colorMode = sphinxDisplay?.DisplayColorFlagSet == true || sphinxDisplay?.Display4bppFlagSet == true;
+			var flagColor = sphinxDisplay?.DisplayColorFlagSet == true;
+			var flag4bpp = sphinxDisplay?.Display4bppFlagSet == true;
 
 			for (var y = 0; y < mapSize.y * tileSize.y; y++)
 			{
@@ -168,89 +169,31 @@ namespace StoicGoose.GLWindow.Interface.Windows
 					var mapBase = scrNumber == 0 ? machine.DisplayController.Scr1Base : machine.DisplayController.Scr2Base;
 					var mapOffset = (uint)((mapBase << 11) | ((y >> 3) << 6) | ((x >> 3) << 1));
 
-					var attribs = tileAttribs[((y >> 3) << 5) + (x >> 3)] = ReadMemory16(machine, mapOffset);
+					var attribs = tileAttribs[((y >> 3) << 5) + (x >> 3)] = (ushort)(machine.ReadMemory(mapOffset + 1) << 8 | machine.ReadMemory(mapOffset));
 					var tileNum = (ushort)(attribs & 0x01FF);
-					tileNum |= (ushort)(colorMode ? (((attribs >> 13) & 0b1) << 9) : 0);
+					tileNum |= (ushort)((flagColor || flag4bpp) ? (((attribs >> 13) & 0b1) << 9) : 0);
 
 					var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-					var color = GetPixelColor(machine, tileNum, y ^ (((attribs >> 15) & 0b1) * 7), x ^ (((attribs >> 14) & 0b1) * 7));
-
-					if (color != 0 || (!colorMode && color == 0 && !BitHandling.IsBitSet(tilePal, 2)))
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, y ^ (((attribs >> 15) & 0b1) * 7), x ^ (((attribs >> 14) & 0b1) * 7), machine.DisplayController.DisplayPackedFormatSet, flagColor, flag4bpp);
+					if (pixelColor != 0 || (!(flagColor || flag4bpp) && pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
 					{
-						if (colorMode)
-							WriteToTexture(y, x, tilePal, color, machine);
+						if (flagColor || flag4bpp)
+							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), mapTextureData, x, y, mapSize.x * tileSize.x);
 						else
-							WriteToTexture(y, x, (byte)(15 - machine.DisplayController.PalMonoPools[machine.DisplayController.PalMonoData[tilePal][color & 0b11]]));
+							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - machine.DisplayController.PalMonoPools[machine.DisplayController.PalMonoData[tilePal][pixelColor & 0b11]])), mapTextureData, x, y, mapSize.x * tileSize.x);
 					}
 					else
 					{
-						if (colorMode)
-							WriteToTexture(y, x, sphinxDisplay.BackColorPalette, sphinxDisplay.BackColorIndex, machine);
+						if (flagColor || flag4bpp)
+							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, sphinxDisplay.BackColorPalette, sphinxDisplay.BackColorIndex)), mapTextureData, x, y, mapSize.x * tileSize.x);
 						else
-							WriteToTexture(y, x, (byte)(15 - machine.DisplayController.PalMonoPools[machine.DisplayController.BackColorIndex & 0b0111]));
+							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - machine.DisplayController.PalMonoPools[machine.DisplayController.BackColorIndex & 0b0111])), mapTextureData, x, y, mapSize.x * tileSize.x);
 					}
 				}
 			}
+
 			mapTexture.Update(mapTextureData);
-		}
-
-		private static ushort ReadMemory16(IMachine machine, uint address) => (ushort)(machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
-		private static uint ReadMemory32(IMachine machine, uint address) => (uint)(machine.ReadMemory(address + 3) << 24 | machine.ReadMemory(address + 2) << 16 | machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
-
-		private static byte GetPixelColor(IMachine machine, ushort tile, int y, int x)
-		{
-			if (machine.DisplayController is SphinxDisplayController sphinxDisplay && sphinxDisplay.DisplayColorFlagSet && sphinxDisplay.Display4bppFlagSet)
-			{
-				if (!machine.DisplayController.DisplayPackedFormatSet)
-				{
-					var data = ReadMemory32(machine, (uint)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2)));
-					return (byte)((((data >> 31 - (x % 8)) & 0b1) << 3 | ((data >> 23 - (x % 8)) & 0b1) << 2 | ((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b1111);
-				}
-				else
-				{
-					var data = machine.ReadMemory((ushort)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2) + ((x % 8) >> 1)));
-					return (byte)((data >> 4 - (((x % 8) & 0b1) << 2)) & 0b1111);
-				}
-			}
-			else
-			{
-				if (!machine.DisplayController.DisplayPackedFormatSet)
-				{
-					var data = ReadMemory16(machine, (uint)(0x2000 + (tile << 4) + ((y % 8) << 1)));
-					return (byte)((((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b11);
-				}
-				else
-				{
-					var data = machine.ReadMemory((uint)(0x2000 + (tile << 4) + ((y % 8) << 1) + ((x % 8) >> 2)));
-					return (byte)((data >> 6 - (((x % 8) & 0b11) << 1)) & 0b11);
-				}
-			}
-		}
-
-		private void WriteToTexture(int y, int x, byte pixel)
-		{
-			byte r, g, b;
-			r = g = b = (byte)((pixel << 4) | pixel);
-			WriteToTexture(y, x, r, g, b);
-		}
-
-		private void WriteToTexture(int y, int x, byte palette, byte color, IMachine machine)
-		{
-			var pixel = ReadMemory16(machine, (uint)(0x0FE00 + (palette << 5) + (color << 1)));
-			int b = (pixel >> 0) & 0b1111;
-			int g = (pixel >> 4) & 0b1111;
-			int r = (pixel >> 8) & 0b1111;
-			WriteToTexture(y, x, (byte)(r | r << 4), (byte)(g | g << 4), (byte)(b | b << 4));
-		}
-
-		private void WriteToTexture(int y, int x, byte r, byte g, byte b)
-		{
-			var address = ((y * mapSize.x * tileSize.x) + x) * 4;
-			mapTextureData[address + 0] = r;
-			mapTextureData[address + 1] = g;
-			mapTextureData[address + 2] = b;
-			mapTextureData[address + 3] = 255;
 		}
 	}
 }

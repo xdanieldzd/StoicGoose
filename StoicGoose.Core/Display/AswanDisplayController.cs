@@ -1,19 +1,20 @@
 ﻿using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.Display
 {
 	public sealed class AswanDisplayController : DisplayControllerCommon
 	{
-		public AswanDisplayController(MemoryReadDelegate memoryRead) : base(memoryRead) { }
+		public AswanDisplayController(IMachine machine) : base(machine) { }
 
 		protected override void RenderSleep(int y, int x)
 		{
-			WriteToFramebuffer(y, x, 255, 255, 255);
+			DisplayUtilities.CopyPixel((255, 255, 255), outputFramebuffer, y, x, HorizontalDisp);
 		}
 
 		protected override void RenderBackColor(int y, int x)
 		{
-			WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[backColorIndex & 0b0111]));
+			DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[backColorIndex & 0b0111])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderSCR1(int y, int x)
@@ -28,10 +29,9 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)(attribs & 0x01FF);
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-			if (color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2)))
-				WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, false, false);
+			if (pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
+				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderSCR2(int y, int x)
@@ -46,14 +46,14 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)(attribs & 0x01FF);
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var color = GetPixelColor(tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7));
-
-			if (color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, false, false);
+			if (pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
 					isUsedBySCR2[(y * HorizontalDisp) + x] = true;
-					WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+
+					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 				}
 			}
 		}
@@ -85,28 +85,13 @@ namespace StoicGoose.Core.Display
 					var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 					var spriteY = (activeSprite >> 16) & 0xFF;
 
-					var color = GetPixelColor(tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)));
-
-					if ((color != 0 || (color == 0 && !BitHandling.IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), displayPackedFormatSet, false, false);
+					if ((pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
-							WriteToFramebuffer(y, x, (byte)(15 - palMonoPools[palMonoData[tilePal][color & 0b11]]));
+							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 					}
 				}
-			}
-		}
-
-		protected override byte GetPixelColor(ushort tile, int y, int x)
-		{
-			if (!displayPackedFormatSet)
-			{
-				var data = ReadMemory16((uint)(0x2000 + (tile << 4) + ((y % 8) << 1)));
-				return (byte)((((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b11);
-			}
-			else
-			{
-				var data = ReadMemory8((uint)(0x2000 + (tile << 4) + ((y % 8) << 1) + ((x % 8) >> 2)));
-				return (byte)((data >> 6 - (((x % 8) & 0b11) << 1)) & 0b11);
 			}
 		}
 

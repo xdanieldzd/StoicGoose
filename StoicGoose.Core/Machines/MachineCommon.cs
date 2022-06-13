@@ -83,7 +83,7 @@ namespace StoicGoose.Core.Machines
 			InternalRamMask = (uint)(InternalRamSize - 1);
 			InternalRam = new byte[InternalRamSize];
 
-			Cpu = new V30MZ(ReadMemory, WriteMemory, ReadPort, WritePort);
+			Cpu = new V30MZ(this);
 			InternalEeprom = new EEPROM(InternalEepromSize, InternalEepromAddressBits);
 
 			InitializeEepromToDefaults();

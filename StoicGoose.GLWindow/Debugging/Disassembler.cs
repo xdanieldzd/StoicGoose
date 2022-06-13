@@ -3,25 +3,24 @@ using System.Collections.Generic;
 
 using Iced.Intel;
 
-using StoicGoose.Core;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.GLWindow.Debugging
 {
 	public class Disassembler
 	{
+		readonly IMachine machine = default;
+		readonly MemoryCodeReader memoryCodeReader = default;
 		readonly Decoder decoder = default;
-		readonly MemoryCodeReader memoryCodeReader = new();
 
 		readonly Dictionary<ushort, List<DisassembledInstruction>> segmentCache = new();
 
-		MemoryReadDelegate memoryReadDelegate = default;
-		public MemoryReadDelegate ReadMemoryFunction
+		public Disassembler(IMachine machine)
 		{
-			get => memoryReadDelegate;
-			set => memoryReadDelegate = memoryCodeReader.ReadDelegate = value;
+			this.machine = machine;
+			memoryCodeReader = new() { Machine = this.machine };
+			decoder = Decoder.Create(16, memoryCodeReader, DecoderOptions.NoInvalidCheck);
 		}
-
-		public Disassembler() => decoder = Decoder.Create(16, memoryCodeReader, DecoderOptions.NoInvalidCheck);
 
 		public List<DisassembledInstruction> DisassembleSegment(ushort segment)
 		{
@@ -32,7 +31,7 @@ namespace StoicGoose.GLWindow.Debugging
 				memoryCodeReader.Position = segment << 4;
 				decoder.IP = 0;
 				while (decoder.IP < 0x10000 && memoryCodeReader.CanReadByte)
-					instructions.Add(new(segment, decoder.Decode(), memoryReadDelegate));
+					instructions.Add(new(segment, decoder.Decode(), machine));
 
 				segmentCache[segment] = instructions;
 			}
@@ -67,7 +66,7 @@ namespace StoicGoose.GLWindow.Debugging
 
 		public DisassembledInstruction() { }
 
-		public DisassembledInstruction(ushort segment, Iced.Intel.Instruction icedInstruction, MemoryReadDelegate readDelegate)
+		public DisassembledInstruction(ushort segment, Instruction icedInstruction, IMachine machine)
 		{
 			/* Set segment:address pair */
 			Segment = segment;
@@ -76,7 +75,7 @@ namespace StoicGoose.GLWindow.Debugging
 			/* Get instruction bytes */
 			var byteList = new List<byte>();
 			for (var i = 0; i < icedInstruction.Length; i++)
-				byteList.Add(readDelegate((uint)((segment << 4) + Address + i)));
+				byteList.Add(machine.ReadMemory((uint)((segment << 4) + Address + i)));
 			Bytes = byteList.ToArray();
 
 			/* Turn invalid instructions into byte declarations */
@@ -197,7 +196,7 @@ namespace StoicGoose.GLWindow.Debugging
 
 		public bool CanReadByte => currentPosition < endPosition;
 
-		public MemoryReadDelegate ReadDelegate { get; set; } = default;
+		public IMachine Machine { get; set; } = default;
 
 		public MemoryCodeReader()
 		{
@@ -209,10 +208,13 @@ namespace StoicGoose.GLWindow.Debugging
 
 		public override int ReadByte()
 		{
-			if (currentPosition >= endPosition || ReadDelegate == default)
+			if (Machine == default)
+				throw new Exception("No machine instance");
+
+			if (currentPosition >= endPosition)
 				return -1;
 
-			return ReadDelegate((uint)currentPosition++);
+			return Machine.ReadMemory((uint)currentPosition++);
 		}
 	}
 }

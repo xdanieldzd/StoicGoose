@@ -1,4 +1,5 @@
 ﻿using StoicGoose.Common.Attributes;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.Sound
 {
@@ -12,7 +13,7 @@ namespace StoicGoose.Core.Sound
 		/* REG_SND_9899 */
 		protected ushort unknown9899;
 
-		public AswanSoundController(MemoryReadDelegate memoryRead, int rate, int outChannels) : base(memoryRead, rate, outChannels) { }
+		public AswanSoundController(IMachine machine, int rate, int outChannels) : base(machine, rate, outChannels) { }
 
 		public override void ResetRegisters()
 		{

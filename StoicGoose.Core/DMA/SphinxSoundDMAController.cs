@@ -11,8 +11,7 @@ namespace StoicGoose.Core.DMA
 		readonly static ushort destinationPortChannel2Volume = 0x089;
 		readonly static ushort destinationPortHyperVoice = 0x095;
 
-		readonly MemoryReadDelegate memoryReadDelegate;
-		readonly PortWriteDelegate portWriteDelegate;
+		readonly IMachine machine = default;
 
 		/* REG_DMA_SRC(_HI) */
 		uint dmaSource;
@@ -32,10 +31,9 @@ namespace StoicGoose.Core.DMA
 
 		int cycleCount;
 
-		public SphinxSoundDMAController(MemoryReadDelegate memoryRead, PortWriteDelegate portWrite)
+		public SphinxSoundDMAController(IMachine machine)
 		{
-			memoryReadDelegate = memoryRead;
-			portWriteDelegate = portWrite;
+			this.machine = machine;
 		}
 
 		public void Reset()
@@ -63,7 +61,7 @@ namespace StoicGoose.Core.DMA
 
 			if (cycleCount >= cycleCounts[dmaRate])
 			{
-				portWriteDelegate(isDestinationHyperVoice ? destinationPortHyperVoice : destinationPortChannel2Volume, memoryReadDelegate(dmaSource));
+				machine.WritePort(isDestinationHyperVoice ? destinationPortHyperVoice : destinationPortChannel2Volume, machine.ReadMemory(dmaSource));
 
 				dmaSource += (uint)(isDecrementMode ? -1 : 1);
 				dmaLength--;

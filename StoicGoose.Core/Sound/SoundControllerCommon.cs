@@ -9,6 +9,8 @@ using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Sound
 {
+	public delegate byte WaveTableReadDelegate(ushort address);
+
 	public abstract partial class SoundControllerCommon : IPortAccessComponent
 	{
 		/* http://daifukkat.su/docs/wsman/#hw_sound */
@@ -35,7 +37,7 @@ namespace StoicGoose.Core.Sound
 		readonly int samplesPerFrame, cyclesPerFrame, cyclesPerSample;
 		int cycleCount;
 
-		readonly MemoryReadDelegate memoryReadDelegate;
+		protected readonly IMachine machine = default;
 
 		/* REG_SND_WAVE_BASE */
 		protected byte waveTableBase;
@@ -45,17 +47,17 @@ namespace StoicGoose.Core.Sound
 		/* REG_SND_VOLUME */
 		protected byte masterVolume;
 
-		public SoundControllerCommon(MemoryReadDelegate memoryRead, int rate, int outChannels)
+		public SoundControllerCommon(IMachine machine, int rate, int outChannels)
 		{
-			memoryReadDelegate = memoryRead;
+			this.machine = machine;
 
 			sampleRate = rate;
 			numOutputChannels = outChannels;
 
-			channel1 = new SoundChannel1((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (0 << 4) + a)));
-			channel2 = new SoundChannel2((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (1 << 4) + a)));
-			channel3 = new SoundChannel3((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (2 << 4) + a)));
-			channel4 = new SoundChannel4((a) => memoryReadDelegate((uint)((waveTableBase << 6) + (3 << 4) + a)));
+			channel1 = new SoundChannel1((a) => this.machine.ReadMemory((uint)((waveTableBase << 6) + (0 << 4) + a)));
+			channel2 = new SoundChannel2((a) => this.machine.ReadMemory((uint)((waveTableBase << 6) + (1 << 4) + a)));
+			channel3 = new SoundChannel3((a) => this.machine.ReadMemory((uint)((waveTableBase << 6) + (2 << 4) + a)));
+			channel4 = new SoundChannel4((a) => this.machine.ReadMemory((uint)((waveTableBase << 6) + (3 << 4) + a)));
 
 			channelSampleBuffers = new List<short>[NumChannels];
 			for (var i = 0; i < channelSampleBuffers.Length; i++) channelSampleBuffers[i] = new();

@@ -42,8 +42,8 @@ namespace StoicGoose.Core.Machines
 
 		public override void Initialize()
 		{
-			DisplayController = new AswanDisplayController(ReadMemory);
-			SoundController = new AswanSoundController(ReadMemory, 44100, 2);
+			DisplayController = new AswanDisplayController(this);
+			SoundController = new AswanSoundController(this, 44100, 2);
 
 			base.Initialize();
 		}

@@ -1,4 +1,5 @@
 ﻿using StoicGoose.Common.Attributes;
+using StoicGoose.Core.Interfaces;
 
 using static StoicGoose.Common.Utilities.BitHandling;
 
@@ -11,7 +12,7 @@ namespace StoicGoose.Core.Sound
 
 		readonly SoundChannelHyperVoice channelHyperVoice = default;
 
-		public SphinxSoundController(MemoryReadDelegate memoryRead, int rate, int outChannels) : base(memoryRead, rate, outChannels)
+		public SphinxSoundController(IMachine machine, int rate, int outChannels) : base(machine, rate, outChannels)
 		{
 			channelHyperVoice = new();
 		}
