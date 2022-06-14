@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32516.85
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoicGoose", "StoicGoose\StoicGoose.csproj", "{74BF0AC4-AAC5-4173-9AAF-7ECB7C6D94A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoicGoose.WinForms", "StoicGoose.WinForms\StoicGoose.WinForms.csproj", "{74BF0AC4-AAC5-4173-9AAF-7ECB7C6D94A5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoicGoose.Core", "StoicGoose.Core\StoicGoose.Core.csproj", "{1D3566F8-2643-4A91-82CB-CB90D66D33BD}"
 EndProject

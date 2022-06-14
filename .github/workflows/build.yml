@@ -6,11 +6,11 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        project: ['StoicGoose', 'StoicGoose.GLWindow']
+        project: ['StoicGoose.WinForms', 'StoicGoose.GLWindow']
         include:
-          - project: StoicGoose
-            csproj: StoicGoose\StoicGoose.csproj
-            artifacts: StoicGoose-artifacts
+          - project: StoicGoose.WinForms
+            csproj: StoicGoose.WinForms\StoicGoose.csproj
+            artifacts: StoicGoose.WinForms-artifacts
           - project: StoicGoose.GLWindow
             csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
             artifacts: StoicGoose.GLWindow-artifacts
