@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using ImGuiNET;
 
@@ -49,7 +51,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 		private void DrawSubMenus(MenuItem menuItem)
 		{
-			if (ImGui.BeginMenu(menuItem.Label))
+			if (ImGui.BeginMenu(menuItem.Label ?? nameof(MenuItem)))
 			{
 				foreach (var subItem in menuItem.SubItems)
 					DrawMenu(subItem);
@@ -62,15 +64,17 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 	public class MenuItem
 	{
 		public string Label { get; set; } = string.Empty;
+		public string Localization { get; set; } = string.Empty;
 		public Action<MenuItem> ClickAction { get; set; } = default;
 		public Action<MenuItem> UpdateAction { get; set; } = default;
 		public MenuItem[] SubItems { get; set; } = Array.Empty<MenuItem>();
 		public bool IsEnabled { get; set; } = true;
 		public bool IsChecked { get; set; } = false;
 
-		public MenuItem(string label, Action<MenuItem> clickAction = null, Action<MenuItem> updateAction = null)
+		public MenuItem(string label = "", string localization = "", Action<MenuItem> clickAction = null, Action<MenuItem> updateAction = null)
 		{
 			Label = label;
+			Localization = localization;
 			ClickAction = clickAction;
 			UpdateAction = updateAction;
 		}

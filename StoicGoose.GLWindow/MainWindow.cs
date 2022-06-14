@@ -71,6 +71,7 @@ namespace StoicGoose.GLWindow
 		protected override void OnLoad()
 		{
 			InitializeUI();
+			LocalizeUI();
 
 			ContextInfo.WriteToLog(this, false);
 
@@ -112,6 +113,8 @@ namespace StoicGoose.GLWindow
 			CreateMachine(Program.Configuration.PreferredSystem);
 
 			HandleCommandLineArguments(Environment.GetCommandLineArgs().Skip(1));
+
+			statusMessageItem.Label = Localizer.GetString("MainWindow.StatusMessageReady", new { Program.ProductName, ProductVersion = Program.GetVersionString(true) });
 
 			Log.WriteEvent(LogSeverity.Information, this, $"{nameof(OnLoad)} override finished.");
 

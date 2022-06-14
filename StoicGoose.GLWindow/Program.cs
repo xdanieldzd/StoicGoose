@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -49,7 +50,8 @@ namespace StoicGoose.GLWindow
 
 		static Program()
 		{
-			Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+			Thread.CurrentThread.CurrentUICulture = new(Configuration.Language);
 
 			Localizer.Initialize(Resources.GetEmbeddedText("Assets.Localization.json"));
 

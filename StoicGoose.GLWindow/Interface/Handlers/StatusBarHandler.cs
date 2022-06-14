@@ -95,6 +95,6 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 		public bool ShowSeparator { get; set; } = true;
 		public bool IsEnabled { get; set; } = true;
 
-		public StatusBarItem(string label) => Label = label;
+		public StatusBarItem(string label = "") => Label = label;
 	}
 }

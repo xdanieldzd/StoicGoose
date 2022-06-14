@@ -26,6 +26,7 @@
                 "MemoryPatches": "Memory Patches",
                 "Log": "Log",
                 "Options": "Options",
+                "Language": "UI Language",
                 "PreferredSystem": "Preferred System",
                 "WonderSwan": "WonderSwan",
                 "WonderSwanColor": "WonderSwan Color",
@@ -42,6 +43,7 @@
             "Dialogs": {
                 "OpenROMTitle": "Open ROM",
                 "SelectBootstrapROMTitle": "Select Bootstrap ROM",
+                "ROMFilter": "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc",
             },
             "RomLoadFileDropSuccess": "Loaded ROM via file drop.",
             "RomLoadFileDropFailed": "File drop contained unrecognized file.",
@@ -52,6 +54,7 @@
             "StatusRunningPaused": "Paused",
             "StatusRunningStopped": "Stopped",
             "StatusRunningRunning": "Running",
+            "LanguageChanged": "Language has been changed to {Language}.",
         },
         "FileDialogHandler": {
             "OpenButton": "Open",
@@ -85,6 +88,7 @@
                 "MemoryPatches": "Speicher-Patches",
                 "Log": "Protokoll",
                 "Options": "Optionen",
+                "Language": "Sprache der Oberfläche",
                 "PreferredSystem": "Bevorzugtes System",
                 "WonderSwan": "WonderSwan",
                 "WonderSwanColor": "WonderSwan Color",
@@ -101,6 +105,7 @@
             "Dialogs": {
                 "OpenROMTitle": "ROM öffnen",
                 "SelectBootstrapROMTitle": "Bootstrap-ROM auswählen",
+                "ROMFilter": "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc",
             },
             "RomLoadFileDropSuccess": "ROM durch Ablegen von Datei geladen.",
             "RomLoadFileDropFailed": "Abgelegte Datei konnte nicht erkannt werden.",
@@ -111,6 +116,7 @@
             "StatusRunningPaused": "Pausiert",
             "StatusRunningStopped": "Gestoppt",
             "StatusRunningRunning": "Aktiv",
+            "LanguageChanged": "Sprache wurde auf {Language} geändert.",
         },
         "FileDialogHandler": {
             "OpenButton": "Öffnen",

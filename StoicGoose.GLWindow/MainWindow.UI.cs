@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 using StoicGoose.Common.Localization;
 using StoicGoose.Common.Utilities;
@@ -79,122 +81,131 @@ namespace StoicGoose.GLWindow
 				};
 			}
 
-			fileMenu = new(Localizer.GetString("MainWindow.Menus.File"))
+			fileMenu = new(localization: "MainWindow.Menus.File")
 			{
 				SubItems = new MenuItem[]
 				{
-					new(Localizer.GetString("MainWindow.Menus.Open"), (_) =>
+					new(localization: "MainWindow.Menus.Open", clickAction: (_) =>
 					{
 						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
 						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
 						openRomDialog.IsOpen = true;
 					}),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.Exit"), (_) => { Close(); })
+					new(localization: "MainWindow.Menus.Exit", clickAction: (_) => { Close(); })
 				}
 			};
 
-			emulationMenu = new(Localizer.GetString("MainWindow.Menus.Emulation"))
+			emulationMenu = new(localization: "MainWindow.Menus.Emulation")
 			{
 				SubItems = new MenuItem[]
 				{
-					new(Localizer.GetString("MainWindow.Menus.Pause"),
-					(_) => { isPaused = !isPaused; },
-					(s) => { s.IsEnabled = isRunning; s.IsChecked = isPaused; }),
-					new(Localizer.GetString("MainWindow.Menus.Reset"),
-					(_) => { if (isRunning) { SaveVolatileData(); machine?.Reset(); } },
-					(s) => { s.IsEnabled = isRunning; }),
+					new(localization: "MainWindow.Menus.Pause",
+					clickAction: (_) => { isPaused = !isPaused; },
+					updateAction: (s) => { s.IsEnabled = isRunning; s.IsChecked = isPaused; }),
+					new(localization: "MainWindow.Menus.Reset",
+					clickAction: (_) => { if (isRunning) { SaveVolatileData(); machine?.Reset(); } },
+					updateAction: (s) => { s.IsEnabled = isRunning; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.Shutdown"),
-					(_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
-					(s) => { s.IsEnabled = isRunning; })
+					new(localization: "MainWindow.Menus.Shutdown",
+					clickAction: (_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
+					updateAction: (s) => { s.IsEnabled = isRunning; })
 				}
 			};
 
-			windowsMenu = new(Localizer.GetString("MainWindow.Menus.Windows"))
+			windowsMenu = new(localization: "MainWindow.Menus.Windows")
 			{
 				SubItems = new MenuItem[]
 				{
-					new(Localizer.GetString("MainWindow.Menus.Display"),
-					(_) => { displayWindow.IsWindowOpen = !displayWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = displayWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.Display",
+					clickAction: (_) => { displayWindow.IsWindowOpen = !displayWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = displayWindow.IsWindowOpen; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.Disassembler"),
-					(_) => { disassemblerWindow.IsWindowOpen = !disassemblerWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = disassemblerWindow.IsWindowOpen; }),
-					new(Localizer.GetString("MainWindow.Menus.MemoryEditor"),
-					(_) => { memoryEditorWindow.IsWindowOpen = !memoryEditorWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = memoryEditorWindow.IsWindowOpen; }),
-					new(Localizer.GetString("MainWindow.Menus.SystemControllers"))
+					new(localization: "MainWindow.Menus.Disassembler",
+					clickAction: (_) => { disassemblerWindow.IsWindowOpen = !disassemblerWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = disassemblerWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.MemoryEditor",
+					clickAction : (_) => { memoryEditorWindow.IsWindowOpen = !memoryEditorWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = memoryEditorWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.SystemControllers")
 					{
 						SubItems = new MenuItem[]
 						{
-							new(Localizer.GetString("MainWindow.Menus.SystemController"),
-							(_) => { systemControllerStatusWindow.IsWindowOpen = !systemControllerStatusWindow.IsWindowOpen; },
-							(s) => { s.IsChecked = systemControllerStatusWindow.IsWindowOpen; }),
-							new(Localizer.GetString("MainWindow.Menus.DisplayController"),
-							(_) => { displayControllerStatusWindow.IsWindowOpen = !displayControllerStatusWindow.IsWindowOpen; },
-							(s) => { s.IsChecked = displayControllerStatusWindow.IsWindowOpen; }),
-							new(Localizer.GetString("MainWindow.Menus.SoundController"),
-							(_) => { soundControllerStatusWindow.IsWindowOpen = !soundControllerStatusWindow.IsWindowOpen; },
-							(s) => { s.IsChecked = soundControllerStatusWindow.IsWindowOpen; })
+							new(localization: "MainWindow.Menus.SystemController",
+							clickAction : (_) => { systemControllerStatusWindow.IsWindowOpen = !systemControllerStatusWindow.IsWindowOpen; },
+							updateAction: (s) => { s.IsChecked = systemControllerStatusWindow.IsWindowOpen; }),
+							new(localization: "MainWindow.Menus.DisplayController",
+							clickAction : (_) => { displayControllerStatusWindow.IsWindowOpen = !displayControllerStatusWindow.IsWindowOpen; },
+							updateAction: (s) => { s.IsChecked = displayControllerStatusWindow.IsWindowOpen; }),
+							new(localization: "MainWindow.Menus.SoundController",
+							clickAction : (_) => { soundControllerStatusWindow.IsWindowOpen = !soundControllerStatusWindow.IsWindowOpen; },
+							updateAction: (s) => { s.IsChecked = soundControllerStatusWindow.IsWindowOpen; })
 						}
 					},
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.TilemapViewer"),
-					(_) => { tilemapViewerWindow.IsWindowOpen = !tilemapViewerWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = tilemapViewerWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.TilemapViewer",
+					clickAction : (_) => { tilemapViewerWindow.IsWindowOpen = !tilemapViewerWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = tilemapViewerWindow.IsWindowOpen; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.Breakpoints"),
-					(_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = breakpointWindow.IsWindowOpen; }),
-					new(Localizer.GetString("MainWindow.Menus.MemoryPatches"),
-					(_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.Breakpoints",
+					clickAction : (_) => { breakpointWindow.IsWindowOpen = !breakpointWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = breakpointWindow.IsWindowOpen; }),
+					new(localization: "MainWindow.Menus.MemoryPatches",
+					clickAction : (_) => { memoryPatchWindow.IsWindowOpen = !memoryPatchWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = memoryPatchWindow.IsWindowOpen; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.Log"),
-					(_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = logWindow.IsWindowOpen; })
+					new(localization: "MainWindow.Menus.Log",
+					clickAction: (_) => { logWindow.IsWindowOpen = !logWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = logWindow.IsWindowOpen; })
 				}
 			};
 
-			optionsMenu = new(Localizer.GetString("MainWindow.Menus.Options"))
+			optionsMenu = new(localization: "MainWindow.Menus.Options")
 			{
 				SubItems = new MenuItem[]
 				{
-					new(Localizer.GetString("MainWindow.Menus.PreferredSystem"))
+					new(localization: "MainWindow.Menus.Language")
+					{
+						SubItems = Localizer.GetSupportedLanguages().Select(x =>
+							new MenuItem(label: x.NativeName,
+							clickAction: (_) => { Thread.CurrentThread.CurrentUICulture = new(Program.Configuration.Language = x.TwoLetterISOLanguageName); LocalizeUI(); },
+							updateAction: (s) => { s.IsChecked = Program.Configuration.Language == x.TwoLetterISOLanguageName; })
+						).ToArray()
+					},
+					new("-"),
+					new(localization: "MainWindow.Menus.PreferredSystem")
 					{
 						SubItems = new MenuItem[]
 						{
-							new(Localizer.GetString("MainWindow.Menus.WonderSwan"),
-							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
-							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
-							new(Localizer.GetString("MainWindow.Menus.WonderSwanColor"),
-							(_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
-							(s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwanColor).FullName; })
+							new(localization: "MainWindow.Menus.WonderSwan",
+							clickAction: (_) => { Program.Configuration.PreferredSystem = typeof(WonderSwan).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
+							updateAction: (s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwan).FullName; }),
+							new(localization: "MainWindow.Menus.WonderSwanColor",
+							clickAction: (_) => { Program.Configuration.PreferredSystem = typeof(WonderSwanColor).FullName; CreateMachine(Program.Configuration.PreferredSystem); LoadAndRunCartridge(cartridgeFilename); },
+							updateAction: (s) => { s.IsChecked = Program.Configuration.PreferredSystem == typeof(WonderSwanColor).FullName; })
 						}
 					},
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.LimitFPS"),
-					(_) => { Program.Configuration.LimitFps = !Program.Configuration.LimitFps; },
-					(s) => { s.IsChecked = Program.Configuration.LimitFps; }),
-					new(Localizer.GetString("MainWindow.Menus.Mute"),
-					(_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
-					(s) => { s.IsChecked = Program.Configuration.Mute; }),
+					new(localization: "MainWindow.Menus.LimitFPS",
+					clickAction: (_) => { Program.Configuration.LimitFps = !Program.Configuration.LimitFps; },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.LimitFps; }),
+					new(localization: "MainWindow.Menus.Mute",
+					clickAction: (_) => { soundHandler.SetMute(Program.Configuration.Mute = !Program.Configuration.Mute); },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.Mute; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.UseBootstrapROMs"),
-					(_) => { Program.Configuration.UseBootstrap = !Program.Configuration.UseBootstrap; reinitMachineIfRunning(); },
-					(s) => { s.IsChecked = Program.Configuration.UseBootstrap; }),
-					new(Localizer.GetString("MainWindow.Menus.SelectBootstrapROM"))
+					new(localization: "MainWindow.Menus.UseBootstrapROMs",
+					clickAction: (_) => { Program.Configuration.UseBootstrap = !Program.Configuration.UseBootstrap; reinitMachineIfRunning(); },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.UseBootstrap; }),
+					new(localization: "MainWindow.Menus.SelectBootstrapROM")
 					{
 						SubItems = new MenuItem[]
 						{
-							new(Localizer.GetString("MainWindow.Menus.WonderSwan"), (_) =>
+							new(localization: "MainWindow.Menus.WonderSwan", clickAction: (_) =>
 							{
 								initBootstrapRomDialog(typeof(WonderSwan));
 								selectBootstrapRomDialog.IsOpen = true;
 							}),
-							new(Localizer.GetString("MainWindow.Menus.WonderSwanColor"), (_) =>
+							new(localization: "MainWindow.Menus.WonderSwanColor", clickAction: (_) =>
 							{
 								initBootstrapRomDialog(typeof(WonderSwanColor));
 								selectBootstrapRomDialog.IsOpen = true;
@@ -202,24 +213,24 @@ namespace StoicGoose.GLWindow
 						}
 					},
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.EnableBreakpoints"),
-					(_) => { ApplyMachineBreakpointHandlers(Program.Configuration.EnableBreakpoints = !Program.Configuration.EnableBreakpoints); },
-					(s) => { s.IsChecked = Program.Configuration.EnableBreakpoints; }),
-					new(Localizer.GetString("MainWindow.Menus.EnableMemoryPatches"),
-					(_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
-					(s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
+					new(localization: "MainWindow.Menus.EnableBreakpoints",
+					clickAction: (_) => { ApplyMachineBreakpointHandlers(Program.Configuration.EnableBreakpoints = !Program.Configuration.EnableBreakpoints); },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.EnableBreakpoints; }),
+					new(localization: "MainWindow.Menus.EnableMemoryPatches",
+					clickAction: (_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
 					new("-"),
-					new(Localizer.GetString("MainWindow.Menus.InputSettings"),
-					(_) => { inputSettingsWindow.IsWindowOpen = !inputSettingsWindow.IsWindowOpen; },
-					(s) => { s.IsChecked = inputSettingsWindow.IsWindowOpen; })
+					new(localization: "MainWindow.Menus.InputSettings",
+					clickAction: (_) => { inputSettingsWindow.IsWindowOpen = !inputSettingsWindow.IsWindowOpen; },
+					updateAction: (s) => { s.IsChecked = inputSettingsWindow.IsWindowOpen; })
 				}
 			};
 
-			helpMenu = new(Localizer.GetString("MainWindow.Menus.Help"))
+			helpMenu = new(localization: "MainWindow.Menus.Help")
 			{
 				SubItems = new MenuItem[]
 				{
-					new(Localizer.GetString("MainWindow.Menus.About"), (_) => { aboutMessageBox.IsOpen = true; })
+					new(localization: "MainWindow.Menus.About", clickAction: (_) => { aboutMessageBox.IsOpen = true; })
 				}
 			};
 
@@ -234,13 +245,12 @@ namespace StoicGoose.GLWindow
 
 			breakpointHitMessageBox = new("Breakpoint Hit", string.Empty, "Okay");
 
-			statusMessageItem = new(Localizer.GetString("MainWindow.StatusMessageReady", new { Program.ProductName, ProductVersion = Program.GetVersionString(true) })) { ShowSeparator = false };
-			statusRunningItem = new(string.Empty) { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
-			statusFpsItem = new(string.Empty) { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
+			statusMessageItem = new() { ShowSeparator = false };
+			statusRunningItem = new() { Width = 100f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
+			statusFpsItem = new() { Width = 75f, ItemAlignment = StatusBarItemAlign.Right, TextAlignment = StatusBarItemTextAlign.Center };
 
-			openRomDialog = new(ImGuiFileDialogType.Open, Localizer.GetString("MainWindow.Dialogs.OpenROMTitle"))
+			openRomDialog = new(ImGuiFileDialogType.Open)
 			{
-				Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc",
 				Callback = (res, fn) =>
 				{
 					if (res == ImGuiFileDialogResult.Okay)
@@ -248,7 +258,7 @@ namespace StoicGoose.GLWindow
 				}
 			};
 
-			selectBootstrapRomDialog = new(ImGuiFileDialogType.Open, Localizer.GetString("MainWindow.Dialogs.SelectBootstrapROMTitle")) { Filter = "WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc" };
+			selectBootstrapRomDialog = new(ImGuiFileDialogType.Open);
 
 			backgroundGoose = new()
 			{
@@ -263,6 +273,35 @@ namespace StoicGoose.GLWindow
 			messageBoxHandler = new(aboutMessageBox, breakpointHitMessageBox);
 			statusBarHandler = new();
 			fileDialogHandler = new(openRomDialog, selectBootstrapRomDialog);
+
+			Log.WriteEvent(LogSeverity.Information, this, "User interface initialized.");
+		}
+
+		private void LocalizeUI()
+		{
+			static void localizeMenus(params MenuItem[] menuItems)
+			{
+				foreach (var menuItem in menuItems.Where(x => !string.IsNullOrEmpty(x.Localization)))
+				{
+					menuItem.Label = Localizer.GetString(menuItem.Localization);
+					localizeMenus(menuItem.SubItems.Where(x => !string.IsNullOrEmpty(x.Localization)).ToArray());
+				}
+			}
+
+			localizeMenus(fileMenu, emulationMenu, windowsMenu, optionsMenu, helpMenu);
+
+			statusMessageItem.Label = Localizer.GetString("MainWindow.LanguageChanged", new { Language = Thread.CurrentThread.CurrentUICulture.NativeName });
+
+			openRomDialog.Title = Localizer.GetString("MainWindow.Dialogs.OpenROMTitle");
+			openRomDialog.Filter = Localizer.GetString("MainWindow.Dialogs.ROMFilter");
+
+			selectBootstrapRomDialog.Title = Localizer.GetString("MainWindow.Dialogs.SelectBootstrapROMTitle");
+			selectBootstrapRomDialog.Filter = Localizer.GetString("MainWindow.Dialogs.ROMFilter");
+
+			FileDialogHandler.OpenButtonLabel = Localizer.GetString("FileDialogHandler.OpenButton");
+			FileDialogHandler.CancelButtonLabel = Localizer.GetString("FileDialogHandler.CancelButton");
+
+			Log.WriteEvent(LogSeverity.Information, this, $"UI localization to {Thread.CurrentThread.CurrentUICulture.DisplayName} applied.");
 		}
 	}
 }

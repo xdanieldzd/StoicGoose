@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 
+using StoicGoose.Common.Localization;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
 
@@ -8,6 +9,10 @@ namespace StoicGoose.GLWindow
 {
 	public sealed class Configuration : ConfigurationBase<Configuration>
 	{
+		[DisplayName("UI Language")]
+		[Description("Preferred user interface language.")]
+		public string Language { get; set; } = Localizer.FallbackCulture;
+
 		[DisplayName("Preferred System")]
 		[Description("Preferred system to emulate.")]
 		public string PreferredSystem { get; set; } = typeof(WonderSwan).FullName;

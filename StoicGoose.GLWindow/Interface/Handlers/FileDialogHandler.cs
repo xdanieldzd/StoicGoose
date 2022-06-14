@@ -6,16 +6,14 @@ using System.Text.RegularExpressions;
 
 using ImGuiNET;
 
-using StoicGoose.Common.Localization;
-
 using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface.Handlers
 {
 	public class FileDialogHandler
 	{
-		readonly static string openButtonLabel = string.Empty;
-		readonly static string cancelButtonLabel = string.Empty;
+		public static string OpenButtonLabel { get; set; }
+		public static string CancelButtonLabel { get; set; }
 
 		readonly List<FileDialog> fileDialogs = new();
 
@@ -36,12 +34,6 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 		string selectedFilePath = string.Empty;
 
 		public bool IsAnyDialogOpen => fileDialogs.Any(x => x.IsOpen);
-
-		static FileDialogHandler()
-		{
-			openButtonLabel = Localizer.GetString("FileDialogHandler.OpenButton");
-			cancelButtonLabel = Localizer.GetString("FileDialogHandler.CancelButton");
-		}
 
 		public FileDialogHandler(params FileDialog[] fileDialogs)
 		{
@@ -189,7 +181,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 					var buttonWidth = (windowContentAvailWidth - ImGui.GetStyle().ItemSpacing.X) / 2f;
 
-					if (ImGui.Button(openButtonLabel, new NumericsVector2(buttonWidth, 0f)) || readyToOpen)
+					if (ImGui.Button(OpenButtonLabel, new NumericsVector2(buttonWidth, 0f)) || readyToOpen)
 					{
 						ImGui.CloseCurrentPopup();
 
@@ -199,7 +191,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 						ResetHandlerState();
 					}
 					ImGui.SameLine();
-					if (ImGui.Button(cancelButtonLabel, new NumericsVector2(buttonWidth, 0f)))
+					if (ImGui.Button(CancelButtonLabel, new NumericsVector2(buttonWidth, 0f)))
 					{
 						ImGui.CloseCurrentPopup();
 
@@ -276,7 +268,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 		public bool IsOpen = false;
 		public bool IsFirstOpen = true;
 
-		public FileDialog(ImGuiFileDialogType dialogType, string title)
+		public FileDialog(ImGuiFileDialogType dialogType, string title = "")
 		{
 			DialogType = dialogType;
 			Title = title;
