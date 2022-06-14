@@ -9,7 +9,7 @@ jobs:
         project: ['StoicGoose.WinForms', 'StoicGoose.GLWindow']
         include:
           - project: StoicGoose.WinForms
-            csproj: StoicGoose.WinForms\StoicGoose.csproj
+            csproj: StoicGoose.WinForms\StoicGoose.WinForms.csproj
             artifacts: StoicGoose.WinForms-artifacts
           - project: StoicGoose.GLWindow
             csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
