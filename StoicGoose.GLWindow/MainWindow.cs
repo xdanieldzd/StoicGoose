@@ -66,6 +66,7 @@ namespace StoicGoose.GLWindow
 
 			PrintStartupMessage();
 			PrintAssemblies();
+			PrintOperatingSystem();
 		}
 
 		protected override void OnLoad()
@@ -248,6 +249,13 @@ namespace StoicGoose.GLWindow
 				Log.WriteEvent(LogSeverity.Debug, this, $"Using Assembly {assemblyName.Name} v{assemblyName.Version.Major:D3}{(assemblyName.Version.Minor != 0 ? $".{assemblyName.Version.Minor}" : string.Empty)}.");
 		}
 
+		private void PrintOperatingSystem()
+		{
+			Log.WriteEvent(LogSeverity.Debug, this, "Current operating system:");
+			Log.WriteEvent(LogSeverity.Debug, this, $"- Platform: {Environment.OSVersion.Platform}");
+			Log.WriteEvent(LogSeverity.Debug, this, $"- Version: {Environment.OSVersion.VersionString}");
+		}
+
 		private void CreateMachine(string typeName)
 		{
 			if (machine != null && isRunning)
@@ -286,7 +294,8 @@ namespace StoicGoose.GLWindow
 			displayTexture = new Texture(machine.ScreenWidth, machine.ScreenHeight);
 			displayTexture.Update(initialScreenImage);
 
-			bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
+			if (Program.Configuration.BootstrapFiles.ContainsKey(typeName))
+				bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 
 			systemControllerStatusWindow.SetComponentType(machine.GetType());
 			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());

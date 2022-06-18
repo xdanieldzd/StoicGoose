@@ -69,8 +69,12 @@ namespace StoicGoose.GLWindow
 
 			void initBootstrapRomDialog(Type machineType)
 			{
-				selectBootstrapRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.BootstrapFiles[machineType.FullName]);
-				selectBootstrapRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.BootstrapFiles[machineType.FullName]);
+				if (Program.Configuration.BootstrapFiles.ContainsKey(machineType.FullName))
+				{
+					selectBootstrapRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.BootstrapFiles[machineType.FullName]);
+					selectBootstrapRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.BootstrapFiles[machineType.FullName]);
+				}
+
 				selectBootstrapRomDialog.Callback = (res, fn) =>
 				{
 					if (res == ImGuiFileDialogResult.Okay)
@@ -87,8 +91,11 @@ namespace StoicGoose.GLWindow
 				{
 					new(localization: "MainWindow.Menus.Open", clickAction: (_) =>
 					{
-						openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
-						openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
+						if (!string.IsNullOrEmpty(Program.Configuration.LastRomLoaded))
+						{
+							openRomDialog.InitialDirectory = Path.GetDirectoryName(Program.Configuration.LastRomLoaded);
+							openRomDialog.InitialFilename = Path.GetFileName(Program.Configuration.LastRomLoaded);
+						}
 						openRomDialog.IsOpen = true;
 					}),
 					new("-"),

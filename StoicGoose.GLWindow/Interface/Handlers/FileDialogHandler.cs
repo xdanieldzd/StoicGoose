@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 
 using ImGuiNET;
 
+using StoicGoose.Common.Utilities;
+
 using NumericsVector2 = System.Numerics.Vector2;
 
 namespace StoicGoose.GLWindow.Interface.Handlers
@@ -80,8 +82,13 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 				if (selectedDriveInfo == -1)
 				{
-					var initialRoot = new DirectoryInfo(fileDialogs[i].InitialDirectory).Root;
-					selectedDriveInfo = Array.FindIndex(driveInfos, x => x.RootDirectory.FullName == initialRoot.FullName);
+					if (!string.IsNullOrEmpty(fileDialogs[i].InitialDirectory))
+					{
+						var initialRoot = new DirectoryInfo(fileDialogs[i].InitialDirectory).Root;
+						selectedDriveInfo = Array.FindIndex(driveInfos, x => x.RootDirectory.FullName == initialRoot.FullName);
+					}
+					else
+						selectedDriveInfo = 0;
 				}
 
 				if (selectedFilter == -1)
@@ -89,7 +96,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 				if (workingDirectory == default)
 				{
-					UpdateCurrentFilesAndDirs(new(fileDialogs[i].InitialDirectory));
+					UpdateCurrentFilesAndDirs(!string.IsNullOrEmpty(fileDialogs[i].InitialDirectory) ? new(fileDialogs[i].InitialDirectory) : driveInfos[selectedDriveInfo].RootDirectory);
 					selectFile(currentFileDirList.FindIndex(x => x.label == fileDialogs[i].InitialFilename));
 				}
 

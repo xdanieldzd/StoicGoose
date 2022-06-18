@@ -35,7 +35,7 @@ namespace StoicGoose.GLWindow
 
 		public static string ProductName => assemblyVersionInfo.ProductName;
 
-		readonly static string mutexName = $"{assemblyVersionInfo.ProductName}/{GetVersionDetails()}";
+		readonly static string mutexName = $"{assemblyVersionInfo.ProductName}_{GetVersionDetails()}";
 
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), assemblyVersionInfo.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
