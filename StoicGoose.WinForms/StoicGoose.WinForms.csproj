@@ -72,7 +72,7 @@
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenTK" Version="4.7.2" />
+    <PackageReference Include="OpenTK" Version="4.7.4" />
     <PackageReference Include="OpenTK.WinForms" Version="4.0.0-pre.6" />
   </ItemGroup>
 
