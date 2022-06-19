@@ -31,7 +31,41 @@ Two flavors of StoicGoose are available:
   * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
 * Optionally, copies of the WonderSwan and WonderSwan Color bootstrap ROMs (supported but not required)
 
+## Building
+
+### Windows
+
+* Download [Visual Studio Community 2022](https://visualstudio.microsoft.com/vs)
+* Clone the StoicGoose repository
+* Build and run the emulator
+
+### Linux
+
+* This has only been tested through Ubuntu 20.04.3 LTS via Windows Subsystem for Linux (WSL) so far, not yet on a standalone Linux installation.
+* Please check [Microsoft's instructions for installing .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and ensure your distribution is supported.
+* The Windows Forms-based interface will **not** work on Linux, only the Dear ImGui-based debugger.
+
+To clone the StoicGoose repository:
+```
+$ git clone https://github.com/xdanieldzd/StoicGoose.git
+```
+
+To create and run a Debug build:
+```
+$ cd StoicGoose/StoicGoose.GLWindow/
+$ dotnet build
+$ dotnet bin/Debug/net6.0/StoicGoose.GLWindow.dll
+```
+
+To create and run a Release build:
+```
+$ cd StoicGoose/StoicGoose.GLWindow/
+$ dotnet build -c Release
+$ dotnet bin/Release/net6.0/StoicGoose.GLWindow.dll
+```
+
 ## Screenshots (v000.6 WIP)
+
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Logo.png" alt="Screenshot Bootstraps 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WS-Bootstrap-Menu.png" alt="Screenshot Bootstraps 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Logo.png" alt="Screenshot Bootstraps 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Bootstrap-Menu.png" alt="Screenshot Bootstraps 4" width="50%">
@@ -51,6 +85,7 @@ UPDATE ME ALREADY, YOU STUPID LAZY AMATEUR CODER!
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/Debugger.png" alt="Screenshot Debugger">
 -->
 ## Acknowledgements & Attribution
+
 * The XML data files in `Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
 * The file `WS-Icon.ico` is derived from "[WonderSwan-Black-Left.jpg](https://en.wikipedia.org/wiki/File:WonderSwan-Black-Left.jpg)" on [Wikipedia](https://en.wikipedia.org), in revision from 25 May 2014 by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos), used as public domain.
 * My personal thanks and gratitude to the late Near, who has always been encouraging and inspiring on my amateur emulator developer journey. They are sorely missed.
