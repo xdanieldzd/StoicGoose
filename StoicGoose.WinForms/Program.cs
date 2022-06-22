@@ -26,13 +26,14 @@ namespace StoicGoose.WinForms
 		const string shaderDirectoryName = "Shaders";
 		const string noIntroDatDirectoryName = "No-Intro";
 
-		readonly static string mutexName = $"{Application.ProductName}/{GetVersionDetails()}";
+		readonly static string mutexName = $"{Application.ProductName}_{GetVersionDetails()}";
 
 		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
 		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
 		public static Configuration Configuration { get; private set; } = LoadConfiguration(programConfigPath);
 
+		public static string DataPath { get; } = string.Empty;
 		public static string InternalDataPath { get; } = string.Empty;
 		public static string SaveDataPath { get; } = string.Empty;
 		public static string CheatsDataPath { get; } = string.Empty;
@@ -54,6 +55,7 @@ namespace StoicGoose.WinForms
 
 				Log.Initialize(Path.Combine(programDataDirectory, logFileName));
 
+				Directory.CreateDirectory(DataPath = programDataDirectory);
 				Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
 				Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
 				Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));

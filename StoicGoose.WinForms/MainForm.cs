@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -57,9 +58,10 @@ namespace StoicGoose.WinForms
 
 			if (InitializeConsole())
 			{
-				Log.WriteLine($"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}");
+				var message = $"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}";
+				Log.WriteLine(message);
 				Log.WriteLine("HONK, HONK, pork cheek!");
-				Log.WriteLine("----------------------------------------");
+				Log.WriteLine($"{Ansi.Reset}{new string('-', message.Length - Ansi.Green.Length)}");
 			}
 
 			if (GlobalVariables.EnableOpenGLDebug)
@@ -794,6 +796,16 @@ namespace StoicGoose.WinForms
 		private void cheatListToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			cheatsForm.Show();
+		}
+
+		private void openDataFolderToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Process.Start(new ProcessStartInfo()
+			{
+				FileName = $"{Program.DataPath.TrimEnd(Path.DirectorySeparatorChar)}{Path.DirectorySeparatorChar}",
+				UseShellExecute = true,
+				Verb = "open"
+			});
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
