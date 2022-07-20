@@ -25,7 +25,7 @@ Two flavors of StoicGoose are available:
 
 ## Requirements
 
-* A GPU supporting OpenGL 4.1 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later) _and_ appropriate drivers
+* A GPU supporting OpenGL 4.0 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later, Intel Ivy Bridge iGPUs or later) _and_ appropriate drivers
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * A working implementation of OpenAL
   * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
