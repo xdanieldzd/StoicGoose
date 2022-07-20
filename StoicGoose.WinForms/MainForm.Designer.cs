@@ -315,7 +315,7 @@
 			// renderControl
 			// 
 			this.renderControl.API = OpenTK.Windowing.Common.ContextAPI.OpenGL;
-			this.renderControl.APIVersion = new System.Version(4, 1, 0, 0);
+			this.renderControl.APIVersion = new System.Version(2, 1, 0, 0);
 			this.renderControl.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.renderControl.Flags = OpenTK.Windowing.Common.ContextFlags.Default;
 			this.renderControl.IsEventDriven = true;

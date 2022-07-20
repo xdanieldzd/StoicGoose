@@ -33,7 +33,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 	{
 		readonly static string[] vertexShaderSource =
 		{
-			"#version 410",
+			$"#version {Program.RequiredGLVersion.Major}{Program.RequiredGLVersion.Minor}{Program.RequiredGLVersion.Build}",
 			"layout (location = 0) in vec2 inPosition;",
 			"layout (location = 1) in vec2 inTexCoord;",
 			"layout (location = 2) in uint inColor;",
@@ -49,7 +49,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 		readonly static string[] fragmentShaderSource =
 		{
-			"#version 410",
+			$"#version {Program.RequiredGLVersion.Major}{Program.RequiredGLVersion.Minor}{Program.RequiredGLVersion.Build}",
 			"in vec2 texCoord;",
 			"in vec4 color;",
 			"out vec4 fragColor;",

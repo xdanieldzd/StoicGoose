@@ -56,6 +56,8 @@ namespace StoicGoose.WinForms
 		{
 			InitializeComponent();
 
+			renderControl.APIVersion = Program.RequiredGLVersion;
+
 			if (InitializeConsole())
 			{
 				var message = $"{Ansi.Green}{Application.ProductName} {Program.GetVersionString(true)}";

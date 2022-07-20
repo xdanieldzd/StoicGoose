@@ -286,6 +286,18 @@ namespace StoicGoose.GLWindow
 			breakpointVariables = new(machine);
 			lastBreakpointHit = null;
 
+			foreach (var button in machine.GameControls.Replace(" ", "").Split(','))
+			{
+				if (!Program.Configuration.GameControls.ContainsKey(button))
+					Program.Configuration.GameControls[button] = string.Empty;
+			}
+
+			foreach (var button in machine.HardwareControls.Replace(" ", "").Split(','))
+			{
+				if (!Program.Configuration.SystemControls.ContainsKey(button))
+					Program.Configuration.SystemControls[button] = string.Empty;
+			}
+
 			inputHandler.SetVerticalRemapping(machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))

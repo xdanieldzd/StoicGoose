@@ -22,7 +22,7 @@ namespace StoicGoose.GLWindow
 {
 	static class Program
 	{
-		readonly static Version requiredGLVersion = new(4, 1, 0);
+		public readonly static Version RequiredGLVersion = new(4, 0, 0);
 
 		const string jsonConfigFileName = "Config.json";
 		const string logFileName = "Log.txt";
@@ -83,7 +83,7 @@ namespace StoicGoose.GLWindow
 					Title = $"{assemblyVersionInfo.ProductName} {GetVersionString(false)}",
 					Flags = ContextFlags.Default,
 					API = ContextAPI.OpenGL,
-					APIVersion = requiredGLVersion,
+					APIVersion = RequiredGLVersion,
 					Icon = new(new Image((int)windowIcon.Width, (int)windowIcon.Height, windowIcon.PixelData))
 				})
 				{
@@ -93,7 +93,7 @@ namespace StoicGoose.GLWindow
 			}
 			catch (GLFWException ex)
 			{
-				ShutdownOnFatalError(ex, Localizer.GetString("Program.WrongOpenGLVersion", new { ProductName, MajorGLVersion = requiredGLVersion.Major, MinorGLVersion = requiredGLVersion.Minor }));
+				ShutdownOnFatalError(ex, Localizer.GetString("Program.WrongOpenGLVersion", new { ProductName, MajorGLVersion = RequiredGLVersion.Major, MinorGLVersion = RequiredGLVersion.Minor }));
 			}
 			catch (Exception ex)
 			{

@@ -233,10 +233,12 @@ namespace StoicGoose.WinForms.Handlers
 					throw new Exception($"Error loading shader bundle for '{name}'");
 			}
 
+			var glslVersionString = $"#version {Program.RequiredGLVersion.Major}{Program.RequiredGLVersion.Minor}{Program.RequiredGLVersion.Build}";
+
 			var shaderBundle = manifestJson.DeserializeObject<BundleManifest>();
 			var shaderProgram = new ShaderProgram(
-				ShaderFactory.FromSource(ShaderType.VertexShader, commonVertexShaderSource),
-				ShaderFactory.FromSource(ShaderType.FragmentShader, commonFragmentShaderBaseSource, $"const int numSamplers = {shaderBundle.Samplers};", fragmentSource));
+				ShaderFactory.FromSource(ShaderType.VertexShader, glslVersionString, commonVertexShaderSource),
+				ShaderFactory.FromSource(ShaderType.FragmentShader, glslVersionString, commonFragmentShaderBaseSource, $"const int numSamplers = {shaderBundle.Samplers};", fragmentSource));
 
 			if (shaderBundle.Samplers > maxTextureSamplerCount)
 				shaderBundle.Samplers = maxTextureSamplerCount;

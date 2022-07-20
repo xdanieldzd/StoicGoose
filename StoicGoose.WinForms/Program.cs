@@ -14,6 +14,8 @@ namespace StoicGoose.WinForms
 {
 	static class Program
 	{
+		public readonly static Version RequiredGLVersion = new(4, 0, 0);
+
 		const string jsonConfigFileName = "Config.json";
 		const string logFileName = "Log.txt";
 
