@@ -39,7 +39,7 @@ vec3 accumulateTextures()
 vec3 grid(vec3 color)
 {
     vec3 outputColor = vec3(0);
-    vec2 gridStep = vec2(floor(outputViewport.z / inputViewport.z), floor(outputViewport.w / inputViewport.w));
+    vec2 gridStep = vec2(outputViewport.z / inputViewport.z, outputViewport.w / inputViewport.w);
 
     if (gridStep.x > 1.0 && gridStep.y > 1.0)
     {

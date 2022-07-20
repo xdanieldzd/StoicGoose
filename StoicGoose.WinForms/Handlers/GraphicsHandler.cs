@@ -298,18 +298,9 @@ namespace StoicGoose.WinForms.Handlers
 		{
 			wasShaderChanged = true;
 
-			var lastFilterMode = commonBundleManifest?.Filter;
-			var lastWrapMode = commonBundleManifest?.Wrap;
-			var lastNumSamplers = commonBundleManifest?.Samplers;
-
 			(commonBundleManifest, commonShaderProgram) = LoadShaderBundle(name);
 
-			if (lastFilterMode == null || lastFilterMode != commonBundleManifest.Filter ||
-				lastWrapMode == null || lastWrapMode != commonBundleManifest.Wrap ||
-				lastNumSamplers == null || lastNumSamplers != commonBundleManifest.Samplers)
-			{
-				GenerateDisplayTextures();
-			}
+			GenerateDisplayTextures();
 		}
 
 		public void UpdateScreen(byte[] framebuffer)
