@@ -2,7 +2,7 @@
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface.Windows
+namespace StoicGoose.ImGuiCommon.Windows
 {
 	public abstract class WindowBase
 	{

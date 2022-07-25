@@ -44,6 +44,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StoicGoose.Common\StoicGoose.Common.csproj" />
     <ProjectReference Include="..\StoicGoose.Core\StoicGoose.Core.csproj" />
+    <ProjectReference Include="..\StoicGoose.ImGuiCommon\StoicGoose.ImGuiCommon.csproj" />
   </ItemGroup>
 
 </Project>

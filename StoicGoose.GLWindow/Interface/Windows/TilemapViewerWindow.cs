@@ -8,6 +8,7 @@ using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.Interfaces;
+using StoicGoose.ImGuiCommon.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

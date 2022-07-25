@@ -5,7 +5,7 @@ using System.Linq;
 
 using ImGuiNET;
 
-namespace StoicGoose.GLWindow.Interface.Handlers
+namespace StoicGoose.ImGuiCommon.Handlers
 {
 	public class MenuHandler
 	{

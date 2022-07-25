@@ -7,9 +7,9 @@ using System.Threading;
 using StoicGoose.Common.Localization;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Machines;
-using StoicGoose.GLWindow.Interface.Handlers;
-using StoicGoose.GLWindow.Interface.Widgets;
 using StoicGoose.GLWindow.Interface.Windows;
+using StoicGoose.ImGuiCommon.Handlers;
+using StoicGoose.ImGuiCommon.Widgets;
 
 namespace StoicGoose.GLWindow
 {

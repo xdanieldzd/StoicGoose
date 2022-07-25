@@ -107,8 +107,6 @@ namespace StoicGoose.GLWindow.Interface
 			return buttonIdx;
 		}
 
-		public static float HelpMarkerWidth() => ImGui.CalcTextSize(helpMarker).X;
-
 		public static bool IsPointInsideRectangle(NumericsVector2 point, NumericsVector2 rectPos, NumericsVector2 rectSize)
 		{
 			return point.X >= rectPos.X && point.X < rectPos.X + rectSize.X && point.Y >= rectPos.Y && point.Y < rectPos.Y + rectSize.Y;

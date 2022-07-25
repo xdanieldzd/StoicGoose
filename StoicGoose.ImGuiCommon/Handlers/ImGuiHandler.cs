@@ -15,14 +15,15 @@ using StoicGoose.Common.OpenGL.Shaders;
 using StoicGoose.Common.OpenGL.Uniforms;
 using StoicGoose.Common.OpenGL.Vertices;
 using StoicGoose.Common.Utilities;
-using StoicGoose.GLWindow.Interface.Windows;
+
+using StoicGoose.ImGuiCommon.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 using Buffer = StoicGoose.Common.OpenGL.Buffer;
 using ShaderProgram = StoicGoose.Common.OpenGL.Shaders.Program;
 
-namespace StoicGoose.GLWindow.Interface.Handlers
+namespace StoicGoose.ImGuiCommon.Handlers
 {
 	/* Derived/adapted from...
 	 * - https://github.com/NogginBops/ImGui.NET_OpenTK_Sample
@@ -33,7 +34,6 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 	{
 		readonly static string[] vertexShaderSource =
 		{
-			$"#version {Program.RequiredGLVersion.Major}{Program.RequiredGLVersion.Minor}{Program.RequiredGLVersion.Build}",
 			"layout (location = 0) in vec2 inPosition;",
 			"layout (location = 1) in vec2 inTexCoord;",
 			"layout (location = 2) in uint inColor;",
@@ -49,7 +49,6 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 		readonly static string[] fragmentShaderSource =
 		{
-			$"#version {Program.RequiredGLVersion.Major}{Program.RequiredGLVersion.Minor}{Program.RequiredGLVersion.Build}",
 			"in vec2 texCoord;",
 			"in vec4 color;",
 			"out vec4 fragColor;",
@@ -83,7 +82,7 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 
 		public List<WindowBase> OpenWindows => windowList.Where(x => x.window.IsWindowOpen).Select(x => x.window).ToList();
 
-		public ImGuiHandler(GameWindow window)
+		public ImGuiHandler(GameWindow window, Version requiredGlVersion)
 		{
 			gameWindow = window;
 			gameWindow.TextInput += (e) => pressedChars.Add((char)e.Unicode);
@@ -100,9 +99,11 @@ namespace StoicGoose.GLWindow.Interface.Handlers
 			indexBuffer = Buffer.CreateIndexBuffer<ushort>(BufferUsageHint.StaticDraw);
 			vertexArray = new VertexArray(vertexBuffer, indexBuffer);
 
+			var glslVersionString = $"#version {requiredGlVersion.Major}{requiredGlVersion.Minor}{requiredGlVersion.Build}";
+
 			shaderProgram = new ShaderProgram(
-				ShaderFactory.FromSource(ShaderType.VertexShader, vertexShaderSource),
-				ShaderFactory.FromSource(ShaderType.FragmentShader, fragmentShaderSource));
+				ShaderFactory.FromSource(ShaderType.VertexShader, glslVersionString, string.Join(Environment.NewLine, vertexShaderSource)),
+				ShaderFactory.FromSource(ShaderType.FragmentShader, glslVersionString, string.Join(Environment.NewLine, fragmentShaderSource)));
 
 			var io = ImGui.GetIO();
 			io.Fonts.AddFontDefault();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using ImGuiNET;
 
+using StoicGoose.ImGuiCommon.Windows;
+
 using NumericsVector2 = System.Numerics.Vector2;
 using OTKKeys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 

@@ -9,7 +9,7 @@ using StoicGoose.Common.OpenGL;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface.Widgets
+namespace StoicGoose.ImGuiCommon.Widgets
 {
 	public class BackgroundLogo
 	{

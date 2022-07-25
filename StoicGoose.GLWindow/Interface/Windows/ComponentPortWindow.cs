@@ -6,6 +6,7 @@ using System.Reflection;
 using ImGuiNET;
 
 using StoicGoose.Common.Attributes;
+using StoicGoose.ImGuiCommon.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

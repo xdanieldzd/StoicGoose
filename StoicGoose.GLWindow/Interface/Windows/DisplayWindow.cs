@@ -3,6 +3,7 @@
 using ImGuiNET;
 
 using StoicGoose.Common.OpenGL;
+using StoicGoose.ImGuiCommon.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

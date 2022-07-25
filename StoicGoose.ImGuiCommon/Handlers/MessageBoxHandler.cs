@@ -6,7 +6,7 @@ using ImGuiNET;
 
 using NumericsVector2 = System.Numerics.Vector2;
 
-namespace StoicGoose.GLWindow.Interface.Handlers
+namespace StoicGoose.ImGuiCommon.Handlers
 {
 	public class MessageBoxHandler
 	{

@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoicGoose.Common", "StoicG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoicGoose.GLWindow", "StoicGoose.GLWindow\StoicGoose.GLWindow.csproj", "{4DEBA1D9-848E-4370-8D56-2EA14AC3A1C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoicGoose.ImGuiCommon", "StoicGoose.ImGuiCommon\StoicGoose.ImGuiCommon.csproj", "{1F66A2A4-E9DF-4739-84F5-14A3A3401FA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{4DEBA1D9-848E-4370-8D56-2EA14AC3A1C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DEBA1D9-848E-4370-8D56-2EA14AC3A1C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DEBA1D9-848E-4370-8D56-2EA14AC3A1C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F66A2A4-E9DF-4739-84F5-14A3A3401FA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F66A2A4-E9DF-4739-84F5-14A3A3401FA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F66A2A4-E9DF-4739-84F5-14A3A3401FA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F66A2A4-E9DF-4739-84F5-14A3A3401FA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

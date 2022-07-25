@@ -15,8 +15,9 @@ using StoicGoose.Common.OpenGL;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Interfaces;
 using StoicGoose.GLWindow.Debugging;
-using StoicGoose.GLWindow.Interface.Handlers;
 using StoicGoose.GLWindow.Interface.Windows;
+using StoicGoose.ImGuiCommon.Handlers;
+using StoicGoose.ImGuiCommon.Windows;
 
 using CartridgeMetadata = StoicGoose.Core.Cartridges.Metadata;
 
@@ -78,7 +79,7 @@ namespace StoicGoose.GLWindow
 			soundHandler = new(44100, 2);
 			inputHandler = new();
 
-			imGuiHandler = new(this);
+			imGuiHandler = new(this, Program.RequiredGLVersion);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));

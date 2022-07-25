@@ -9,6 +9,7 @@ using ImGuiNET;
 using StoicGoose.Core.CPU;
 using StoicGoose.Core.Interfaces;
 using StoicGoose.GLWindow.Debugging;
+using StoicGoose.ImGuiCommon.Windows;
 
 using NumericsVector2 = System.Numerics.Vector2;
 

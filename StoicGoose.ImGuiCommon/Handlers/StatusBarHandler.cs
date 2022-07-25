@@ -2,7 +2,7 @@
 
 using ImGuiNET;
 
-namespace StoicGoose.GLWindow.Interface.Handlers
+namespace StoicGoose.ImGuiCommon.Handlers
 {
 	public class StatusBarHandler
 	{
