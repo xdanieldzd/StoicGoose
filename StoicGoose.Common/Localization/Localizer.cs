@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -15,9 +16,9 @@ namespace StoicGoose.Common.Localization
 
 		public static void Initialize(string jsonData) => source = JsonConvert.DeserializeObject(jsonData) as JObject;
 
-		public static CultureInfo[] GetSupportedLanguages() => source.Children().Select(x => new CultureInfo((x as JProperty).Name)).ToArray();
+		public static CultureInfo[] GetSupportedLanguages() => source?.Children().Select(x => new CultureInfo((x as JProperty).Name)).ToArray() ?? Array.Empty<CultureInfo>();
 
-		private static JToken GetToken(string path) => source.SelectToken($"{CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}.{path}") ?? source.SelectToken($"{FallbackCulture}.{path}");
+		private static JToken GetToken(string path) => source?.SelectToken($"{CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}.{path}") ?? source?.SelectToken($"{FallbackCulture}.{path}");
 		public static string GetString(string path) => GetToken(path)?.Value<string>() ?? path[(path.LastIndexOf('.') + 1)..];
 		public static string GetString(string path, object parameters)
 		{

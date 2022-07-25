@@ -34,7 +34,6 @@ namespace StoicGoose.GLWindow
 
 		/* Graphics */
 		readonly State renderState = new();
-		byte[] initialScreenImage = default;
 
 		/* Sound */
 		SoundHandler soundHandler = default;
@@ -102,9 +101,6 @@ namespace StoicGoose.GLWindow
 			renderState.SetClearColor(System.Drawing.Color.FromArgb(0x3E, 0x4F, 0x65)); // 🧲
 			renderState.Enable(EnableCap.Blend);
 			renderState.SetBlending(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-			initialScreenImage = new byte[244 * 144 * 4];
-			for (var i = 0; i < initialScreenImage.Length; i += 4) initialScreenImage[i + 3] = 0xFF;
 
 			soundHandler.SetMute(Program.Configuration.Mute);
 
@@ -303,8 +299,7 @@ namespace StoicGoose.GLWindow
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
 				.ToDictionary(x => x[0], x => x[1]));
 
-			displayTexture = new Texture(machine.ScreenWidth, machine.ScreenHeight);
-			displayTexture.Update(initialScreenImage);
+			displayTexture = new Texture(machine.ScreenWidth, machine.ScreenHeight, 0, 0, 0, 255);
 
 			if (Program.Configuration.BootstrapFiles.ContainsKey(typeName))
 				bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];

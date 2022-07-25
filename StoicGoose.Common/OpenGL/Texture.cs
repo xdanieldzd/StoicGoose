@@ -150,5 +150,20 @@ namespace StoicGoose.Common.OpenGL
 			isDirty = true;
 			pixelData = data;
 		}
+
+		public void Fill(byte r, byte g, byte b, byte a)
+		{
+			isDirty = true;
+
+			var data = new byte[Size.X * Size.Y * 4];
+			for (var i = 0; i < data.Length; i += 4)
+			{
+				data[i + 0] = r;
+				data[i + 1] = g;
+				data[i + 2] = b;
+				data[i + 3] = a;
+			}
+			pixelData = data;
+		}
 	}
 }

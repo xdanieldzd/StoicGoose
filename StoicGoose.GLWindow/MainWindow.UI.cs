@@ -115,7 +115,7 @@ namespace StoicGoose.GLWindow
 					updateAction: (s) => { s.IsEnabled = isRunning; }),
 					new("-"),
 					new(localization: "MainWindow.Menus.Shutdown",
-					clickAction: (_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Update(initialScreenImage); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
+					clickAction: (_) => { if (isRunning) { SaveVolatileData(); machine?.Shutdown(); displayTexture.Fill(0, 0, 0, 255); statusMessageItem.Label = "Machine shutdown."; isRunning = false; } },
 					updateAction: (s) => { s.IsEnabled = isRunning; })
 				}
 			};
