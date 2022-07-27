@@ -479,6 +479,7 @@ namespace StoicGoose.GLWindow
 			machine.LoadRom(data);
 
 			isVerticalOrientation = machine.Cartridge.Metadata.Orientation == CartridgeMetadata.Orientations.Vertical;
+			inputHandler.IsVerticalOrientation = isVerticalOrientation;
 
 			LoadCartridgeRam();
 			LoadBootstrap();

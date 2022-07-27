@@ -29,7 +29,7 @@ namespace StoicGoose.Core.Display
 
 		protected override void RenderSleep(int y, int x)
 		{
-			DisplayUtilities.CopyPixel((0, 0, 0), outputFramebuffer, y, x, HorizontalDisp);
+			DisplayUtilities.CopyPixel((0, 0, 0), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderBackColor(int y, int x)
@@ -93,12 +93,15 @@ namespace StoicGoose.Core.Display
 		{
 			if (!sprEnable) return;
 
-			activeSpriteCountOnLine = 0;
-			for (var i = 0; i < spriteCountNextFrame; i++)
+			if (x == 0)
 			{
-				var spriteY = (spriteData[i] >> 16) & 0xFF;
-				if ((byte)(y - spriteY) <= 7 && activeSpriteCountOnLine < maxSpritesPerLine)
-					activeSpritesOnLine[activeSpriteCountOnLine++] = spriteData[i];
+				activeSpriteCountOnLine = 0;
+				for (var i = 0; i < spriteCountNextFrame; i++)
+				{
+					var spriteY = (spriteData[i] >> 16) & 0xFF;
+					if ((byte)(y - spriteY) <= 7 && activeSpriteCountOnLine < maxSpritesPerLine)
+						activeSpritesOnLine[activeSpriteCountOnLine++] = spriteData[i];
+				}
 			}
 
 			for (var i = 0; i < activeSpriteCountOnLine; i++)

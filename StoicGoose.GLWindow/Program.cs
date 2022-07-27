@@ -69,7 +69,9 @@ namespace StoicGoose.GLWindow
 			using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance) Environment.Exit(-1);
 
+#if !DEBUG
 			try
+#endif
 			{
 				var windowIcon = Resources.GetEmbeddedRgbaFile("Assets.WS-Icon.rgba");
 
@@ -91,6 +93,7 @@ namespace StoicGoose.GLWindow
 				};
 				mainWindow.Run();
 			}
+#if !DEBUG
 			catch (GLFWException ex)
 			{
 				ShutdownOnFatalError(ex, Localizer.GetString("Program.WrongOpenGLVersion", new { ProductName, MajorGLVersion = RequiredGLVersion.Major, MinorGLVersion = RequiredGLVersion.Minor }));
@@ -99,6 +102,7 @@ namespace StoicGoose.GLWindow
 			{
 				ShutdownOnFatalError(ex);
 			}
+#endif
 		}
 
 		private static void ShutdownOnFatalError(Exception ex, string otherMessage = null)

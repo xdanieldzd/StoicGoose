@@ -40,9 +40,38 @@ namespace StoicGoose.GLWindow.Interface.Windows
 				var drawList = ImGui.GetWindowDrawList();
 				var screenPos = ImGui.GetCursorScreenPos();
 
-				drawList.AddImage(new IntPtr(texture.Handle),
-					screenPos + childBorderSize,
-					screenPos + textureSize + childBorderSize);
+				var pos = new NumericsVector2[4];
+				var uvs = new NumericsVector2[4];
+
+				if (vertical)
+				{
+					pos[0] = screenPos + new NumericsVector2(textureSize.X, 0f) + childBorderSize;
+					pos[3] = screenPos + new NumericsVector2(textureSize.X, textureSize.Y) + childBorderSize;
+					pos[2] = screenPos + new NumericsVector2(0f, textureSize.Y) + childBorderSize;
+					pos[1] = screenPos + new NumericsVector2(0f, 0f) + childBorderSize;
+
+					uvs[0] = new NumericsVector2(1f, 1f);
+					uvs[1] = new NumericsVector2(1f, 0f);
+					uvs[2] = new NumericsVector2(0f, 0f);
+					uvs[3] = new NumericsVector2(0f, 1f);
+				}
+				else
+				{
+					pos[0] = screenPos + new NumericsVector2(0f, 0f) + childBorderSize;
+					pos[1] = screenPos + new NumericsVector2(0f, textureSize.Y) + childBorderSize;
+					pos[2] = screenPos + new NumericsVector2(textureSize.X, textureSize.Y) + childBorderSize;
+					pos[3] = screenPos + new NumericsVector2(textureSize.X, 0f) + childBorderSize;
+
+					uvs[0] = new NumericsVector2(0f, 0f);
+					uvs[1] = new NumericsVector2(0f, 1f);
+					uvs[2] = new NumericsVector2(1f, 1f);
+					uvs[3] = new NumericsVector2(1f, 0f);
+				}
+
+				drawList.AddImageQuad(
+					new IntPtr(texture.Handle),
+					pos[0], pos[1], pos[2], pos[3],
+					uvs[0], uvs[1], uvs[2], uvs[3]);
 
 				if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
 					ImGui.OpenPopup("context");

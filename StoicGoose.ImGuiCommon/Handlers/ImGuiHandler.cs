@@ -196,6 +196,11 @@ namespace StoicGoose.ImGuiCommon.Handlers
 			io.KeyMap[(int)ImGuiKey.Keypad8] = (int)Keys.KeyPad8;
 			io.KeyMap[(int)ImGuiKey.Keypad9] = (int)Keys.KeyPad9;
 			io.KeyMap[(int)ImGuiKey.KeypadDecimal] = (int)Keys.KeyPadDecimal;
+
+			io.KeyMap[(int)ImGuiKey.LeftShift] = (int)Keys.LeftShift;
+			io.KeyMap[(int)ImGuiKey.RightShift] = (int)Keys.RightShift;
+			io.KeyMap[(int)ImGuiKey.LeftCtrl] = (int)Keys.LeftControl;
+			io.KeyMap[(int)ImGuiKey.RightCtrl] = (int)Keys.RightControl;
 		}
 
 		~ImGuiHandler()
