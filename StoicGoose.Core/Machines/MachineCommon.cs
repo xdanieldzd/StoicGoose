@@ -198,6 +198,7 @@ namespace StoicGoose.Core.Machines
 
 		protected void RaiseInterrupt(int number)
 		{
+			if (!IsBitSet(interruptEnable, number)) return;
 			ChangeBit(ref interruptStatus, number, true);
 		}
 

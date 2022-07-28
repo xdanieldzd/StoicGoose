@@ -79,9 +79,6 @@ namespace StoicGoose.Core.CPU
 
 		public void Interrupt(int vector)
 		{
-			/* Ignore interrupt if interrupts are disabled */
-			if (!IsFlagSet(Flags.InterruptEnable)) return;
-
 			/* Resume execution */
 			halted = false;
 
