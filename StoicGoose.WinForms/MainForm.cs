@@ -348,8 +348,8 @@ namespace StoicGoose.WinForms
 			}
 			else
 			{
-				screenWidth = emulatorHandler.Machine.ScreenWidth;
-				screenHeight = emulatorHandler.Machine.ScreenHeight;
+				screenWidth = emulatorHandler.Machine.ScreenHeight;
+				screenHeight = emulatorHandler.Machine.ScreenWidth;
 				if (!statusIconsOnRight) screenWidth += statusIconSize;
 				if (statusIconsOnRight) screenHeight += statusIconSize;
 			}
