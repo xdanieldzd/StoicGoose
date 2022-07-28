@@ -125,6 +125,8 @@ namespace StoicGoose.GLWindow
 
 			Program.Configuration.WindowsToRestore = imGuiHandler.OpenWindows.Select(x => x.GetType().FullName).ToList();
 
+			Program.Configuration.DisplaySize = displayWindow.WindowScale;
+
 			Program.SaveConfiguration();
 
 			/* Ensure imgui.ini gets written */
