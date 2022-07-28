@@ -105,6 +105,7 @@ namespace StoicGoose.GLWindow
 #endif
 		}
 
+#if !DEBUG
 		private static void ShutdownOnFatalError(Exception ex, string otherMessage = null)
 		{
 			Log.WriteFatal(ConstructFatalErrorMessage(ex));
@@ -124,6 +125,7 @@ namespace StoicGoose.GLWindow
 			else
 				return $"{ex.GetType().Name}: {ex.Message}";
 		}
+#endif
 
 		private static Configuration LoadConfiguration(string filename)
 		{
