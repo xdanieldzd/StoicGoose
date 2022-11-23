@@ -766,7 +766,10 @@
 			return cycles;
 		}
 
-		/* NOTE: AAM/AAD: NEC CPUs ignore immediate & always use base 10 -- https://www.vcfed.org/forum/forum/technical-support/vintage-computer-programming/36551/ */
+		/* NOTE: AAM/AAD: While NEC V20/V30 do ignore immediate & always use base 10 (1), V30MZ does *not* ignore the immediate (2)
+		 * (1): https://www.vcfed.org/forum/forum/technical-support/vintage-computer-programming/36551/
+		 * (2): https://github.com/xdanieldzd/StoicGoose/issues/9
+		 */
 
 		private static int Opcode0xD4(V30MZ cpu)
 		{
@@ -779,7 +782,6 @@
 			}
 			else
 			{
-				value = 10;
 				cpu.ax.High = (byte)(cpu.ax.Low / value);
 				cpu.ax.Low = (byte)(cpu.ax.Low % value);
 				cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
@@ -792,8 +794,7 @@
 		private static int Opcode0xD5(V30MZ cpu)
 		{
 			/* AAD */
-			cpu.ReadOpcodeIb();
-			var value = 10;
+			var value = cpu.ReadOpcodeIb();
 			cpu.ax.Low = (byte)(cpu.ax.High * value + cpu.ax.Low);
 			cpu.ax.High = 0;
 			cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));

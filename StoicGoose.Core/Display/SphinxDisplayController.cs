@@ -14,7 +14,7 @@ namespace StoicGoose.Core.Display
 		/* REG_LCD_CTRL */
 		bool lcdContrastHigh;
 		/* REG_DISP_MODE */
-		bool displayColorFlagSet, display4bppFlagSet;
+		bool displayPackedFormatSet, display4bppFlagSet, displayColorFlagSet;
 
 		public SphinxDisplayController(IMachine machine) : base(machine) { }
 
@@ -24,7 +24,7 @@ namespace StoicGoose.Core.Display
 
 			backColorPalette = 0;
 			lcdContrastHigh = false;
-			displayColorFlagSet = display4bppFlagSet = false;
+			displayPackedFormatSet = display4bppFlagSet = displayColorFlagSet = false;
 		}
 
 		protected override void RenderSleep(int y, int x)
@@ -34,7 +34,7 @@ namespace StoicGoose.Core.Display
 
 		protected override void RenderBackColor(int y, int x)
 		{
-			if (displayColorFlagSet || display4bppFlagSet)
+			if (displayColorFlagSet)
 				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, backColorPalette, backColorIndex)), outputFramebuffer, x, y, HorizontalDisp);
 			else
 				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[backColorIndex & 0b0111])), outputFramebuffer, x, y, HorizontalDisp);
@@ -49,13 +49,13 @@ namespace StoicGoose.Core.Display
 
 			var mapOffset = (uint)((scr1Base << 11) | ((scrollY >> 3) << 6) | ((scrollX >> 3) << 1));
 			var attribs = ReadMemory16(mapOffset);
-			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet || display4bppFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
+			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
-			if (pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, display4bppFlagSet, displayColorFlagSet);
+			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
 			{
-				if (displayColorFlagSet || display4bppFlagSet)
+				if (displayColorFlagSet)
 					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 				else
 					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
@@ -71,17 +71,17 @@ namespace StoicGoose.Core.Display
 
 			var mapOffset = (uint)((scr2Base << 11) | ((scrollY >> 3) << 6) | ((scrollX >> 3) << 1));
 			var attribs = ReadMemory16(mapOffset);
-			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet || display4bppFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
+			var tileNum = (ushort)((attribs & 0x01FF) | (displayColorFlagSet ? (((attribs >> 13) & 0b1) << 9) : 0));
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
-			if (pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, display4bppFlagSet, displayColorFlagSet);
+			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
 					isUsedBySCR2[(y * HorizontalDisp) + x] = true;
 
-					if (displayColorFlagSet || display4bppFlagSet)
+					if (displayColorFlagSet)
 						DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 					else
 						DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
@@ -119,12 +119,12 @@ namespace StoicGoose.Core.Display
 					var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 					var spriteY = (activeSprite >> 16) & 0xFF;
 
-					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), displayPackedFormatSet, displayColorFlagSet, display4bppFlagSet);
-					if ((pixelColor != 0 || (!(displayColorFlagSet || display4bppFlagSet) && pixelColor == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), displayPackedFormatSet, display4bppFlagSet, displayColorFlagSet);
+					if ((pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 						{
-							if (displayColorFlagSet || display4bppFlagSet)
+							if (displayColorFlagSet)
 								DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel(DisplayUtilities.ReadColor(machine, tilePal, pixelColor)), outputFramebuffer, x, y, HorizontalDisp);
 							else
 								DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
@@ -148,13 +148,13 @@ namespace StoicGoose.Core.Display
 
 				case 0x04:
 					/* REG_SPR_BASE */
-					retVal |= (byte)(sprBase & 0b111111);
+					retVal |= (byte)(sprBase & (displayColorFlagSet ? 0b111111 : 0b011111));
 					break;
 
 				case 0x07:
 					/* REG_MAP_BASE */
-					retVal |= (byte)((scr1Base & 0b1111) << 0);
-					retVal |= (byte)((scr2Base & 0b1111) << 4);
+					retVal |= (byte)((scr1Base & (displayColorFlagSet ? 0b1111 : 0b0111)) << 0);
+					retVal |= (byte)((scr2Base & (displayColorFlagSet ? 0b1111 : 0b0111)) << 4);
 					break;
 
 				case 0x14:
@@ -166,8 +166,8 @@ namespace StoicGoose.Core.Display
 				case 0x60:
 					/* REG_DISP_MODE */
 					ChangeBit(ref retVal, 5, displayPackedFormatSet);
-					ChangeBit(ref retVal, 6, displayColorFlagSet);
-					ChangeBit(ref retVal, 7, display4bppFlagSet);
+					ChangeBit(ref retVal, 6, display4bppFlagSet);
+					ChangeBit(ref retVal, 7, displayColorFlagSet);
 					break;
 
 				default:
@@ -191,13 +191,13 @@ namespace StoicGoose.Core.Display
 
 				case 0x04:
 					/* REG_SPR_BASE */
-					sprBase = (byte)(value & 0b111111);
+					sprBase = (byte)(value & (displayColorFlagSet ? 0b111111 : 0b011111));
 					break;
 
 				case 0x07:
 					/* REG_MAP_BASE */
-					scr1Base = (byte)((value >> 0) & 0b1111);
-					scr2Base = (byte)((value >> 4) & 0b1111);
+					scr1Base = (byte)((value >> 0) & (displayColorFlagSet ? 0b1111 : 0b0111));
+					scr2Base = (byte)((value >> 4) & (displayColorFlagSet ? 0b1111 : 0b0111));
 					break;
 
 				case 0x14:
@@ -209,8 +209,8 @@ namespace StoicGoose.Core.Display
 				case 0x60:
 					/* REG_DISP_MODE */
 					displayPackedFormatSet = IsBitSet(value, 5);
-					displayColorFlagSet = IsBitSet(value, 6);
-					display4bppFlagSet = IsBitSet(value, 7);
+					display4bppFlagSet = IsBitSet(value, 6);
+					displayColorFlagSet = IsBitSet(value, 7);
 					break;
 
 				default:
@@ -242,10 +242,13 @@ namespace StoicGoose.Core.Display
 		[BitDescription("LCD contrast setting; high contrast?", 1)]
 		public bool LcdContrastHigh => lcdContrastHigh;
 		[Port("REG_DISP_MODE", 0x060)]
-		[BitDescription("Display color mode; is color?", 6)]
-		public bool DisplayColorFlagSet => displayColorFlagSet;
+		[BitDescription("Tile format; is packed format?", 5)]
+		public bool DisplayPackedFormatSet => displayPackedFormatSet;
 		[Port("REG_DISP_MODE", 0x060)]
-		[BitDescription("Tile bits-per-pixel; is 4bpp?", 7)]
+		[BitDescription("Tile bits-per-pixel; is 4bpp?", 6)]
 		public bool Display4bppFlagSet => display4bppFlagSet;
+		[Port("REG_DISP_MODE", 0x060)]
+		[BitDescription("Display color mode; is color?", 7)]
+		public bool DisplayColorFlagSet => displayColorFlagSet;
 	}
 }

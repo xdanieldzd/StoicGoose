@@ -1,5 +1,6 @@
-﻿using StoicGoose.Common.Utilities;
-using StoicGoose.Core.Interfaces;
+﻿using StoicGoose.Core.Interfaces;
+
+using static StoicGoose.Common.Utilities.BitHandling;
 
 namespace StoicGoose.Core.Display
 {
@@ -29,8 +30,8 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)(attribs & 0x01FF);
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, false, false);
-			if (pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), false, false, false);
+			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
 				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
@@ -46,8 +47,8 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)(attribs & 0x01FF);
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), displayPackedFormatSet, false, false);
-			if (pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), false, false, false);
+			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
 			{
 				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
 				{
@@ -88,8 +89,8 @@ namespace StoicGoose.Core.Display
 					var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 					var spriteY = (activeSprite >> 16) & 0xFF;
 
-					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), displayPackedFormatSet, false, false);
-					if ((pixelColor != 0 || (pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), false, false, false);
+					if ((pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
 					{
 						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
 							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
@@ -122,12 +123,7 @@ namespace StoicGoose.Core.Display
 
 				case 0x14:
 					/* REG_LCD_CTRL */
-					BitHandling.ChangeBit(ref retVal, 0, lcdActive);
-					break;
-
-				case 0x60:
-					/* REG_DISP_MODE */
-					BitHandling.ChangeBit(ref retVal, 5, displayPackedFormatSet);
+					ChangeBit(ref retVal, 0, lcdActive);
 					break;
 
 				default:
@@ -161,12 +157,7 @@ namespace StoicGoose.Core.Display
 
 				case 0x14:
 					/* REG_LCD_CTRL */
-					lcdActive = BitHandling.IsBitSet(value, 0);
-					break;
-
-				case 0x60:
-					/* REG_DISP_MODE */
-					displayPackedFormatSet = BitHandling.IsBitSet(value, 5);
+					lcdActive = IsBitSet(value, 0);
 					break;
 
 				default:

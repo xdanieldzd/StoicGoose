@@ -77,8 +77,6 @@ namespace StoicGoose.Core.Display
 		protected readonly byte[] palMonoPools = default;
 		/* REG_PALMONO_x */
 		protected readonly byte[][] palMonoData = default;
-		/* REG_DISP_MODE */
-		protected bool displayPackedFormatSet;
 		/* REG_xTMR_xxx */
 		protected readonly DisplayTimer hBlankTimer = new(), vBlankTimer = new();
 
@@ -126,7 +124,6 @@ namespace StoicGoose.Core.Display
 			vsync = VerticalTotal - 4; /* NOTE: Full usage/meaning unknown, so we're ignoring it for now */
 			Array.Fill<byte>(palMonoPools, 0);
 			for (var i = 0; i < palMonoData.GetLength(0); i++) Array.Fill<byte>(palMonoData[i], 0);
-			displayPackedFormatSet = false;
 			hBlankTimer.Reset();
 			vBlankTimer.Reset();
 		}
@@ -719,9 +716,6 @@ namespace StoicGoose.Core.Display
 		[Port("REG_LCD_VSYNC", 0x017)]
 		[BitDescription("VSYNC line position")]
 		public int VSync => vsync;
-		[Port("REG_DISP_MODE", 0x060)]
-		[BitDescription("Tile format; is packed format?", 5)]
-		public bool DisplayPackedFormatSet => displayPackedFormatSet;
 		[Port("REG_TMR_CTRL", 0x0A2)]
 		[BitDescription("H-blank timer enable", 0)]
 		public bool HBlankTimerEnable => hBlankTimer.Enable;

@@ -160,6 +160,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		private void UpdateTilemapTexture(IMachine machine)
 		{
 			var sphinxDisplay = machine.DisplayController as SphinxDisplayController;
+			var flagPacked = sphinxDisplay?.DisplayPackedFormatSet == true;
 			var flagColor = sphinxDisplay?.DisplayColorFlagSet == true;
 			var flag4bpp = sphinxDisplay?.Display4bppFlagSet == true;
 
@@ -176,7 +177,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 
 					var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, y ^ (((attribs >> 15) & 0b1) * 7), x ^ (((attribs >> 14) & 0b1) * 7), machine.DisplayController.DisplayPackedFormatSet, flagColor, flag4bpp);
+					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, y ^ (((attribs >> 15) & 0b1) * 7), x ^ (((attribs >> 14) & 0b1) * 7), flagPacked, flag4bpp, flagColor);
 					if (pixelColor != 0 || (!(flagColor || flag4bpp) && pixelColor == 0 && !BitHandling.IsBitSet(tilePal, 2)))
 					{
 						if (flagColor || flag4bpp)

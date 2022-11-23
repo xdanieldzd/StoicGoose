@@ -1,4 +1,5 @@
-﻿using StoicGoose.Core.Interfaces;
+﻿using System;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.Display
 {
@@ -9,36 +10,36 @@ namespace StoicGoose.Core.Display
 		private static ushort ReadMemory16(IMachine machine, uint address) => (ushort)(machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
 		private static uint ReadMemory32(IMachine machine, uint address) => (uint)(machine.ReadMemory(address + 3) << 24 | machine.ReadMemory(address + 2) << 16 | machine.ReadMemory(address + 1) << 8 | machine.ReadMemory(address));
 
-		public static byte ReadPixel(IMachine machine, ushort tile, int y, int x, bool isPacked, bool isColor, bool is4bpp)
+		public static byte ReadPixel(IMachine machine, ushort tile, int y, int x, bool isPacked, bool is4bpp, bool isColor)
 		{
-			if (!isColor || !is4bpp)
+			/* http://perfectkiosk.net/stsws.html#color_mode */
+
+			/* WonderSwan OR Color/Crystal in 2bpp mode */
+			if (!isColor || (isColor && !is4bpp))
 			{
-				/* 2bpp, like WS */
-				if (!isPacked)
-				{
-					var data = ReadMemory16(machine, (uint)(0x2000 + (tile << 4) + ((y % 8) << 1)));
-					return (byte)((((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b11);
-				}
-				else
-				{
-					var data = machine.ReadMemory((uint)(0x2000 + (tile << 4) + ((y % 8) << 1) + ((x % 8) >> 2)));
-					return (byte)((data >> 6 - (((x % 8) & 0b11) << 1)) & 0b11);
-				}
+				var data = ReadMemory16(machine, (uint)(0x2000 + (tile << 4) + ((y % 8) << 1)));
+				return (byte)((((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b11);
 			}
-			else
+
+			/* WonderSwan Color/Crystal in 4bpp mode */
+			else if (isColor && is4bpp)
 			{
-				/* 4bpp, Color-only */
+				/* 4bpp planar mode */
 				if (!isPacked)
 				{
 					var data = ReadMemory32(machine, (uint)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2)));
 					return (byte)((((data >> 31 - (x % 8)) & 0b1) << 3 | ((data >> 23 - (x % 8)) & 0b1) << 2 | ((data >> 15 - (x % 8)) & 0b1) << 1 | ((data >> 7 - (x % 8)) & 0b1)) & 0b1111);
 				}
-				else
+
+				/* 4bpp packed mode */
+				else if (isPacked)
 				{
 					var data = machine.ReadMemory((ushort)(0x4000 + ((tile & 0x03FF) << 5) + ((y % 8) << 2) + ((x % 8) >> 1)));
 					return (byte)((data >> 4 - (((x % 8) & 0b1) << 2)) & 0b1111);
 				}
 			}
+
+			throw new Exception("Invalid display controller configuration");
 		}
 
 		public static ushort ReadColor(IMachine machine, byte paletteIdx, byte colorIdx)
