@@ -31,8 +31,11 @@ namespace StoicGoose.Core.Display
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
 			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), false, false, false);
-			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
-				DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
+
+			var isOpaque = !IsBitSet(tilePal, 2) || pixelColor != 0;
+			if (!isOpaque) return;
+
+			DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderSCR2(int y, int x)
@@ -47,16 +50,17 @@ namespace StoicGoose.Core.Display
 			var tileNum = (ushort)(attribs & 0x01FF);
 			var tilePal = (byte)((attribs >> 9) & 0b1111);
 
-			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), false, false, false);
-			if (pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2)))
-			{
-				if (!scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x)))))
-				{
-					isUsedBySCR2[(y * HorizontalDisp) + x] = true;
+			var isVisible = !scr2WindowEnable || (scr2WindowEnable && ((!scr2WindowDisplayOutside && IsInsideSCR2Window(y, x)) || (scr2WindowDisplayOutside && IsOutsideSCR2Window(y, x))));
+			if (!isVisible) return;
 
-					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
-				}
-			}
+			var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, scrollY ^ (((attribs >> 15) & 0b1) * 7), scrollX ^ (((attribs >> 14) & 0b1) * 7), false, false, false);
+
+			var isOpaque = !IsBitSet(tilePal, 2) || pixelColor != 0;
+			if (!isOpaque) return;
+
+			isUsedBySCR2[(y * HorizontalDisp) + x] = true;
+
+			DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 		}
 
 		protected override void RenderSprites(int y, int x)
@@ -85,16 +89,21 @@ namespace StoicGoose.Core.Display
 				if (!sprWindowEnable || (sprWindowEnable && (windowDisplayOutside != IsInsideSPRWindow(y, x))))
 				{
 					var tileNum = (ushort)(activeSprite & 0x01FF);
-					var tilePal = (byte)(((activeSprite >> 9) & 0b111) + 8);
+					var tilePal = (byte)((activeSprite >> 9) & 0b111);
 					var priorityAboveSCR2 = ((activeSprite >> 13) & 0b1) == 0b1;
 					var spriteY = (activeSprite >> 16) & 0xFF;
 
+					var isVisible = !isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2;
+					if (!isVisible) continue;
+
 					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), false, false, false);
-					if ((pixelColor != 0 || (pixelColor == 0 && !IsBitSet(tilePal, 2))) && (!isUsedBySCR2[(y * HorizontalDisp) + x] || priorityAboveSCR2))
-					{
-						if (y >= 0 && y < VerticalDisp && x >= 0 && x < HorizontalDisp)
-							DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
-					}
+
+					var isOpaque = !IsBitSet(tilePal, 2) || pixelColor != 0;
+					if (!isOpaque) return;
+
+					tilePal += 8;
+
+					DisplayUtilities.CopyPixel(DisplayUtilities.GeneratePixel((byte)(15 - palMonoPools[palMonoData[tilePal][pixelColor & 0b11]])), outputFramebuffer, x, y, HorizontalDisp);
 				}
 			}
 		}
