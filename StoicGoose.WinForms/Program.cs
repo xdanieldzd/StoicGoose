@@ -17,7 +17,7 @@ namespace StoicGoose.WinForms
 		public readonly static Version RequiredGLVersion = new(4, 0, 0);
 
 		const string jsonConfigFileName = "Config.json";
-		const string logFileName = "Log.txt";
+		const string logFilePrefix = "Log_";
 
 		const string internalDataDirectoryName = "Internal";
 		const string saveDataDirectoryName = "Saves";
@@ -55,7 +55,7 @@ namespace StoicGoose.WinForms
 			{
 				Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
-				Log.Initialize(Path.Combine(programDataDirectory, logFileName));
+				Log.Initialize(Path.Combine(programDataDirectory, $"{logFilePrefix}{DateTime.Now:yyyy-dd-M_HH-mm-ss}.txt"));
 
 				Directory.CreateDirectory(DataPath = programDataDirectory);
 				Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
@@ -80,14 +80,14 @@ namespace StoicGoose.WinForms
 		[STAThread]
 		static void Main()
 		{
-			using var mutex = new Mutex(true, mutexName, out bool newInstance);
+			/*using var mutex = new Mutex(true, mutexName, out bool newInstance);
 			if (!newInstance)
 			{
 				MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.",
 					$"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Environment.Exit(-1);
 			}
-
+			*/
 			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);

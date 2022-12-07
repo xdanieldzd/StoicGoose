@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -51,6 +52,9 @@ namespace StoicGoose.WinForms
 		string internalEepromPath = string.Empty;
 		Vector2i statusIconsLocation = Vector2i.Zero;
 		Cheat[] cheats = default;
+		MemoryMappedFile serialMmf = default;
+		MemoryMappedViewAccessor serialMmvAccessor = default;
+		byte serialCommsAlreadyConfigured = 0, serialCommsTargetLocation = 0;
 
 		public MainForm()
 		{
@@ -264,6 +268,49 @@ namespace StoicGoose.WinForms
 					emulatorHandler.Machine.SoundController.ChangeMasterVolume();
 
 				return (buttonsPressed, buttonsHeld);
+			};
+
+			// initialize memory-mapped file stuffs for serial link
+			serialMmf = MemoryMappedFile.CreateOrOpen($"{Application.ProductName}Serial", 16, MemoryMappedFileAccess.ReadWrite);
+			serialMmvAccessor = serialMmf.CreateViewAccessor();
+
+			// check if other instance already configured locations
+			serialCommsAlreadyConfigured = serialMmvAccessor.ReadByte(0x00);
+			if (serialCommsAlreadyConfigured == 0)
+			{
+				// not configured? set other instance location to 2, then write configured status to MMF
+				serialCommsTargetLocation = 0x02;
+
+				serialMmvAccessor.Write(0x00, 0xFF);
+			}
+			else
+			{
+				// configured? set other instance location to 1
+				serialCommsTargetLocation = 0x01;
+			}
+
+			emulatorHandler.Machine.SerialReceive += () =>
+			{
+				// raise serial receive ready interrupt
+				emulatorHandler.Machine.RaiseInterrupt(3);
+
+				// grab byte from other instance, write to machine's serial data port
+				emulatorHandler.Machine.SerialDataPort = serialMmvAccessor.ReadByte(serialCommsTargetLocation);
+
+				// set machine's serial status data received flag
+				emulatorHandler.Machine.SerialDataReceivedFlag = true;
+			};
+
+			emulatorHandler.Machine.SerialSend += () =>
+			{
+				// raise serial	send ready interrupt
+				emulatorHandler.Machine.RaiseInterrupt(0);
+
+				// grab serial data from machine, write to other instance
+				serialMmvAccessor.Write(serialCommsTargetLocation, emulatorHandler.Machine.SerialDataPort);
+
+				// set machine's serial status send buffer empty flag
+				emulatorHandler.Machine.SerialSendBufferEmptyFlag = true;
 			};
 
 			renderControl.Resize += (s, e) => { if (s is Control control) graphicsHandler.Resize(control.ClientRectangle); };

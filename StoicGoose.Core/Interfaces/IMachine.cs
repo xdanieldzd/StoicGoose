@@ -36,6 +36,12 @@ namespace StoicGoose.Core.Interfaces
 
 		Func<(List<string> buttonsPressed, List<string> buttonsHeld)> ReceiveInput { get; set; }
 
+		Action SerialSend { get; set; }
+		Action SerialReceive { get; set; }
+		byte SerialDataPort { get; set; }
+		bool SerialSendBufferEmptyFlag { get; set; }
+		bool SerialDataReceivedFlag { get; set; }
+
 		Func<uint, byte, byte> ReadMemoryCallback { get; set; }
 		Action<uint, byte> WriteMemoryCallback { get; set; }
 		Func<ushort, byte, byte> ReadPortCallback { get; set; }
@@ -49,6 +55,9 @@ namespace StoicGoose.Core.Interfaces
 		void RunFrame();
 		void RunLine();
 		void RunStep();
+
+		void RaiseInterrupt(int number);
+		void LowerInterrupt(int number);
 
 		void LoadBootstrap(byte[] data);
 		bool IsBootstrapLoaded { get; }

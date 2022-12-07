@@ -142,7 +142,7 @@ namespace StoicGoose.Core.Display
 			if (cycleCount >= HorizontalTotal)
 			{
 				/* Sprite fetch */
-				if (LineCurrent == VerticalDisp - 2)
+				if (lineCurrent == VerticalDisp - 2)
 				{
 					spriteCountNextFrame = 0;
 					for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
@@ -570,15 +570,12 @@ namespace StoicGoose.Core.Display
 
 				case 0xA2:
 					/* REG_TMR_CTRL */
-					var hEnable = IsBitSet(value, 0);
-					var vEnable = IsBitSet(value, 2);
+					if (!hBlankTimer.Enable && IsBitSet(value, 0)) hBlankTimer.Reload();
+					if (!vBlankTimer.Enable && IsBitSet(value, 2)) vBlankTimer.Reload();
 
-					if (!hBlankTimer.Enable && hEnable) hBlankTimer.Reload();
-					if (!vBlankTimer.Enable && vEnable) vBlankTimer.Reload();
-
-					hBlankTimer.Enable = hEnable;
+					hBlankTimer.Enable = IsBitSet(value, 0);
 					hBlankTimer.Repeating = IsBitSet(value, 1);
-					vBlankTimer.Enable = vEnable;
+					vBlankTimer.Enable = IsBitSet(value, 2);
 					vBlankTimer.Repeating = IsBitSet(value, 3);
 					break;
 

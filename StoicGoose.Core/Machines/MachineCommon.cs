@@ -50,6 +50,9 @@ namespace StoicGoose.Core.Machines
 
 		public Func<(List<string> buttonsPressed, List<string> buttonsHeld)> ReceiveInput { get; set; } = default;
 
+		public Action SerialSend { get; set; } = default;
+		public Action SerialReceive { get; set; } = default;
+
 		public Func<uint, byte, byte> ReadMemoryCallback { get; set; } = default;
 		public Action<uint, byte> WriteMemoryCallback { get; set; } = default;
 		public Func<ushort, byte, byte> ReadPortCallback { get; set; } = default;
@@ -73,6 +76,10 @@ namespace StoicGoose.Core.Machines
 		protected byte serialData;
 		/* REG_SER_STATUS */
 		protected bool serialEnable, serialBaudRateSelect, serialOverrunReset, serialSendBufferEmpty, serialOverrun, serialDataReceived;
+
+		public byte SerialDataPort { get => serialData; set { serialData = value; SerialReceive(); } }
+		public bool SerialSendBufferEmptyFlag { get => serialSendBufferEmpty; set => serialSendBufferEmpty = value; }
+		public bool SerialDataReceivedFlag { get => serialDataReceived; set => serialDataReceived = value; }
 
 		public bool IsBootstrapLoaded => BootstrapRom != null;
 
@@ -196,26 +203,26 @@ namespace StoicGoose.Core.Machines
 
 		public abstract void RunStep();
 
-		protected void RaiseInterrupt(int number)
+		public void RaiseInterrupt(int number)
 		{
 			if (!IsBitSet(interruptEnable, number)) return;
 			ChangeBit(ref interruptStatus, number, true);
 		}
 
-		protected void LowerInterrupt(int number)
+		public void LowerInterrupt(int number)
 		{
 			ChangeBit(ref interruptStatus, number, false);
 		}
 
 		protected void HandleInterrupts()
 		{
-			if (!Cpu.IsFlagSet(V30MZ.Flags.InterruptEnable)) return;
-
 			for (var i = 7; i >= 0; i--)
 			{
 				if (!IsBitSet(interruptEnable, i) || !IsBitSet(interruptStatus, i)) continue;
 
 				Cpu.IsHalted = false;
+				if (!Cpu.IsFlagSet(V30MZ.Flags.InterruptEnable)) continue;
+
 				Cpu.Interrupt((interruptBase & 0b11111000) | i);
 				return;
 			}

@@ -161,6 +161,7 @@ namespace StoicGoose.Core.Machines
 
 				case 0xB1:
 					/* REG_SER_DATA */
+					SerialReceive();
 					retVal = serialData;
 					break;
 
@@ -315,6 +316,7 @@ namespace StoicGoose.Core.Machines
 				case 0xB1:
 					/* REG_SER_DATA */
 					serialData = value;
+					SerialSend();
 					break;
 
 				case 0xB2:
