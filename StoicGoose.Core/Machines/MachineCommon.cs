@@ -31,7 +31,7 @@ namespace StoicGoose.Core.Machines
 		public abstract string InternalEepromDefaultUsername { get; }
 		public abstract Dictionary<ushort, byte> InternalEepromDefaultData { get; }
 
-		public const double MasterClock = 12288000; /* 12.288 MHz xtal */
+		public const double MasterClock = 12288000.0; /* 12.288 MHz xtal */
 		public const double CpuClock = MasterClock / 4.0; /* /4 = 3.072 MHz */
 
 		public abstract int InternalRamSize { get; }
