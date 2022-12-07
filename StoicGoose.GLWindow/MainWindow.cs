@@ -57,7 +57,7 @@ namespace StoicGoose.GLWindow
 		double framesPerSecond = 0.0;
 
 		/* Easter egg variables */
-		readonly Random random = new(Guid.NewGuid().GetHashCode());
+		readonly System.Random random = new(Guid.NewGuid().GetHashCode());
 
 		public MainWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
 		{

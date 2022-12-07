@@ -1,0 +1,40 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<# var flags = new (string shortName, string longName, int bitNumber)[] {
+("carry", "Carry", 0),
+("parity", "Parity", 2),
+("auxCarry", "AuxiliaryCarry", 4),
+("zero", "Zero", 6),
+("sign", "Sign", 7),
+("brk", "Break", 8),
+("intEnable", "InterruptEnable", 9),
+("direction", "Direction", 10),
+("overflow", "Overflow", 11)
+}; #>
+namespace StoicGoose.Core.CPU
+{
+public class ProgramStatusWord
+{
+<# foreach (var flag in flags) { #>
+const ushort <#= flag.shortName #>Bit = 1 << <#= flag.bitNumber #>;
+bool <#= flag.shortName #>;
+public bool <#= flag.longName #> { get => <#= flag.shortName #>; set => <#= flag.shortName #> = value; }
+<# } #>
+
+public ushort Value
+{
+get => (ushort)(
+<# foreach (var flag in flags) { #>
+(<#= flag.shortName #> ? <#= flag.shortName #>Bit : 0) |
+<# } #>
+0b1111000000000010);
+set
+{
+<# foreach (var flag in flags) { #>
+<#= flag.shortName #> = (value & <#= flag.shortName #>Bit) == <#= flag.shortName #>Bit;
+<# } #>
+}
+}
+public static implicit operator ProgramStatusWord(ushort value) => new() { Value = value };
+}
+}

@@ -1,0 +1,14 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<# var types = new Type[] { typeof(byte), typeof(sbyte), typeof(ushort), typeof(short), typeof(uint), typeof(int) }; #>
+using System;
+namespace StoicGoose.Common.Utilities
+{
+public static class Random
+{
+readonly static System.Random rng = new((int)(DateTime.Now.Ticks & 0xFFFFFFFF));
+<# foreach (var type in types) { #>
+public static <#= type.Name #> Get<#= type.Name #>() => (<#= type.Name #>)rng.Next();
+<# } #>
+}
+}

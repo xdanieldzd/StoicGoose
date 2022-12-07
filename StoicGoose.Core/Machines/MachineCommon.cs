@@ -101,6 +101,18 @@ namespace StoicGoose.Core.Machines
 			SoundController?.Reset();
 			InternalEeprom?.Reset();
 
+			/* Initialize certain CPU registers if bootstrap ROM isn't used */
+			if (BootstrapRom == null)
+			{
+				Cpu.AW = 0x0000;
+				Cpu.DW = 0x0000;
+				Cpu.BP = 0x0000;
+				Cpu.SS = 0x0000;
+				Cpu.SP = 0x2000;
+				Cpu.DS0 = 0x0000;
+				Cpu.DS1 = 0x0000;
+			}
+
 			CurrentClockCyclesInFrame = 0;
 			CurrentClockCyclesInLine = 0;
 			TotalClockCyclesInFrame = (int)Math.Round(CpuClock / DisplayControllerCommon.VerticalClock);
@@ -209,7 +221,7 @@ namespace StoicGoose.Core.Machines
 
 		protected void HandleInterrupts()
 		{
-			if (!Cpu.IsFlagSet(V30MZ.Flags.InterruptEnable)) return;
+			if (!Cpu.PSW.InterruptEnable) return;
 
 			for (var i = 7; i >= 0; i--)
 			{

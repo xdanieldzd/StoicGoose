@@ -23,4 +23,32 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Utilities\Random.tt">
+      <LastGenOutput>Random.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Utilities\BitHandling.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>BitHandling.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Utilities\Random.cs">
+      <DependentUpon>Random.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Utilities\BitHandling.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BitHandling.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

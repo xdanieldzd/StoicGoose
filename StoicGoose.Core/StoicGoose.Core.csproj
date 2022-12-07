@@ -19,4 +19,23 @@
     <ProjectReference Include="..\StoicGoose.Common\StoicGoose.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="CPU\ProgramStatusWord.tt">
+      <LastGenOutput>ProgramStatusWord.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="CPU\ProgramStatusWord.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ProgramStatusWord.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

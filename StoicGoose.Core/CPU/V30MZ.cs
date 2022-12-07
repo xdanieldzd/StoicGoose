@@ -1,42 +1,55 @@
-﻿using StoicGoose.Core.Interfaces;
+﻿using StoicGoose.Common.Utilities;
+using StoicGoose.Core.Interfaces;
 
 namespace StoicGoose.Core.CPU
 {
 	public sealed partial class V30MZ : IComponent
 	{
-		// TODO: attempt prefetch emulation (Meitantei Conan - Nishi no Meitantei Saidai no Kiki; cart changes banks on startup, can no longer execute jump, execs garbage)
-
 		/* Parent machine instance */
 		readonly IMachine machine = default;
 
-		/* General registers */
-		Register16 ax, bx, cx, dx;
-		ushort sp, bp, si, di;
-		/* Segment registers */
-		ushort cs, ds, ss, es;
-		/* Status and instruction registers */
-		ushort ip;
-		Flags flags;
+		/* General Purpose Registers */
+		Register16 aw, bw, cw, dw;
+		public Register16 AW { get => aw; set => aw = value; }
+		public Register16 BW { get => bw; set => bw = value; }
+		public Register16 CW { get => cw; set => cw = value; }
+		public Register16 DW { get => dw; set => dw = value; }
 
-		bool halted;
-		int opCycles, intCycles;
-
-		/* Public properties for registers */
-		public Register16 AX { get => ax; set => ax = value; }
-		public Register16 BX { get => bx; set => bx = value; }
-		public Register16 CX { get => cx; set => cx = value; }
-		public Register16 DX { get => dx; set => dx = value; }
-		public ushort SP { get => sp; set => sp = value; }
-		public ushort BP { get => bp; set => bp = value; }
-		public ushort SI { get => si; set => si = value; }
-		public ushort DI { get => di; set => di = value; }
-		public ushort CS { get => cs; set => cs = value; }
-		public ushort DS { get => ds; set => ds = value; }
+		/* Segment Registers */
+		ushort ds0, ds1, ps, ss;
+		public ushort DS0 { get => ds0; set => ds0 = value; }
+		public ushort DS1 { get => ds1; set => ds1 = value; }
+		public ushort PS { get => ps; set => ps = value; }
 		public ushort SS { get => ss; set => ss = value; }
-		public ushort ES { get => es; set => es = value; }
-		public ushort IP { get => ip; set => ip = value; }
 
-		public bool IsHalted { get => halted; set => halted = value; }
+		/* Stack Pointer */
+		ushort sp;
+		public ushort SP { get => sp; set => sp = value; }
+
+		/* Base Pointer */
+		ushort bp;
+		public ushort BP { get => bp; set => bp = value; }
+
+		/* Index Registers */
+		ushort ix, iy;
+		public ushort IX { get => ix; set => ix = value; }
+		public ushort IY { get => iy; set => iy = value; }
+
+		/* Program Counter */
+		ushort pc;
+		public ushort PC { get => pc; set => pc = value; }
+
+		/* Prefetch Pointer */
+		ushort pfp;
+		public ushort PFP { get => pfp; set => pfp = value; }
+
+		/* Program Status Word */
+		ProgramStatusWord psw;
+		public ProgramStatusWord PSW { get => psw; set => psw = value; }
+
+		/* Miscellaneous variables */
+		bool isHalted;
+		public bool IsHalted { get => isHalted; set => isHalted = value; }
 
 		public V30MZ(IMachine machine)
 		{
@@ -47,29 +60,24 @@ namespace StoicGoose.Core.CPU
 
 		public void Reset()
 		{
-			/* CPU reset */
-			flags = Flags.ReservedB1 | Flags.ReservedB12 | Flags.ReservedB13 | Flags.ReservedB14 | Flags.ReservedB15;
-			ip = 0x0000;
-			cs = 0xFFFF;
-			ds = 0x0000;
+			/* Reset CPU */
+			aw = Random.GetUInt16();
+			bw = Random.GetUInt16();
+			cw = Random.GetUInt16();
+			dw = Random.GetUInt16();
+			ds0 = 0x0000;
+			ds1 = 0x0000;
+			ps = 0xFFFF;
 			ss = 0x0000;
-			es = 0x0000;
+			sp = Random.GetUInt16();
+			bp = Random.GetUInt16();
+			ix = Random.GetUInt16();
+			iy = Random.GetUInt16();
+			pc = 0x0000;
+			pfp = 0x0000;
+			psw = 0x0000;
 
-			/* Initialized by WS bootstrap */
-			ax.Word = 0x0000;
-			dx.Word = 0x0000;
-			bp = 0x0000;
-			ss = 0x0000;
-			sp = 0x2000;
-			ds = 0x0000;
-			es = 0x0000;
-
-			/* Misc variables */
-			halted = false;
-			opCycles = intCycles = 0;
-
-			ResetPrefixes();
-			modRm.Reset();
+			isHalted = false;
 		}
 
 		public void Shutdown()
@@ -79,66 +87,12 @@ namespace StoicGoose.Core.CPU
 
 		public void Interrupt(int vector)
 		{
-			/* Resume execution */
-			halted = false;
-
-			/* Read interrupt handler's segment & offset */
-			var offset = ReadMemory16(0, (ushort)((vector * 4) + 0));
-			var segment = ReadMemory16(0, (ushort)((vector * 4) + 2));
-
-			/* Push state, clear flags, etc. */
-			Push((ushort)flags);
-			Push(cs);
-			Push(ip);
-
-			ClearFlags(Flags.InterruptEnable);
-			ClearFlags(Flags.Trap);
-
-			ResetPrefixes();
-			modRm.Reset();
-
-			intCycles = 32;
-
-			/* Continue with interrupt handler */
-			cs = segment;
-			ip = offset;
+			//
 		}
 
 		public int Step()
 		{
-			var cycles = 0;
-
-			if (halted)
-			{
-				/* CPU is halted */
-				cycles++;
-			}
-			else
-			{
-				/* Read any prefixes & opcode */
-				byte opcode;
-				while (!HandlePrefixes(opcode = ReadMemory8(cs, ip++))) { }
-
-				/* Execute instruction */
-				opCycles = instructions[opcode](this);
-				if (opCycles == 0)
-				{
-					/* Assume invalid opcode, raise interrupt */
-					Interrupt(6);
-					cycles = 8;
-				}
-				cycles += opCycles;
-				opCycles = 0;
-			}
-
-			cycles += intCycles;
-			intCycles = 0;
-
-			/* Reset state for next instruction */
-			ResetPrefixes();
-			modRm.Reset();
-
-			return cycles;
+			return 0;
 		}
 	}
 }

@@ -102,8 +102,8 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		{
 			if (userData is not (IMachine machine, bool isRunning, bool isPaused)) return;
 
-			var codeSegment = machine.Cpu.CS;
-			var instructionPointer = machine.Cpu.IP;
+			var codeSegment = machine.Cpu.PS;
+			var instructionPointer = machine.Cpu.PC;
 			var stackPointer = machine.Cpu.SP;
 
 			var style = ImGui.GetStyle();
@@ -428,28 +428,28 @@ namespace StoicGoose.GLWindow.Interface.Windows
 					var pos = ImGui.GetCursorScreenPos();
 					var posStart = pos;
 
-					drawListProcessor.AddText(pos, colorText, $"IP: 0x{machine.Cpu.IP:X4}"); pos.X += glyphSize.X * 19f;
+					drawListProcessor.AddText(pos, colorText, $"IP: 0x{machine.Cpu.PC:X4}"); pos.X += glyphSize.X * 19f;
 
 					drawListProcessor.AddText(pos, colorText, "Flags:"); pos.X += glyphSize.X * 6f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Carry, "CF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Parity, "PF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Auxiliary, "AF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Zero, "ZF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Sign, "SF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Trap, "TF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.InterruptEnable, "IF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Direction, "DF"); pos.X += glyphSize.X * 2.5f;
-					DrawFlag(drawListProcessor, pos, machine.Cpu, V30MZ.Flags.Overflow, "OF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Carry ? colorText : colorDisabled, "CF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Parity ? colorText : colorDisabled, "PF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.AuxiliaryCarry ? colorText : colorDisabled, "AF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Zero ? colorText : colorDisabled, "ZF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Sign ? colorText : colorDisabled, "SF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Break ? colorText : colorDisabled, "TF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.InterruptEnable ? colorText : colorDisabled, "IF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Direction ? colorText : colorDisabled, "DF"); pos.X += glyphSize.X * 2.5f;
+					drawListProcessor.AddText(pos, machine.Cpu.PSW.Overflow ? colorText : colorDisabled, "OF"); pos.X += glyphSize.X * 2.5f;
 					pos.X = posStart.X;
 					pos.Y += height * 1.5f;
 
-					if (DrawRegister(drawListProcessor, pos, machine.Cpu.AX, "A")) { machine.Cpu.AX = newRegisterValue; }
+					if (DrawRegister(drawListProcessor, pos, machine.Cpu.AW, "A")) { machine.Cpu.AW = newRegisterValue; }
 					pos.Y += height;
-					if (DrawRegister(drawListProcessor, pos, machine.Cpu.BX, "B")) { machine.Cpu.BX = newRegisterValue; }
+					if (DrawRegister(drawListProcessor, pos, machine.Cpu.BW, "B")) { machine.Cpu.BW = newRegisterValue; }
 					pos.Y += height;
-					if (DrawRegister(drawListProcessor, pos, machine.Cpu.CX, "C")) { machine.Cpu.CX = newRegisterValue; }
+					if (DrawRegister(drawListProcessor, pos, machine.Cpu.CW, "C")) { machine.Cpu.CW = newRegisterValue; }
 					pos.Y += height;
-					if (DrawRegister(drawListProcessor, pos, machine.Cpu.DX, "D")) { machine.Cpu.DX = newRegisterValue; }
+					if (DrawRegister(drawListProcessor, pos, machine.Cpu.DW, "D")) { machine.Cpu.DW = newRegisterValue; }
 					pos.Y = posStart.Y;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
@@ -460,26 +460,26 @@ namespace StoicGoose.GLWindow.Interface.Windows
 					pos.X = windowPos.X + glyphSize.X * 49f;
 					drawListProcessor.AddText(pos, colorText, $"SP: 0x{machine.Cpu.SP:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SP}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"CS: 0x{machine.Cpu.CS:X4}"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.CS}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"CS: 0x{machine.Cpu.PS:X4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.PS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
 					drawListProcessor.AddText(pos, colorText, $"BP: 0x{machine.Cpu.BP:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.BP}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"DS: 0x{machine.Cpu.DS:X4}"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DS}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"DS: 0x{machine.Cpu.DS0:X4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DS0}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"SI: 0x{machine.Cpu.SI:X4}"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SI}]"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"SI: 0x{machine.Cpu.IX:X4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.IX}]"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorText, $"SS: 0x{machine.Cpu.SS:X4}"); pos.X += glyphSize.X * 10f;
 					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.SS}]"); pos.Y += height;
 
 					pos.X = windowPos.X + glyphSize.X * 49f;
-					drawListProcessor.AddText(pos, colorText, $"DI: 0x{machine.Cpu.DI:X4}"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DI}]"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorText, $"ES: 0x{machine.Cpu.ES:X4}"); pos.X += glyphSize.X * 10f;
-					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.ES}]"); pos.Y += height;
+					drawListProcessor.AddText(pos, colorText, $"DI: 0x{machine.Cpu.IY:X4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.IY}]"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorText, $"ES: 0x{machine.Cpu.DS1:X4}"); pos.X += glyphSize.X * 10f;
+					drawListProcessor.AddText(pos, colorDisabled, $"[{machine.Cpu.DS1}]"); pos.Y += height;
 
 					ImGui.EndChild();
 				}
@@ -488,12 +488,12 @@ namespace StoicGoose.GLWindow.Interface.Windows
 			}
 		}
 
-		private void DrawFlag(ImDrawListPtr drawList, NumericsVector2 position, V30MZ cpu, V30MZ.Flags flag, string label)
+		/*private void DrawFlag(ImDrawListPtr drawList, NumericsVector2 position, V30MZ cpu, V30MZ.Flags flag, string label)
 		{
 			drawList.AddText(position, cpu.IsFlagSet(flag) ? colorText : colorDisabled, label);
 		}
-
-		private bool DrawRegister(ImDrawListPtr drawList, NumericsVector2 position, V30MZ.Register16 register, string label)
+		*/
+		private bool DrawRegister(ImDrawListPtr drawList, NumericsVector2 position, Register16 register, string label)
 		{
 			var result = false;
 
