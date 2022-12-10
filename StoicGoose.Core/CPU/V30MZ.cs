@@ -7,6 +7,14 @@ namespace StoicGoose.Core.CPU
 {
 	public sealed partial class V30MZ : IComponent
 	{
+		const byte PrefixSegmentOverrideDS1 = 0x26;
+		const byte PrefixSegmentOverridePS = 0x2E;
+		const byte PrefixSegmentOverrideSS = 0x36;
+		const byte PrefixSegmentOverrideDS0 = 0x3E;
+		const byte PrefixBusLock = 0xF0;
+		const byte PrefixRepeatWhileNonZero = 0xF2;
+		const byte PrefixRepeatWhileZero = 0xF3;
+
 		/* Parent machine instance */
 		readonly IMachine machine = default;
 
@@ -163,6 +171,28 @@ namespace StoicGoose.Core.CPU
 			isPrefix = true;
 		}
 
+		private ushort SegmentViaPrefix(ushort value)
+		{
+			foreach (var prefix in prefixes)
+			{
+				if (prefix == PrefixSegmentOverrideDS1) return ds1;
+				if (prefix == PrefixSegmentOverridePS) return ps;
+				if (prefix == PrefixSegmentOverrideSS) return ss;
+				if (prefix == PrefixSegmentOverrideDS0) return ds0;
+			}
+			return value;
+		}
+
+		private byte RepeatViaPrefix()
+		{
+			foreach (var prefix in prefixes)
+			{
+				if (prefix == PrefixRepeatWhileNonZero) return prefix;
+				if (prefix == PrefixRepeatWhileZero) return prefix;
+			}
+			return 0;
+		}
+
 		private static bool Parity(int value)
 		{
 			int count = 0;
@@ -227,13 +257,27 @@ namespace StoicGoose.Core.CPU
 			machine.WriteMemory((uint)((segment << 4) + address + 1), (byte)(value >> 8));
 		}
 
+		private byte ReadPort8(ushort port)
+		{
+			cycles += 1;
+			return machine.ReadPort(port);
+		}
+
 		private ushort ReadPort16(ushort port)
 		{
+			cycles += 1 + (port & 0b1);
 			return (ushort)(machine.ReadPort((ushort)(port + 1)) << 8 | machine.ReadPort(port));
+		}
+
+		private void WritePort8(ushort port, byte value)
+		{
+			cycles += 1;
+			machine.WritePort(port, value);
 		}
 
 		private void WritePort16(ushort port, ushort value)
 		{
+			cycles += 1 + (port & 0b1);
 			machine.WritePort(port, (byte)(value & 0xFF));
 			machine.WritePort((ushort)(port + 1), (byte)(value >> 8));
 		}

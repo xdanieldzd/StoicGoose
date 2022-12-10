@@ -15,39 +15,27 @@ namespace StoicGoose.Core.CPU
 
 			public ModRM(byte value)
 			{
-				static ushort segment(ushort value)
-				{
-					foreach (var prefix in cpu.prefixes)
-					{
-						if (prefix == 0x26) return cpu.ds1;
-						if (prefix == 0x2E) return cpu.ps;
-						if (prefix == 0x36) return cpu.ss;
-						if (prefix == 0x3E) return cpu.ds0;
-					}
-					return value;
-				};
-
 				Mod = (byte)((value >> 6) & 0b11);
 				Reg = (byte)((value >> 3) & 0b111);
 				Mem = (byte)((value >> 0) & 0b111);
 
 				if (Mod == 0b00 && Mem == 0b110)
 				{
-					Segment = segment(cpu.ds0);
+					Segment = cpu.SegmentViaPrefix(cpu.ds0);
 					Address = cpu.Fetch16();
 				}
 				else
 				{
 					switch (Mem)
 					{
-						case 0b000: Segment = segment(cpu.ds0); Address = cpu.bw + cpu.ix; break;
-						case 0b001: Segment = segment(cpu.ds0); Address = cpu.bw + cpu.iy; break;
-						case 0b010: Segment = segment(cpu.ss); Address = (ushort)(cpu.bp + cpu.ix); break;
-						case 0b011: Segment = segment(cpu.ss); Address = (ushort)(cpu.bp + cpu.iy); break;
-						case 0b100: Segment = segment(cpu.ds0); Address = cpu.ix; break;
-						case 0b101: Segment = segment(cpu.ds0); Address = cpu.iy; break;
-						case 0b110: Segment = segment(cpu.ss); Address = cpu.bp; break;
-						case 0b111: Segment = segment(cpu.ds0); Address = cpu.bw; break;
+						case 0b000: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.bw + cpu.ix; break;
+						case 0b001: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.bw + cpu.iy; break;
+						case 0b010: Segment = cpu.SegmentViaPrefix(cpu.ss); Address = (ushort)(cpu.bp + cpu.ix); break;
+						case 0b011: Segment = cpu.SegmentViaPrefix(cpu.ss); Address = (ushort)(cpu.bp + cpu.iy); break;
+						case 0b100: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.ix; break;
+						case 0b101: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.iy; break;
+						case 0b110: Segment = cpu.SegmentViaPrefix(cpu.ss); Address = cpu.bp; break;
+						case 0b111: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.bw; break;
 					}
 
 					if (Mod == 0b01) Address += cpu.Fetch8();
