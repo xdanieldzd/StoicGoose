@@ -137,9 +137,9 @@ namespace StoicGoose.Core.CPU
 			var offset = ReadMemory16(0x0000, (ushort)((vector * 4) + 0));
 			var segment = ReadMemory16(0x0000, (ushort)((vector * 4) + 2));
 
-			//Push((ushort)flags);
-			//Push(cs);
-			//Push(ip);
+			PUSH(psw.Value);
+			PUSH(ps);
+			PUSH(pc);
 
 			psw.InterruptEnable = false;
 			psw.Break = false;
@@ -213,6 +213,17 @@ namespace StoicGoose.Core.CPU
 			cycles++;
 		}
 
+		private void Loop()
+		{
+			var list = new List<byte> { opcode };
+			while (pf.Count > 0)
+			{
+				if (list.Count == 16) { pfp--; break; }
+				list.Add(pf.Dequeue());
+			}
+			list.ForEach(x => pf.Enqueue(x));
+		}
+
 		private void Flush()
 		{
 			pf.Clear();
@@ -230,6 +241,18 @@ namespace StoicGoose.Core.CPU
 		private ushort Fetch16()
 		{
 			return (ushort)(Fetch8() | Fetch8() << 8);
+		}
+
+		private void BranchIf(bool condition)
+		{
+			Wait(1);
+			var offset = (sbyte)Fetch8();
+			if (condition)
+			{
+				Wait(3);
+				pc = (ushort)(pc + offset);
+				Flush();
+			}
 		}
 
 		private byte ReadMemory8(ushort segment, ushort address)

@@ -5,7 +5,6 @@
 		//BR
 		//BRK
 		//BRKV
-		//CALL
 
 		internal void CHKIND()
 		{
