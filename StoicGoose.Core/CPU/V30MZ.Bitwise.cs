@@ -63,7 +63,6 @@
 		//SHL
 		//SHR
 		//SHRA
-		//TEST
 
 		internal byte XOR(byte a, byte b)
 		{

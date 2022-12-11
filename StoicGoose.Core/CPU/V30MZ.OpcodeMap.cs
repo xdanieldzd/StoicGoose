@@ -122,10 +122,10 @@ namespace StoicGoose.Core.CPU
 			instructions[0x69] = () => { Wait(5); modRM = Fetch8(); SetRegister16((ushort)MUL((short)GetMemory16(), (short)Fetch16())); };
 			instructions[0x6A] = () => { PUSH(Fetch8()); };
 			instructions[0x6B] = () => { Wait(5); modRM = Fetch8(); SetRegister16((ushort)MUL((short)GetMemory16(), (sbyte)Fetch8())); };
-			instructions[0x6C] = () => { Wait(5); INM<byte>(); };
-			instructions[0x6D] = () => { Wait(5); INM<ushort>(); };
-			instructions[0x6E] = () => { Wait(6); OUTM<byte>(); };
-			instructions[0x6F] = () => { Wait(6); OUTM<ushort>(); };
+			instructions[0x6C] = () => { Wait(5); INM8(); };
+			instructions[0x6D] = () => { Wait(5); INM16(); };
+			instructions[0x6E] = () => { Wait(6); OUTM8(); };
+			instructions[0x6F] = () => { Wait(6); OUTM16(); };
 			instructions[0x70] = () => { BranchIf(psw.Overflow); };
 			instructions[0x71] = () => { BranchIf(!psw.Overflow); };
 			instructions[0x72] = () => { BranchIf(psw.Carry); };
@@ -142,7 +142,9 @@ namespace StoicGoose.Core.CPU
 			instructions[0x7D] = () => { BranchIf(psw.Zero || psw.Sign == psw.Overflow); };
 			instructions[0x7E] = () => { BranchIf(psw.Zero || psw.Sign != psw.Overflow); };
 			instructions[0x7F] = () => { BranchIf(!psw.Zero && psw.Sign == psw.Overflow); };
-
+			//80-83 group
+			instructions[0x84] = () => { Wait(1); modRM = Fetch8(); AND(GetMemory8(), GetRegister8()); };
+			instructions[0x85] = () => { Wait(1); modRM = Fetch8(); AND(GetMemory16(), GetRegister16()); };
 			instructions[0x86] = () => { Wait(3); modRM = Fetch8(); var mem = GetMemory8(); var reg = GetRegister8(); SetMemory8(reg); SetRegister8(mem); };
 			instructions[0x87] = () => { Wait(3); modRM = Fetch8(); var mem = GetMemory16(); var reg = GetRegister16(); SetMemory16(reg); SetRegister16(mem); };
 			instructions[0x88] = () => { modRM = Fetch8(); if (modRM.Mod == 0b11) Wait(1); SetMemory8(GetRegister8()); };
@@ -173,6 +175,11 @@ namespace StoicGoose.Core.CPU
 			instructions[0xA1] = () => { aw.Word = ReadMemory16(SegmentViaPrefix(ds0), Fetch16()); };
 			instructions[0xA2] = () => { WriteMemory8(SegmentViaPrefix(ds0), Fetch16(), aw.Low); };
 			instructions[0xA3] = () => { WriteMemory16(SegmentViaPrefix(ds0), Fetch16(), aw.Word); };
+			instructions[0xA4] = () => { Wait(3); MOVBK8(); };
+			instructions[0xA5] = () => { Wait(3); MOVBK16(); };
+
+			instructions[0xA8] = () => { Wait(1); AND(aw.Low, Fetch8()); };
+			instructions[0xA9] = () => { Wait(1); AND(aw.Word, Fetch16()); };
 
 			instructions[0xB0] = () => { Wait(1); aw.Low = Fetch8(); };
 			instructions[0xB1] = () => { Wait(1); cw.Low = Fetch8(); };
@@ -193,6 +200,14 @@ namespace StoicGoose.Core.CPU
 
 			instructions[0xC6] = () => { modRM = Fetch8(); SetMemory8(Fetch8()); };
 			instructions[0xC7] = () => { modRM = Fetch8(); SetMemory16(Fetch16()); };
+			instructions[0xC8] = () => { PREPARE(); };
+			instructions[0xC9] = () => { DISPOSE(); };
+			instructions[0xCA] = () => { Wait(8); var offset = Fetch16(); pc = POP(); ps = POP(); sp += offset; Flush(); };
+			instructions[0xCB] = () => { Wait(7); pc = POP(); ps = POP(); Flush(); };
+			instructions[0xCC] = () => { Wait(8); Interrupt(3); };
+			instructions[0xCD] = () => { Wait(9); Interrupt(Fetch8()); };
+			instructions[0xCE] = () => { Wait(5); if (psw.Overflow) Interrupt(4); };
+			instructions[0xCF] = () => { Wait(9); pc = POP(); ps = POP(); psw.Value = POP(); Flush(); };
 
 			instructions[0xD4] = () => { Wait(17); CVTBD(Fetch8()); };
 			instructions[0xD5] = () => { Wait(6); CVTDB(Fetch8()); };
