@@ -90,7 +90,7 @@ namespace StoicGoose.Core.Machines
 
 				var currentCpuClockCycles = DmaController.IsActive ? DmaController.Step() : Cpu.Step();
 
-				var displayInterrupt = DisplayController.Step(currentCpuClockCycles);
+				var displayInterrupt = true ? DisplayController.StepNEW(1) : DisplayController.Step(currentCpuClockCycles);
 				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.LineCompare)) RaiseInterrupt(4);
 				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlankTimer)) RaiseInterrupt(5);
 				if (displayInterrupt.HasFlag(DisplayControllerCommon.DisplayInterrupts.VBlank)) RaiseInterrupt(6);

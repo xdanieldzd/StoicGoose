@@ -1,0 +1,211 @@
+﻿<#@ include file="$(TemplateIncludeFolder)\Header.ttinclude" #>
+<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".g.cs" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+<#
+var sizes = new[]
+{
+	new { bits = 8, mask = 0xFF, sign = 0x80, type = "byte" },
+	new { bits = 16, mask = 0xFFFF, sign = 0x8000, type = "ushort" } 
+};
+var signed = new Dictionary<string, string>() { { "byte", "sbyte" }, { "ushort", "short" }, { "uint", "int" } };
+var next = new Dictionary<string, string>() { { "byte", "ushort" }, { "ushort", "uint" }, { "uint", "ulong" } };
+#>
+
+namespace StoicGoose.Core.CPU
+{
+	public sealed partial class V30MZ
+	{
+<# foreach (var size in sizes) { #>
+		internal <#= size.type #> ADD(<#= size.type #> a, <#= size.type #> b)
+		{
+			var result = a + b;
+
+			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
+			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Overflow = ((result ^ a) & (result ^ b) & <#= $"0x{size.sign:X}" #>) != 0;
+			psw.Carry = result > <#= $"0x{size.mask:X}" #>;
+			psw.Parity = Parity(result & 0xFF);
+			psw.AuxiliaryCarry = (a & 0x0F) + (b & 0x0F) >= 0x10;
+
+			return (<#= size.type #>)result;
+		}
+
+		internal <#= size.type #> ADDC(<#= size.type #> a, <#= size.type #> b)
+		{
+			return ADD(a, (<#= size.type #>)(b + (psw.Carry ? 1 : 0)));
+		}
+
+		internal <#= size.type #> DEC(<#= size.type #> a)
+		{
+			var result = a - 1;
+
+			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
+			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Overflow = result == <#= $"0x{size.sign - 1:X}" #>;
+			psw.Parity = Parity(result & 0xFF);
+			psw.AuxiliaryCarry = (a & 0x0F) == 0x00;
+
+			return (<#= size.type #>)result;
+		}
+
+		internal <#= next[size.type] #> DIV(<#= next[size.type] #> a, <#= size.type #> b)
+		{
+			if (b == 0) { Interrupt(0); return a; }
+
+			var quotient = (<#= signed[next[size.type]] #>)a / (<#= signed[size.type] #>)b;
+			var remainder = (<#= signed[next[size.type]] #>)a % (<#= signed[size.type] #>)b;
+
+			if (quotient > <#= size.sign - 1 #> || quotient < <#= -size.sign #>) { Interrupt(0); return a; }
+
+			return (<#= next[size.type] #>)(((remainder & <#= $"0x{size.mask:X}" #>) << <#= size.bits #>) | (quotient & <#= $"0x{size.mask:X}" #>));
+		}
+
+		internal <#= next[size.type] #> DIVU(<#= next[size.type] #> a, <#= size.type #> b)
+		{
+			if (b == 0) { Interrupt(0); return a; }
+
+			var quotient = (<#= next[next[size.type]] #>)(a / b);
+			var remainder = (<#= next[next[size.type]] #>)(a % b);
+
+			if (quotient > <#= size.mask #>) { Interrupt(0); return a; }
+
+			return (<#= next[size.type] #>)(((remainder & <#= $"0x{size.mask:X}" #>) << <#= size.bits #>) | (quotient & <#= $"0x{size.mask:X}" #>));
+		}
+
+		internal <#= size.type #> INC(<#= size.type #> a)
+		{
+			var result = a + 1;
+
+			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
+			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Overflow = result == <#= $"0x{size.sign:X}" #>;
+			psw.Parity = Parity(result & 0xFF);
+			psw.AuxiliaryCarry = (a & 0x0F) == 0x0F;
+
+			return (<#= size.type #>)result;
+		}
+
+		internal <#= next[size.type] #> MUL(<#= size.type #> a, <#= size.type #> b)
+		{
+			var result = (<#= signed[size.type] #>)a * (<#= signed[size.type] #>)b;
+
+			psw.Carry = (result >> <#= size.bits #>) != 0;
+			psw.Overflow = (result >> <#= size.bits #>) != 0;
+
+			return (<#= next[size.type] #>)result;
+		}
+
+		internal <#= next[size.type] #> MULU(<#= size.type #> a, <#= size.type #> b)
+		{
+			var result = a * b;
+
+			psw.Carry = (result >> <#= size.bits #>) != 0;
+			psw.Overflow = (result >> <#= size.bits #>) != 0;
+
+			return (<#= next[size.type] #>)result;
+		}
+
+		internal <#= size.type #> NEG(<#= size.type #> a)
+		{
+			var result = -a & <#= $"0x{size.mask:X}" #>;
+
+			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
+			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Overflow = a == <#= $"0x{size.sign:X}" #>;
+			psw.Carry = a != 0;
+			psw.Parity = Parity(result & 0xFF);
+			psw.AuxiliaryCarry = (a & 0x0F) != 0x00;
+
+			return (<#= size.type #>)result;
+		}
+
+		internal <#= size.type #> SUB(<#= size.type #> a, <#= size.type #> b)
+		{
+			var result = a - b;
+
+			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
+			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Overflow = ((a ^ result) & (a ^ b) & <#= $"0x{size.sign:X}" #>) != 0;
+			psw.Carry = b > a;
+			psw.Parity = Parity(result & 0xFF);
+			psw.AuxiliaryCarry = (b & 0x0F) > (a & 0x0F);
+
+			return (<#= size.type #>)result;
+		}
+
+		internal <#= size.type #> SUBC(<#= size.type #> a, <#= size.type #> b)
+		{
+			return SUB(a, (<#= size.type #>)(b + (psw.Carry ? 1 : 0)));
+		}
+
+<# } #>
+		internal void ADJ4x(bool subtract)
+		{
+			var result = aw.Low;
+
+			if ((aw.Low & 0x0F) > 0x09 || psw.AuxiliaryCarry)
+			{
+				result += (byte)(subtract ? -0x06 : 0x06);
+				psw.AuxiliaryCarry = true;
+			}
+
+			if (aw.Low > 0x9F || psw.Carry)
+			{
+				result += (byte)(subtract ? -0x60 : 0x60);
+				psw.Carry = true;
+			}
+
+			psw.Zero = (result & 0xFF) == 0;
+			psw.Sign = (result & 0x80) == 0x80;
+			psw.Parity = Parity(result & 0xFF);
+
+			aw.Low = (byte)result;
+		}
+
+		internal void ADJBx(bool subtract)
+		{
+			if ((aw.Low & 0x0F) > 0x99 || psw.AuxiliaryCarry)
+			{
+				aw.Low += (byte)(subtract ? -0x06 : 0x06);
+				aw.High += (byte)(subtract ? -0x01 : 0x01);
+
+				psw.AuxiliaryCarry = true;
+				psw.Carry = true;
+			}
+			else
+			{
+				psw.AuxiliaryCarry = false;
+				psw.Carry = false;
+			}
+
+			aw.Low &= 0x0F;
+		}
+
+		internal void CVTBD(byte a)
+		{
+			if (a == 0)
+				Interrupt(0);
+			else
+			{
+				aw.High = (byte)(aw.Low / a);
+				aw.Low %= a;
+
+				psw.Zero = (aw.Word & 0xFFFF) == 0;
+				psw.Sign = (aw.Word & 0x8000) == 0x8000;
+				psw.Parity = Parity(aw.Low & 0xFF);
+			}
+		}
+
+		internal void CVTDB(byte a)
+		{
+			aw.Low += (byte)(aw.High * a);
+			aw.High = 0;
+
+			psw.Zero = (aw.Word & 0xFFFF) == 0;
+			psw.Sign = (aw.Word & 0x8000) == 0x8000;
+			psw.Parity = Parity(aw.Low & 0xFF);
+		}
+	}
+}

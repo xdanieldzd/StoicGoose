@@ -15,6 +15,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TextTemplating\Microsoft.TextTemplating.targets" />
+
+  <PropertyGroup>
+    <TransformOnBuild>true</TransformOnBuild>
+    <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="OpenTK" Version="4.7.4" />
@@ -27,28 +35,56 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <TemplateIncludeFolder>$(MSBuildProjectDirectory)\TemplateInclude</TemplateIncludeFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <T4ParameterValues Include="TemplateIncludeFolder">
+      <Value>$(TemplateIncludeFolder)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+    <T4ParameterValues Include="ProjectName">
+      <Value>$(ProjectName)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+    <T4ParameterValues Include="ProjectDir">
+      <Value>$(ProjectDir)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="Utilities\Random.tt">
-      <LastGenOutput>Random.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Random.g.cs</LastGenOutput>
     </None>
     <None Update="Utilities\BitHandling.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>BitHandling.cs</LastGenOutput>
+      <LastGenOutput>BitHandling.g.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Utilities\Random.cs">
-      <DependentUpon>Random.tt</DependentUpon>
+    <Compile Update="Utilities\Random.g.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
+      <DependentUpon>Random.tt</DependentUpon>
     </Compile>
-    <Compile Update="Utilities\BitHandling.cs">
+    <Compile Update="Utilities\BitHandling.g.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>BitHandling.tt</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <AllGeneratedCode Include="$(MSBuildProjectDirectory)\**\*.g.cs" />
+    <AllGeneratedCodeWithTemplates Include="@(AllGeneratedCode)" Condition="!Exists('@(AllGeneratedCode->'%(FileName).tt')')" />
+  </ItemGroup>
+
+  <Target Name="CleanGeneratedCode" AfterTargets="AfterClean">
+    <Delete Files="@(AllGeneratedCodeWithTemplates)" />
+  </Target>
 
 </Project>

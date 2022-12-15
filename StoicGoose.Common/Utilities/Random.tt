@@ -1,14 +1,26 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
-<#@ output extension=".cs" #>
-<# var types = new Type[] { typeof(byte), typeof(sbyte), typeof(ushort), typeof(short), typeof(uint), typeof(int) }; #>
-using System;
+﻿<#@ include file="$(TemplateIncludeFolder)\Header.ttinclude" #>
+<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".g.cs" #>
+<#
+var types = new []
+{
+	new { keyword = "byte", function = "GetByte" },
+	new { keyword = "sbyte", function = "GetSByte" },
+	new { keyword = "ushort", function = "GetUInt16" },
+	new { keyword = "short", function = "GetInt16" },
+	new { keyword = "uint", function = "GetUInt32" },
+	new { keyword = "int", function = "GetInt32" }
+};
+#>
+
 namespace StoicGoose.Common.Utilities
 {
-public static class Random
-{
-readonly static System.Random rng = new((int)(DateTime.Now.Ticks & 0xFFFFFFFF));
+	public static class Random
+	{
+		readonly static System.Random rng = new();
+
 <# foreach (var type in types) { #>
-public static <#= type.Name #> Get<#= type.Name #>() => (<#= type.Name #>)rng.Next();
+		public static <#= type.keyword #> <#= type.function #>() => (<#= type.keyword #>)rng.NextInt64();
 <# } #>
-}
+	}
 }

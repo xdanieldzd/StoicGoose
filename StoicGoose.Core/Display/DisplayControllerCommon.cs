@@ -133,6 +133,85 @@ namespace StoicGoose.Core.Display
 			/* Nothing to do... */
 		}
 
+		public DisplayInterrupts StepNEW(int clockCyclesInStep)
+		{
+			var interrupt = DisplayInterrupts.None;
+
+			switch (cycleCount)
+			{
+				case int _ when cycleCount >= 0 && cycleCount < HorizontalDisp:
+					/* Sprite fetch */
+					if (cycleCount == 0 && lineCurrent == VerticalDisp - 2)
+					{
+						spriteCountNextFrame = 0;
+						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
+						{
+							var k = (uint)((sprBase << 9) + (j << 2));
+							spriteDataNextFrame[spriteCountNextFrame++] = (uint)(machine.ReadMemory(k + 3) << 24 | machine.ReadMemory(k + 2) << 16 | machine.ReadMemory(k + 1) << 8 | machine.ReadMemory(k + 0));
+						}
+					}
+
+					/* Render pixels */
+					RenderPixel(lineCurrent, cycleCount);
+
+					cycleCount += clockCyclesInStep;
+					break;
+
+				case int _ when cycleCount == HorizontalDisp:
+					/* H-timer interrupt */
+					if (hBlankTimer.Step())
+						interrupt |= DisplayInterrupts.HBlankTimer;
+
+					cycleCount += clockCyclesInStep;
+					break;
+
+				case int _ when cycleCount > HorizontalDisp && cycleCount <= HorizontalTotal:
+					cycleCount += clockCyclesInStep;
+					break;
+
+				case int _ when cycleCount > HorizontalTotal:
+					/* Advance scanline */
+					lineCurrent++;
+
+					/* Is frame finished? */
+					if (lineCurrent >= Math.Max(VerticalDisp, vtotal + 1))
+					{
+						/* Transfer framebuffer */
+						SendFramebuffer?.Invoke(outputFramebuffer.Clone() as byte[]);
+
+						/* Copy sprite data for next frame */
+						for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
+						Array.Fill<uint>(spriteDataNextFrame, 0);
+
+						/* Reset variables */
+						lineCurrent = 0;
+						Array.Fill(isUsedBySCR2, false);
+					}
+					else
+					{
+						/* Line compare interrupt */
+						if (lineCurrent == lineCompare)
+							interrupt |= DisplayInterrupts.LineCompare;
+
+						/* V-blank interrupt */
+						if (lineCurrent == VerticalDisp)
+						{
+							interrupt |= DisplayInterrupts.VBlank;
+
+							/* V-timer interrupt */
+							if (vBlankTimer.Step())
+								interrupt |= DisplayInterrupts.VBlankTimer;
+						}
+					}
+
+					/* End of scanline */
+					cycleCount = 0;
+					break;
+			}
+
+			return interrupt;
+		}
+
 		public DisplayInterrupts Step(int clockCyclesInStep)
 		{
 			var interrupt = DisplayInterrupts.None;

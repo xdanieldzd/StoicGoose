@@ -57,9 +57,6 @@ namespace StoicGoose.Core.CPU
 		ProgramStatusWord psw = default;
 		public ProgramStatusWord PSW { get => psw; set => psw = value; }
 
-		/* Prefetch queue */
-		readonly Queue<byte> pf = new();
-
 		/* Prefixes */
 		readonly Queue<byte> prefixes = new();
 		bool isPrefix = false;
@@ -71,7 +68,6 @@ namespace StoicGoose.Core.CPU
 		bool isHalted = default;
 		public bool IsHalted { get => isHalted; set => isHalted = value; }
 
-		byte opcode = default;
 		int cycles = default;
 
 		public V30MZ(IMachine machine)
@@ -88,23 +84,21 @@ namespace StoicGoose.Core.CPU
 		public void Reset()
 		{
 			/* Reset CPU */
-			aw = Random.GetUInt16();
-			bw = Random.GetUInt16();
-			cw = Random.GetUInt16();
-			dw = Random.GetUInt16();
+			aw = 0;// Random.GetUInt16();
+			bw = 0;// Random.GetUInt16();
+			cw = 0;// Random.GetUInt16();
+			dw = 0;// Random.GetUInt16();
 			ds0 = 0x0000;
 			ds1 = 0x0000;
 			ps = 0xFFFF;
 			ss = 0x0000;
-			sp = Random.GetUInt16();
-			bp = Random.GetUInt16();
-			ix = Random.GetUInt16();
-			iy = Random.GetUInt16();
+			sp = 0x2000;// Random.GetUInt16();
+			bp = 0;// Random.GetUInt16();
+			ix = 0;// Random.GetUInt16();
+			iy = 0;// Random.GetUInt16();
 			pc = 0x0000;
 			pfp = 0x0000;
 			psw = 0x0000;
-
-			pf.Clear();
 
 			prefixes.Clear();
 			isPrefix = false;
@@ -146,29 +140,50 @@ namespace StoicGoose.Core.CPU
 
 			ps = segment;
 			pc = offset;
-
-			Flush();
 		}
 
 		public int Step()
 		{
 			cycles = 0;
 
-			isPrefix = false;
+			if (isHalted)
+			{
+				Wait(1);
+			}
+			else
+			{
+				isPrefix = false;
 
-			if (isHalted) Wait(1);
-			else instructions[opcode = Fetch8()]();
+				byte opcode;
+				while (OpcodeIsPrefix(opcode = Fetch8()))
+				{
+					if (prefixes.Count > 15) prefixes.Dequeue();
+					prefixes.Enqueue(opcode);
 
-			if (!isPrefix) prefixes.Clear();
+					isPrefix = true;
+
+					if (opcode == PrefixRepeatWhileNonZero || opcode == PrefixRepeatWhileZero)
+						Wait(4);
+				}
+
+				instructions[opcode]();
+
+				if (!isPrefix) prefixes.Clear();
+			}
 
 			return cycles;
 		}
 
-		private void EnqueuePrefix()
+		private static bool OpcodeIsPrefix(byte op)
 		{
-			if (prefixes.Count >= 16) prefixes.Dequeue();
-			prefixes.Enqueue(opcode);
-			isPrefix = true;
+			return
+				op == PrefixSegmentOverrideDS1 ||
+				op == PrefixSegmentOverridePS ||
+				op == PrefixSegmentOverrideSS ||
+				op == PrefixSegmentOverrideDS0 ||
+				op == PrefixBusLock ||
+				op == PrefixRepeatWhileNonZero ||
+				op == PrefixRepeatWhileZero;
 		}
 
 		private ushort SegmentViaPrefix(ushort value)
@@ -202,45 +217,19 @@ namespace StoicGoose.Core.CPU
 
 		private void Wait(int count)
 		{
-			while (count-- != 0) Prefetch();
-		}
-
-		private void Prefetch()
-		{
-			var isUnaligned = (pfp & 0b1) == 0b1;
-			if (pf.Count < 16) pf.Enqueue(ReadMemory8(ps, pfp++));
-			if (pf.Count < 16 && isUnaligned) pf.Enqueue(ReadMemory8(ps, pfp++));
-			cycles++;
-		}
-
-		private void Loop()
-		{
-			var list = new List<byte> { opcode };
-			while (pf.Count > 0)
-			{
-				if (list.Count == 16) { pfp--; break; }
-				list.Add(pf.Dequeue());
-			}
-			list.ForEach(x => pf.Enqueue(x));
-		}
-
-		private void Flush()
-		{
-			pf.Clear();
-			pfp = pc;
-			if ((pfp & 0b1) == 0b1) cycles++;
+			cycles += count;
 		}
 
 		private byte Fetch8()
 		{
-			pc++;
-			if (pf.Count == 0) Prefetch();
-			return pf.Dequeue();
+			return machine.ReadMemory((uint)((ps << 4) + pc++));
 		}
 
 		private ushort Fetch16()
 		{
-			return (ushort)(Fetch8() | Fetch8() << 8);
+			var lo = Fetch8();
+			var hi = Fetch8();
+			return (ushort)(lo << 0 | hi << 8);
 		}
 
 		private void BranchIf(bool condition)
@@ -251,7 +240,6 @@ namespace StoicGoose.Core.CPU
 			{
 				Wait(3);
 				pc = (ushort)(pc + offset);
-				Flush();
 			}
 		}
 

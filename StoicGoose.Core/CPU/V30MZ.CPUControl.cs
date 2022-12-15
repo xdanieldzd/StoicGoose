@@ -2,10 +2,6 @@
 {
 	public sealed partial class V30MZ
 	{
-		//BR
-		//BRK
-		//BRKV
-
 		internal void CHKIND()
 		{
 			var lo = GetMemory16(0);
@@ -21,13 +17,12 @@
 			bp = POP();
 		}
 
-		//NOT1
-
 		internal void PREPARE()
 		{
 			Wait(7);
 			var offset = Fetch16();
-			var length = Fetch8() & 0x1F;
+			var length = (byte)(Fetch8() & 0x1F);
+
 			PUSH(bp);
 			bp = sp;
 			sp -= offset;
@@ -43,7 +38,5 @@
 				PUSH(bp);
 			}
 		}
-
-		//RET
 	}
 }

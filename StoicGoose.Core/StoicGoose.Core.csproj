@@ -15,6 +15,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TextTemplating\Microsoft.TextTemplating.targets" />
+
+  <PropertyGroup>
+    <TransformOnBuild>true</TransformOnBuild>
+    <TransformOutOfDateOnly>true</TransformOutOfDateOnly>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\StoicGoose.Common\StoicGoose.Common.csproj" />
   </ItemGroup>
@@ -23,19 +31,65 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <TemplateIncludeFolder>$(MSBuildProjectDirectory)\..\StoicGoose.Common\TemplateInclude</TemplateIncludeFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <T4ParameterValues Include="TemplateIncludeFolder">
+      <Value>$(TemplateIncludeFolder)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+    <T4ParameterValues Include="ProjectName">
+      <Value>$(ProjectName)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+    <T4ParameterValues Include="ProjectDir">
+      <Value>$(ProjectDir)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="CPU\ProgramStatusWord.tt">
-      <LastGenOutput>ProgramStatusWord.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ProgramStatusWord.g.cs</LastGenOutput>
+    </None>
+    <None Update="CPU\V30MZ.Arithmetic.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>V30MZ.Arithmetic.g.cs</LastGenOutput>
+    </None>
+    <None Update="CPU\V30MZ.OpcodeMap.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>V30MZ.OpcodeMap.g.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="CPU\ProgramStatusWord.cs">
+    <Compile Update="CPU\ProgramStatusWord.g.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ProgramStatusWord.tt</DependentUpon>
     </Compile>
+    <Compile Update="CPU\V30MZ.Arithmetic.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>V30MZ.Arithmetic.tt</DependentUpon>
+    </Compile>
+    <Compile Update="CPU\V30MZ.OpcodeMap.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>V30MZ.OpcodeMap.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <AllGeneratedCode Include="$(MSBuildProjectDirectory)\**\*.g.cs" />
+    <AllGeneratedCodeWithTemplates Include="@(AllGeneratedCode)" Condition="!Exists('@(AllGeneratedCode->'%(FileName).tt')')" />
+  </ItemGroup>
+
+  <Target Name="CleanGeneratedCode" AfterTargets="AfterClean">
+    <Delete Files="@(AllGeneratedCodeWithTemplates)" />
+  </Target>
 
 </Project>
