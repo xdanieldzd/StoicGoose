@@ -3,7 +3,7 @@
 <img src="Goose-Logo-Web.png" alt="Ze Goose" align="right" width="128">
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/xdanieldzd/StoicGoose)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/xdanieldzd/StoicGoose/Build)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/xdanieldzd/StoicGoose/build.yml)
 ![GitHub](https://img.shields.io/github/license/xdanieldzd/StoicGoose)
 
 StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET 6.0 along with the following NuGet packages:
