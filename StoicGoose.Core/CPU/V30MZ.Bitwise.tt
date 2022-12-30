@@ -1,0 +1,148 @@
+﻿<#@ include file="$(TemplateIncludeFolder)\Header.ttinclude" #>
+<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".g.cs" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+<#
+var sizes = new[]
+{
+	new { bits = 8, mask = 0xFF, sign = 0x80, type = "byte" },
+	new { bits = 16, mask = 0xFFFF, sign = 0x8000, type = "ushort" } 
+};
+var signed = new Dictionary<string, string>() { { "byte", "sbyte" }, { "ushort", "short" }, { "uint", "int" } };
+var next = new Dictionary<string, string>() { { "byte", "ushort" }, { "ushort", "uint" }, { "uint", "ulong" } };
+#>
+
+namespace StoicGoose.Core.CPU
+{
+	public sealed partial class V30MZ
+	{
+<# foreach (var size in sizes) {
+var type = size.type;
+var mask = $"0x{size.mask:X}";
+var sign = $"0x{size.sign:X}";
+#>
+		internal <#= type #> AND(<#= type #> a, <#= type #> b)
+		{
+			var result = a & b;
+
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = false;
+			psw.Carry = false;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+		internal <#= type #> OR(<#= type #> a, <#= type #> b)
+		{
+			var result = a | b;
+
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = false;
+			psw.Carry = false;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+		internal <#= type #> ROL(<#= type #> a, <#= type #> b)
+		{
+			int result = a;
+			for (var n = 0; n < b; n++)
+			{
+				psw.Carry = (result & <#= sign #>) == <#= sign #>;
+				result = (result << 1) | (psw.Carry ? 1 : 0);
+			}
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			return (<#= type #>)result;
+		}
+		internal <#= type #> ROLC(<#= type #> a, <#= type #> b)
+		{
+			int result = a;
+			for (var n = 0; n < b; n++)
+			{
+				var carry = (result & <#= sign #>) == <#= sign #>;
+				result = (result << 1) | (psw.Carry ? 1 : 0);
+				psw.Carry = carry;
+			}
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			return (<#= type #>)result;
+		}
+		internal <#= type #> ROR(<#= type #> a, <#= type #> b)
+		{
+			int result = a;
+			for (var n = 0; n < b; n++)
+			{
+				psw.Carry = (result & 0x01) == 0x01;
+				result = (result >> 1) | (psw.Carry ? <#= sign #> : 0);
+			}
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			return (<#= type #>)result;
+		}
+		internal <#= type #> RORC(<#= type #> a, <#= type #> b)
+		{
+			int result = a;
+			for (var n = 0; n < b; n++)
+			{
+				var carry = (result & 0x01) == 0x01;
+				result = (result >> 1) | (psw.Carry ? <#= sign #> : 0);
+				psw.Carry = carry;
+			}
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			return (<#= type #>)result;
+		}
+		internal <#= type #> SHL(<#= type #> a, <#= type #> b)
+		{
+			var result = (a << b) & <#= mask #>;
+
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			if (b != 0) psw.Carry = ((a << b) & (1 << <#= size.bits #>)) != 0;
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+		internal <#= type #> SHR(<#= type #> a, <#= type #> b)
+		{
+			var result = (a >> b) & <#= mask #>;
+
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			if (b != 0) psw.Carry = ((a >> (b - 1)) & 0x01) != 0;
+			psw.Overflow = ((a ^ result) & <#= sign #>) == <#= sign #>;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+		internal <#= type #> SHRA(<#= type #> a, <#= type #> b)
+		{
+			var result = a;
+			for (var n = 0; n < b; n++)
+			{
+				psw.Carry = (result & 0x01) == 0x01;
+				result = (<#= type #>)((result >> 1) | (result & <#= sign #>));
+			}
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = false;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+		internal <#= type #> XOR(<#= type #> a, <#= type #> b)
+		{
+			var result = a ^ b;
+
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = false;
+			psw.Carry = false;
+			psw.Parity = Parity(result & 0xFF);
+
+			return (<#= type #>)result;
+		}
+<# } #>
+	}
+}

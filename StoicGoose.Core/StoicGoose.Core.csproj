@@ -59,6 +59,14 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>V30MZ.Arithmetic.g.cs</LastGenOutput>
     </None>
+    <None Update="CPU\V30MZ.Bitwise.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>V30MZ.Bitwise.g.cs</LastGenOutput>
+    </None>
+    <None Update="CPU\V30MZ.Block.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>V30MZ.Block.g.cs</LastGenOutput>
+    </None>
     <None Update="CPU\V30MZ.OpcodeMap.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>V30MZ.OpcodeMap.g.cs</LastGenOutput>
@@ -75,6 +83,16 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>V30MZ.Arithmetic.tt</DependentUpon>
+    </Compile>
+    <Compile Update="CPU\V30MZ.Bitwise.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>V30MZ.Bitwise.tt</DependentUpon>
+    </Compile>
+    <Compile Update="CPU\V30MZ.Block.g.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>V30MZ.Block.tt</DependentUpon>
     </Compile>
     <Compile Update="CPU\V30MZ.OpcodeMap.g.cs">
       <DesignTime>True</DesignTime>

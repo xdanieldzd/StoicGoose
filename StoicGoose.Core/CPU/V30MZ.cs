@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-
-using StoicGoose.Common.Utilities;
-using StoicGoose.Core.Interfaces;
+﻿using StoicGoose.Core.Interfaces;
+using System.Collections.Generic;
 
 namespace StoicGoose.Core.CPU
 {
@@ -252,7 +250,9 @@ namespace StoicGoose.Core.CPU
 		private ushort ReadMemory16(ushort segment, ushort address)
 		{
 			cycles += 1 + (address & 0b1);
-			return (ushort)((machine.ReadMemory((uint)((segment << 4) + address + 1)) << 8) | machine.ReadMemory((uint)((segment << 4) + address)));
+			return (ushort)(
+				(machine.ReadMemory((uint)((segment << 4) + address + 1)) << 8) |
+				(machine.ReadMemory((uint)((segment << 4) + address + 0)) << 0));
 		}
 
 		private void WriteMemory8(ushort segment, ushort address, byte value)
@@ -264,8 +264,8 @@ namespace StoicGoose.Core.CPU
 		private void WriteMemory16(ushort segment, ushort address, ushort value)
 		{
 			cycles += 1 + (address & 0b1);
-			machine.WriteMemory((uint)((segment << 4) + address), (byte)(value & 0xFF));
-			machine.WriteMemory((uint)((segment << 4) + address + 1), (byte)(value >> 8));
+			machine.WriteMemory((uint)((segment << 4) + address + 0), (byte)((value >> 0) & 0xFF));
+			machine.WriteMemory((uint)((segment << 4) + address + 1), (byte)((value >> 8) & 0xFF));
 		}
 
 		private byte ReadPort8(ushort port)
@@ -277,7 +277,9 @@ namespace StoicGoose.Core.CPU
 		private ushort ReadPort16(ushort port)
 		{
 			cycles += 1 + (port & 0b1);
-			return (ushort)(machine.ReadPort((ushort)(port + 1)) << 8 | machine.ReadPort(port));
+			return (ushort)(
+				(machine.ReadPort((ushort)(port + 1)) << 8) |
+				(machine.ReadPort((ushort)(port + 0)) << 0));
 		}
 
 		private void WritePort8(ushort port, byte value)
@@ -289,8 +291,8 @@ namespace StoicGoose.Core.CPU
 		private void WritePort16(ushort port, ushort value)
 		{
 			cycles += 1 + (port & 0b1);
-			machine.WritePort(port, (byte)(value & 0xFF));
-			machine.WritePort((ushort)(port + 1), (byte)(value >> 8));
+			machine.WritePort((ushort)(port + 0), (byte)((value >> 0) & 0xFF));
+			machine.WritePort((ushort)(port + 1), (byte)((value >> 8) & 0xFF));
 		}
 	}
 }

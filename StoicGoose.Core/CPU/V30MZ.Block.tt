@@ -1,0 +1,131 @@
+﻿<#@ include file="$(TemplateIncludeFolder)\Header.ttinclude" #>
+<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".g.cs" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.IO" #>
+<#
+var sizes = new[]
+{
+	new { bits = 8, mask = 0xFF, sign = 0x80, type = "byte" },
+	new { bits = 16, mask = 0xFFFF, sign = 0x8000, type = "ushort" } 
+};
+var signed = new Dictionary<string, string>() { { "byte", "sbyte" }, { "ushort", "short" }, { "uint", "int" } };
+var next = new Dictionary<string, string>() { { "byte", "ushort" }, { "ushort", "uint" }, { "uint", "ulong" } };
+#>
+
+namespace StoicGoose.Core.CPU
+{
+	public sealed partial class V30MZ
+	{
+<# foreach (var size in sizes) {
+var type = size.type;
+var mask = $"0x{size.mask:X}";
+var sign = $"0x{size.sign:X}";
+var bits = size.bits;
+var reg = size.bits == 8 ? "Low" : "Word";
+var inc = size.bits == 8 ? 1 : 2;
+#>
+		internal void CMPBK<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				var x = ReadMemory<#= bits #>(SegmentViaPrefix(ds0), ix);
+				var y = ReadMemory<#= bits #>(ds1, iy);
+				ix += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+				iy += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+				SUB(x, y);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+				if (RepeatViaPrefix() == PrefixRepeatWhileNonZero && psw.Zero) return;
+				if (RepeatViaPrefix() == PrefixRepeatWhileZero && !psw.Zero) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void CMPM<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				var x = aw.<#= reg #>;
+				var y = ReadMemory<#= bits #>(ds1, iy);
+				iy += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+				SUB(x, y);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+				if (RepeatViaPrefix() == PrefixRepeatWhileNonZero && psw.Zero) return;
+				if (RepeatViaPrefix() == PrefixRepeatWhileZero && !psw.Zero) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void INM<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				WriteMemory<#= bits #>(ds1, iy, ReadPort<#= bits #>(dw));
+				iy += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void LDM<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				aw.<#= reg #> = ReadMemory<#= bits #>(SegmentViaPrefix(ds0), ix);
+				ix += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void MOVBK<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				WriteMemory<#= bits #>(ds1, iy, ReadMemory<#= bits #>(SegmentViaPrefix(ds0), ix));
+				ix += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+				iy += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void OUTM<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				WritePort<#= bits #>(dw, ReadMemory<#= bits #>(SegmentViaPrefix(ds0), ix));
+				ix += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+		internal void STM<#= bits #>()
+		{
+			if (RepeatViaPrefix() == 0 || cw.Word != 0)
+			{
+				WriteMemory<#= bits #>(ds1, iy, aw.<#= reg #>);
+				iy += (ushort)(psw.Direction ? -<#= inc #> : <#= inc #>);
+
+				if (RepeatViaPrefix() == 0 || --cw.Word == 0) return;
+
+				isPrefix = true;
+				pc--;
+			}
+		}
+<# } #>
+	}
+}

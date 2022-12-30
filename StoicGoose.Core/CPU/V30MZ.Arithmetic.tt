@@ -17,129 +17,122 @@ namespace StoicGoose.Core.CPU
 {
 	public sealed partial class V30MZ
 	{
-<# foreach (var size in sizes) { #>
-		internal <#= size.type #> ADD(<#= size.type #> a, <#= size.type #> b)
+<# foreach (var size in sizes) {
+var type = size.type;
+var mask = $"0x{size.mask:X}";
+var sign = $"0x{size.sign:X}";
+#>
+		internal <#= type #> ADD(<#= type #> a, <#= type #> b)
 		{
 			var result = a + b;
 
-			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
-			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
-			psw.Overflow = ((result ^ a) & (result ^ b) & <#= $"0x{size.sign:X}" #>) != 0;
-			psw.Carry = result > <#= $"0x{size.mask:X}" #>;
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = ((result ^ a) & (result ^ b) & <#= sign #>) != 0;
+			psw.Carry = result > <#= mask #>;
 			psw.Parity = Parity(result & 0xFF);
 			psw.AuxiliaryCarry = (a & 0x0F) + (b & 0x0F) >= 0x10;
 
-			return (<#= size.type #>)result;
+			return (<#= type #>)result;
 		}
-
-		internal <#= size.type #> ADDC(<#= size.type #> a, <#= size.type #> b)
+		internal <#= type #> ADDC(<#= type #> a, <#= type #> b)
 		{
-			return ADD(a, (<#= size.type #>)(b + (psw.Carry ? 1 : 0)));
+			return ADD(a, (<#= type #>)(b + (psw.Carry ? 1 : 0)));
 		}
-
-		internal <#= size.type #> DEC(<#= size.type #> a)
+		internal <#= type #> DEC(<#= type #> a)
 		{
 			var result = a - 1;
 
-			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
-			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
 			psw.Overflow = result == <#= $"0x{size.sign - 1:X}" #>;
 			psw.Parity = Parity(result & 0xFF);
 			psw.AuxiliaryCarry = (a & 0x0F) == 0x00;
 
-			return (<#= size.type #>)result;
+			return (<#= type #>)result;
 		}
-
-		internal <#= next[size.type] #> DIV(<#= next[size.type] #> a, <#= size.type #> b)
+		internal <#= next[type] #> DIV(<#= next[type] #> a, <#= type #> b)
 		{
 			if (b == 0) { Interrupt(0); return a; }
 
-			var quotient = (<#= signed[next[size.type]] #>)a / (<#= signed[size.type] #>)b;
-			var remainder = (<#= signed[next[size.type]] #>)a % (<#= signed[size.type] #>)b;
+			var quotient = (<#= signed[next[type]] #>)a / (<#= signed[type] #>)b;
+			var remainder = (<#= signed[next[type]] #>)a % (<#= signed[type] #>)b;
 
 			if (quotient > <#= size.sign - 1 #> || quotient < <#= -size.sign #>) { Interrupt(0); return a; }
 
-			return (<#= next[size.type] #>)(((remainder & <#= $"0x{size.mask:X}" #>) << <#= size.bits #>) | (quotient & <#= $"0x{size.mask:X}" #>));
+			return (<#= next[type] #>)(((remainder & <#= mask #>) << <#= size.bits #>) | (quotient & <#= mask #>));
 		}
-
-		internal <#= next[size.type] #> DIVU(<#= next[size.type] #> a, <#= size.type #> b)
+		internal <#= next[type] #> DIVU(<#= next[type] #> a, <#= type #> b)
 		{
 			if (b == 0) { Interrupt(0); return a; }
 
-			var quotient = (<#= next[next[size.type]] #>)(a / b);
-			var remainder = (<#= next[next[size.type]] #>)(a % b);
+			var quotient = (<#= next[next[type]] #>)(a / b);
+			var remainder = (<#= next[next[type]] #>)(a % b);
 
 			if (quotient > <#= size.mask #>) { Interrupt(0); return a; }
 
-			return (<#= next[size.type] #>)(((remainder & <#= $"0x{size.mask:X}" #>) << <#= size.bits #>) | (quotient & <#= $"0x{size.mask:X}" #>));
+			return (<#= next[type] #>)(((remainder & <#= mask #>) << <#= size.bits #>) | (quotient & <#= mask #>));
 		}
-
-		internal <#= size.type #> INC(<#= size.type #> a)
+		internal <#= type #> INC(<#= type #> a)
 		{
 			var result = a + 1;
 
-			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
-			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
-			psw.Overflow = result == <#= $"0x{size.sign:X}" #>;
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = result == <#= sign #>;
 			psw.Parity = Parity(result & 0xFF);
 			psw.AuxiliaryCarry = (a & 0x0F) == 0x0F;
 
-			return (<#= size.type #>)result;
+			return (<#= type #>)result;
 		}
-
-		internal <#= next[size.type] #> MUL(<#= size.type #> a, <#= size.type #> b)
+		internal <#= next[type] #> MUL(<#= type #> a, <#= type #> b)
 		{
-			var result = (<#= signed[size.type] #>)a * (<#= signed[size.type] #>)b;
+			var result = (<#= signed[type] #>)a * (<#= signed[type] #>)b;
 
 			psw.Carry = (result >> <#= size.bits #>) != 0;
 			psw.Overflow = (result >> <#= size.bits #>) != 0;
 
-			return (<#= next[size.type] #>)result;
+			return (<#= next[type] #>)result;
 		}
-
-		internal <#= next[size.type] #> MULU(<#= size.type #> a, <#= size.type #> b)
+		internal <#= next[type] #> MULU(<#= type #> a, <#= type #> b)
 		{
 			var result = a * b;
 
 			psw.Carry = (result >> <#= size.bits #>) != 0;
 			psw.Overflow = (result >> <#= size.bits #>) != 0;
 
-			return (<#= next[size.type] #>)result;
+			return (<#= next[type] #>)result;
 		}
-
-		internal <#= size.type #> NEG(<#= size.type #> a)
+		internal <#= type #> NEG(<#= type #> a)
 		{
-			var result = -a & <#= $"0x{size.mask:X}" #>;
+			var result = -a & <#= mask #>;
 
-			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
-			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
-			psw.Overflow = a == <#= $"0x{size.sign:X}" #>;
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = a == <#= sign #>;
 			psw.Carry = a != 0;
 			psw.Parity = Parity(result & 0xFF);
 			psw.AuxiliaryCarry = (a & 0x0F) != 0x00;
 
-			return (<#= size.type #>)result;
+			return (<#= type #>)result;
 		}
-
-		internal <#= size.type #> SUB(<#= size.type #> a, <#= size.type #> b)
+		internal <#= type #> SUB(<#= type #> a, <#= type #> b)
 		{
 			var result = a - b;
 
-			psw.Zero = (result & <#= $"0x{size.mask:X}" #>) == 0;
-			psw.Sign = (result & <#= $"0x{size.sign:X}" #>) == <#= $"0x{size.sign:X}" #>;
-			psw.Overflow = ((a ^ result) & (a ^ b) & <#= $"0x{size.sign:X}" #>) != 0;
+			psw.Zero = (result & <#= mask #>) == 0;
+			psw.Sign = (result & <#= sign #>) == <#= sign #>;
+			psw.Overflow = ((a ^ result) & (a ^ b) & <#= sign #>) != 0;
 			psw.Carry = b > a;
 			psw.Parity = Parity(result & 0xFF);
 			psw.AuxiliaryCarry = (b & 0x0F) > (a & 0x0F);
 
-			return (<#= size.type #>)result;
+			return (<#= type #>)result;
 		}
-
-		internal <#= size.type #> SUBC(<#= size.type #> a, <#= size.type #> b)
+		internal <#= type #> SUBC(<#= type #> a, <#= type #> b)
 		{
-			return SUB(a, (<#= size.type #>)(b + (psw.Carry ? 1 : 0)));
+			return SUB(a, (<#= type #>)(b + (psw.Carry ? 1 : 0)));
 		}
-
 <# } #>
 		internal void ADJ4x(bool subtract)
 		{
@@ -163,7 +156,6 @@ namespace StoicGoose.Core.CPU
 
 			aw.Low = (byte)result;
 		}
-
 		internal void ADJBx(bool subtract)
 		{
 			if ((aw.Low & 0x0F) > 0x99 || psw.AuxiliaryCarry)
@@ -182,7 +174,6 @@ namespace StoicGoose.Core.CPU
 
 			aw.Low &= 0x0F;
 		}
-
 		internal void CVTBD(byte a)
 		{
 			if (a == 0)
@@ -197,7 +188,6 @@ namespace StoicGoose.Core.CPU
 				psw.Parity = Parity(aw.Low & 0xFF);
 			}
 		}
-
 		internal void CVTDB(byte a)
 		{
 			aw.Low += (byte)(aw.High * a);

@@ -38,8 +38,8 @@ namespace StoicGoose.Core.CPU
 						case 0b111: Segment = cpu.SegmentViaPrefix(cpu.ds0); Address = cpu.bw; break;
 					}
 
-					if (Mod == 0b01) Address += cpu.Fetch8();
-					if (Mod == 0b10) Address += cpu.Fetch16();
+					if (Mod == 0b01) Address = (ushort)(Address + (sbyte)cpu.Fetch8());
+					if (Mod == 0b10) Address = (ushort)(Address + (short)cpu.Fetch16());
 				}
 			}
 		}
