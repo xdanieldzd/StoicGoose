@@ -23,7 +23,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore -p:CustomPathToTransforms="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Msbuild\"
       - name: Publish
         run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
       - name: Upload build artifact

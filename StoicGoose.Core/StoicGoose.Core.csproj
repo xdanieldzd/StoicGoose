@@ -15,7 +15,11 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TextTemplating\Microsoft.TextTemplating.targets" />
+  <PropertyGroup>
+    <CustomPathToTransforms>$(MSBuildExtensionsPath)</CustomPathToTransforms>
+  </PropertyGroup>
+
+  <Import Project="$(CustomPathToTransforms)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TextTemplating\Microsoft.TextTemplating.targets" />
 
   <PropertyGroup>
     <TransformOnBuild>true</TransformOnBuild>
