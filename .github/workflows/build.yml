@@ -31,10 +31,10 @@ jobs:
 
       - uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/.nuget/packages
+          path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
-            ${{ runner.os }}-nuget-
+            ${{ runner.os }}-nuget
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v2
