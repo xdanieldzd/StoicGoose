@@ -13,6 +13,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <OutputType>WinExe</OutputType>
     <ApplicationIcon>WS-Icon.ico</ApplicationIcon>
     <StartupObject>StoicGoose.GLWindow.Program</StartupObject>
