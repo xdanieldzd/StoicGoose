@@ -20,10 +20,10 @@ jobs:
         project: ['StoicGoose.WinForms', 'StoicGoose.GLWindow']
         include:
           - project: StoicGoose.WinForms
-            csproj: StoicGoose.WinForms\StoicGoose.WinForms.csproj
+            csproj: StoicGoose.WinForms/StoicGoose.WinForms.csproj
             artifacts: StoicGoose.WinForms-artifacts
           - project: StoicGoose.GLWindow
-            csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
+            csproj: StoicGoose.GLWindow/StoicGoose.GLWindow.csproj
             artifacts: StoicGoose.GLWindow-artifacts
 
     steps:
@@ -43,8 +43,8 @@ jobs:
       - name: Publish
         run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
 
-#      - name: Upload build artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ${{ matrix.artifacts }}
-#          path: D:\a\StoicGoose\StoicGoose\release\*
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifacts }}
+          path: /home/runner/work/StoicGoose/StoicGoose/release/*
