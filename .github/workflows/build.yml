@@ -1,9 +1,20 @@
 name: Build
-on: [push]
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
 
 jobs:
   build:
-    runs-on: windows-latest
+    Name: Build
+    runs-on: ubuntu-latest
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_NOLOGO: true
+
     strategy:
       matrix:
         project: ['StoicGoose.WinForms', 'StoicGoose.GLWindow']
@@ -14,20 +25,26 @@ jobs:
           - project: StoicGoose.GLWindow
             csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
             artifacts: StoicGoose.GLWindow-artifacts
+
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET
+
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: 6.0.x
+
       - name: Restore dependencies
         run: dotnet restore
+
       - name: Build
         run: dotnet build --no-restore
+
       - name: Publish
         run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifacts }}
-          path: D:\a\StoicGoose\StoicGoose\release\*
+
+#      - name: Upload build artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ matrix.artifacts }}
+#          path: D:\a\StoicGoose\StoicGoose\release\*
