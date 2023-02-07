@@ -107,12 +107,9 @@ namespace StoicGoose.ImGuiCommon.Handlers
 				ShaderFactory.FromSource(ShaderType.FragmentShader, glslVersionString, string.Join(Environment.NewLine, fragmentShaderSource)));
 
 			var io = ImGui.GetIO();
-			io.Fonts.AddFontDefault();
 
-			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
-			fontTexture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
-			io.Fonts.SetTexID((IntPtr)fontTexture.Handle);
-			io.Fonts.ClearTexData();
+			io.Fonts.AddFontDefault();
+			UpdateFontTexture(io);
 
 			io.KeyMap[(int)ImGuiKey.Space] = (int)Keys.Space;
 			io.KeyMap[(int)ImGuiKey.Comma] = (int)Keys.Comma;
@@ -224,8 +221,6 @@ namespace StoicGoose.ImGuiCommon.Handlers
 
 		public void AddFontFromEmbeddedResource(string name, float size, GlyphRanges glyphRanges)
 		{
-			fontTexture?.Dispose();
-
 			var io = ImGui.GetIO();
 
 			var glyphRangePtr = glyphRanges switch
@@ -245,6 +240,12 @@ namespace StoicGoose.ImGuiCommon.Handlers
 			io.Fonts.AddFontFromMemoryTTF(handle.AddrOfPinnedObject(), (int)size, size, null, glyphRangePtr);
 			handle.Free();
 
+			UpdateFontTexture(io);
+		}
+
+		public void UpdateFontTexture(ImGuiIOPtr io)
+		{
+			fontTexture?.Dispose();
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
 			fontTexture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
 			io.Fonts.SetTexID((IntPtr)fontTexture.Handle);
