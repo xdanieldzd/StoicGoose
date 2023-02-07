@@ -54,7 +54,7 @@ namespace StoicGoose.GLWindow.Interface.Windows
 		public int NumColumns { get { return numColumns; } set { numColumns = value; } }
 		public bool ShowOptions { get; set; } = true;
 		public bool ShowDataPreview { get { return showDataPreview; } set { showDataPreview = value; } }
-		public bool PreviewShiftJis { get; set; } = false;
+		public bool PreviewShiftJis { get; set; } = true;
 		public bool ShowAscii { get { return showAscii; } set { showAscii = value; } }
 		public bool GrayOutZeroes { get { return grayOutZeroes; } set { grayOutZeroes = value; } }
 		public bool UpperCaseHex { get { return upperCaseHex; } set { upperCaseHex = value; } }

@@ -80,6 +80,7 @@ namespace StoicGoose.GLWindow
 			inputHandler = new();
 
 			imGuiHandler = new(this, Program.RequiredGLVersion);
+			imGuiHandler.AddFontFromEmbeddedResource("Assets.JF-Dot-K14-2004.ttf", 14.0f, ImGuiHandler.GlyphRanges.Japanese);
 			imGuiHandler.RegisterWindow(logWindow, () => null);
 			imGuiHandler.RegisterWindow(displayWindow, () => (displayTexture, isVerticalOrientation));
 			imGuiHandler.RegisterWindow(disassemblerWindow, () => (machine, isRunning, isPaused));

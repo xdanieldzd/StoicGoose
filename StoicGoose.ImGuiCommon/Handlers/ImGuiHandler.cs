@@ -72,9 +72,10 @@ namespace StoicGoose.ImGuiCommon.Handlers
 		readonly VertexArray vertexArray = default;
 
 		readonly ShaderProgram shaderProgram = default;
-		readonly Texture texture = default;
 
 		readonly List<(WindowBase window, Func<object> getUserDataFunc)> windowList = new();
+
+		Texture fontTexture = default;
 
 		bool wasFrameBegun = false;
 
@@ -107,11 +108,10 @@ namespace StoicGoose.ImGuiCommon.Handlers
 
 			var io = ImGui.GetIO();
 			io.Fonts.AddFontDefault();
-			io.Fonts.AddFontDefault();// TODO jpn font
 
 			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
-			texture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
-			io.Fonts.SetTexID((IntPtr)texture.Handle);
+			fontTexture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
+			io.Fonts.SetTexID((IntPtr)fontTexture.Handle);
 			io.Fonts.ClearTexData();
 
 			io.KeyMap[(int)ImGuiKey.Space] = (int)Keys.Space;
@@ -217,9 +217,38 @@ namespace StoicGoose.ImGuiCommon.Handlers
 			vertexArray?.Dispose();
 
 			shaderProgram?.Dispose();
-			texture?.Dispose();
+			fontTexture?.Dispose();
 
 			GC.SuppressFinalize(this);
+		}
+
+		public void AddFontFromEmbeddedResource(string name, float size, GlyphRanges glyphRanges)
+		{
+			fontTexture?.Dispose();
+
+			var io = ImGui.GetIO();
+
+			var glyphRangePtr = glyphRanges switch
+			{
+				GlyphRanges.Japanese => io.Fonts.GetGlyphRangesJapanese(),
+				GlyphRanges.Korean => io.Fonts.GetGlyphRangesKorean(),
+				GlyphRanges.ChineseSimplifiedCommon => io.Fonts.GetGlyphRangesChineseSimplifiedCommon(),
+				GlyphRanges.ChineseFull => io.Fonts.GetGlyphRangesChineseFull(),
+				GlyphRanges.Cyrillic => io.Fonts.GetGlyphRangesCyrillic(),
+				GlyphRanges.Thai => io.Fonts.GetGlyphRangesThai(),
+				GlyphRanges.Vietnamese => io.Fonts.GetGlyphRangesVietnamese(),
+				GlyphRanges.Greek => io.Fonts.GetGlyphRangesGreek(),
+				_ => io.Fonts.GetGlyphRangesDefault()
+			};
+
+			var handle = GCHandle.Alloc(Resources.GetEmbeddedRawData(name), GCHandleType.Pinned);
+			io.Fonts.AddFontFromMemoryTTF(handle.AddrOfPinnedObject(), (int)size, size, null, glyphRangePtr);
+			handle.Free();
+
+			io.Fonts.GetTexDataAsRGBA32(out IntPtr fontTexturePixels, out int fontTextureWidth, out int fontTextureHeight);
+			fontTexture = new Texture(fontTextureWidth, fontTextureHeight, fontTexturePixels);
+			io.Fonts.SetTexID((IntPtr)fontTexture.Handle);
+			io.Fonts.ClearTexData();
 		}
 
 		public void Resize(int width, int height)
@@ -348,8 +377,8 @@ namespace StoicGoose.ImGuiCommon.Handlers
 
 						if (cmdBuffer.TextureId != IntPtr.Zero)
 						{
-							if ((int)cmdBuffer.TextureId == texture.Handle)
-								texture.Bind();
+							if ((int)cmdBuffer.TextureId == fontTexture.Handle)
+								fontTexture.Bind();
 							else
 								GL.BindTexture(TextureTarget.Texture2D, (int)cmdBuffer.TextureId);
 						}
@@ -367,6 +396,19 @@ namespace StoicGoose.ImGuiCommon.Handlers
 			public Vector2 Position;
 			public Vector2 TexCoord;
 			public uint Color;
+		}
+
+		public enum GlyphRanges
+		{
+			Default,
+			Japanese,
+			Korean,
+			ChineseSimplifiedCommon,
+			ChineseFull,
+			Cyrillic,
+			Thai,
+			Vietnamese,
+			Greek
 		}
 	}
 }

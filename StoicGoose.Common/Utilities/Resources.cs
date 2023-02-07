@@ -28,5 +28,14 @@ namespace StoicGoose.Common.Utilities
 			using var reader = new StreamReader(stream);
 			return reader.ReadToEnd();
 		}
+
+		public static byte[] GetEmbeddedRawData(string name)
+		{
+			using var stream = GetEmbeddedResourceStream(name);
+			if (stream == null) return null;
+			var buffer = new byte[stream.Length];
+			stream.Read(buffer, 0, buffer.Length);
+			return buffer;
+		}
 	}
 }

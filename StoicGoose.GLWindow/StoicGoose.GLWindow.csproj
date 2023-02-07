@@ -23,23 +23,26 @@
 
   <ItemGroup>
     <None Remove="Assets\Goose-Logo.rgba" />
+    <None Remove="Assets\JF-Dot-K14-2004.ttf" />
     <None Remove="Assets\Localization.json" />
     <None Remove="Assets\WS-Icon.rgba" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Goose-Logo.rgba" />
+    <EmbeddedResource Include="Assets\JF-Dot-K14-2004.ttf" />
     <EmbeddedResource Include="Assets\Localization.json" />
     <EmbeddedResource Include="Assets\WS-Icon.rgba" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.2.0" />
-    <PackageReference Include="Iced" Version="1.17.0" />
-    <PackageReference Include="ImGui.NET" Version="1.87.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenTK" Version="4.7.4" />
+    <PackageReference Include="GitInfo" Version="2.3.0" />
+    <PackageReference Include="Iced" Version="1.18.0" />
+    <PackageReference Include="ImGui.NET" Version="1.89.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="OpenAL-Soft.Win" Version="1.2.0" />
+    <PackageReference Include="OpenTK" Version="4.7.5" />
   </ItemGroup>
 
   <ItemGroup>

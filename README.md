@@ -86,6 +86,7 @@ UPDATE ME ALREADY, YOU STUPID LAZY AMATEUR CODER!
 -->
 ## Acknowledgements & Attribution
 
-* The XML data files in `Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
-* The file `WS-Icon.ico` is derived from "[WonderSwan-Black-Left.jpg](https://en.wikipedia.org/wiki/File:WonderSwan-Black-Left.jpg)" on [Wikipedia](https://en.wikipedia.org), in revision from 25 May 2014 by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos), used as public domain.
+* The XML data files in `StoicGoose.WinForms\Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.
+* The TTF file `JF-Dot-K14-2004.ttf` in `StoicGoose.GLWindow\Assets` contains the font "[K14-2004](https://ja.m.wikipedia.org/wiki/K14_%28%E3%83%95%E3%82%A9%E3%83%B3%E3%83%88%29)" by Hiroshi Tachibana and Toshiyuki Imamura, used as public domain, available as part of the [自家製ドットフォントシリーズ](http://jikasei.me/font/jf-dotfont/) from [自家製フォント工房](http://jikasei.me/).
+* The file `WS-Icon.ico` in `StoicGoose.WinForms` is derived from "[WonderSwan-Black-Left.jpg](https://en.wikipedia.org/wiki/File:WonderSwan-Black-Left.jpg)" on [Wikipedia](https://en.wikipedia.org), in revision from 25 May 2014 by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos), used as public domain.
 * My personal thanks and gratitude to the late Near, who has always been encouraging and inspiring on my amateur emulator developer journey. They are sorely missed.
