@@ -8,14 +8,15 @@
 
 StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET 6.0 along with the following NuGet packages:
 
-* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.4 (for OpenGL rendering, OpenAL sound, etc.)
+* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.5 (for OpenGL rendering, OpenAL sound, etc.)
 * [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
-* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.1 (for configuration, cheats and breakpoint storage)
-* [GitInfo](https://www.nuget.org/packages/GitInfo) 2.2.0 (for versioning information)
-* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.87.3 (for debugger UI)
-* [Iced](https://www.nuget.org/packages/Iced) 1.17.0 (for x86 disassembly)
-* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.2.0 (for breakpoint support)
-* [Serilog](https://www.nuget.org/packages/Serilog) 2.11.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console) 4.0.1 (for error and general message logging)
+* [OpenAL-Soft.Win](https://www.nuget.org/packages/OpenAL-Soft.Win) 1.2.0 (for OpenAL Soft runtime)
+* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.2 (for configuration, cheats and breakpoint storage)
+* [GitInfo](https://www.nuget.org/packages/GitInfo) 2.3.0 (for versioning information)
+* [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.89.4 (for debugger UI)
+* [Iced](https://www.nuget.org/packages/Iced) 1.18.0 (for x86 disassembly)
+* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.4.0 (for breakpoint support)
+* [Serilog](https://www.nuget.org/packages/Serilog) 2.12.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console) 4.1.0 (for error and general message logging)
 
 ## Versions
 
@@ -28,8 +29,12 @@ Two flavors of StoicGoose are available:
 * A GPU supporting OpenGL 4.0 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later, Intel Ivy Bridge iGPUs or later) _and_ appropriate drivers
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
 * A working implementation of OpenAL
-  * If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll
-* Optionally, copies of the WonderSwan and WonderSwan Color bootstrap ROMs (supported but not required)
+  * ~~If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll~~
+  * This *should* no longer be necessary, due to including the OpenAL-Soft.Win NuGet package
+* Optionally, copies of the WonderSwan and WonderSwan Color bootstrap ROMs (supported but not required); correct MD5 hashes are as follows
+  * 54b915694731cc22e07d3fb8a00ee2db (WonderSwan)
+  * 880893bd5a7d53fff826bd76a83d566e (WonderSwan Color)
+  * d3eff34719a363e586e12b700501ed91 (SwanCrystal)
 
 ## Building
 
