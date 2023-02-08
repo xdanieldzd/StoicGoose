@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -32,6 +33,13 @@ namespace StoicGoose.WinForms
 		readonly static int maxScreenSizeFactor = 5;
 		readonly static int maxRecentFiles = 15;
 		readonly static int statusIconSize = 12;
+
+		readonly static List<(string description, string extension, Func<string, Stream> streamReadFunc)> supportedFileInformation = new()
+		{
+			("WonderSwan ROMs", ".ws", GetStreamFromFile),
+			("WonderSwan Color ROMs", ".wsc", GetStreamFromFile),
+			("Zip Archives", ".zip", GetStreamFromFirstZippedFile)
+		};
 
 		/* Various handlers */
 		DatabaseHandler databaseHandler = default;
@@ -96,6 +104,8 @@ namespace StoicGoose.WinForms
 			CreateRecentFilesMenu();
 			CreateScreenSizeMenu();
 			CreateShaderMenu();
+
+			SetFileFilters();
 
 			InitializeUIMiscellanea();
 
@@ -482,6 +492,25 @@ namespace StoicGoose.WinForms
 			}
 		}
 
+		private void SetFileFilters()
+		{
+			var filters = new List<string>();
+			var extensionsList = new List<string>();
+
+			foreach (var (description, extension, _) in supportedFileInformation)
+			{
+				var currentExtension = $"*{extension}";
+				extensionsList.Add(currentExtension);
+				filters.Add($"{description} ({currentExtension})|{currentExtension}");
+			}
+
+			var allExtensionsFilter = string.Join(";", extensionsList);
+			filters.Insert(0, $"All Supported Files ({allExtensionsFilter})|{allExtensionsFilter}");
+			filters.Add("All Files (*.*)|*.*");
+
+			ofdOpenRom.Filter = string.Join("|", filters);
+		}
+
 		private void CreateDataBinding(ControlBindingsCollection bindings, string propertyName, object dataSource, string dataMember)
 		{
 			var binding = new Binding(propertyName, dataSource, dataMember, false, DataSourceUpdateMode.OnPropertyChanged);
@@ -503,8 +532,6 @@ namespace StoicGoose.WinForms
 
 			CreateDataBinding(enableCheatsToolStripMenuItem.DataBindings, nameof(enableCheatsToolStripMenuItem.Checked), Program.Configuration.General, nameof(Program.Configuration.General.EnableCheats));
 			enableCheatsToolStripMenuItem.CheckedChanged += (s, e) => { emulatorHandler.Machine.ReadMemoryCallback = Program.Configuration.General.EnableCheats ? MachineReadMemoryCallback : default; };
-
-			ofdOpenRom.Filter = $"WonderSwan & Color ROMs (*.ws;*.wsc)|*.ws;*.wsc|All Files (*.*)|*.*";
 
 			cheatListToolStripMenuItem.Enabled = pauseToolStripMenuItem.Enabled = resetToolStripMenuItem.Enabled = false;
 		}
@@ -584,6 +611,16 @@ namespace StoicGoose.WinForms
 			return result;
 		}
 
+		private static Stream GetStreamFromFile(string filename)
+		{
+			return new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+		}
+
+		private static Stream GetStreamFromFirstZippedFile(string filename)
+		{
+			return new ZipArchive(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)).Entries.FirstOrDefault()?.Open();
+		}
+
 		private void LoadAndRunCartridge(string filename)
 		{
 			if (emulatorHandler.IsRunning)
@@ -592,7 +629,11 @@ namespace StoicGoose.WinForms
 				emulatorHandler.Shutdown();
 			}
 
-			using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			using var inputStream = supportedFileInformation.FirstOrDefault(x => x.extension == Path.GetExtension(filename)).streamReadFunc(filename) ?? GetStreamFromFile(filename);
+			using var stream = new MemoryStream();
+			inputStream.CopyTo(stream);
+			stream.Position = 0;
+
 			var data = new byte[stream.Length];
 			stream.Read(data, 0, data.Length);
 			emulatorHandler.Machine.LoadRom(data);
