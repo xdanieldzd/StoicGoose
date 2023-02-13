@@ -69,7 +69,7 @@ $ dotnet build -c Release
 $ dotnet bin/Release/net6.0/StoicGoose.GLWindow.dll
 ```
 
-## Screenshots (v000.6 WIP)
+## Screenshots
 
 WonderSwan and WonderSwan Color Bootstraps, using Dot-Matrix and Dot-Matrix Color shaders:
 
@@ -82,13 +82,11 @@ Various WonderSwan games, using Dot-Matrix shader:
 Various WonderSwan Color games, using Dot-Matrix Color shader:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-DigiD1Tamers.png" alt="Screenshot WSC Games 1" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-FinalFantasy.png" alt="Screenshot WSC Games 2" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-MrDriller.png" alt="Screenshot WSC Games 3" width="50%"><img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/WSC-Riviera.png" alt="Screenshot WSC Games 4" width="50%">
-<!--
-Various debugging features (**outdated!**):
 
-UPDATE ME ALREADY, YOU STUPID LAZY AMATEUR CODER!
+Debugger UI showing various tool windows:
 
 <img src="https://raw.githubusercontent.com/xdanieldzd/StoicGoose/master/Screenshots/Debugger.png" alt="Screenshot Debugger">
--->
+
 ## Acknowledgements & Attribution
 
 * The XML data files in `StoicGoose.WinForms\Assets\No-Intro` were created by the [No-Intro](http://www.no-intro.org) project; see the [DAT-o-MATIC website](https://datomatic.no-intro.org) for official downloads.

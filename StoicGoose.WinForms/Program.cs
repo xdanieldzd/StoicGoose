@@ -145,8 +145,7 @@ namespace StoicGoose.WinForms
 
 		public static void SaveConfiguration()
 		{
-			if (Configuration != null)
-				Configuration.SerializeToFile(programConfigPath);
+			Configuration?.SerializeToFile(programConfigPath);
 		}
 
 		private static string GetVersionDetails()

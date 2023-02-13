@@ -99,7 +99,7 @@ namespace StoicGoose.Core.Display
 					var pixelColor = DisplayUtilities.ReadPixel(machine, tileNum, (byte)((y - spriteY) ^ (((activeSprite >> 15) & 0b1) * 7)), (byte)((x - spriteX) ^ (((activeSprite >> 14) & 0b1) * 7)), false, false, false);
 
 					var isOpaque = !IsBitSet(tilePal, 2) || pixelColor != 0;
-					if (!isOpaque) return;
+					if (!isOpaque) continue;
 
 					tilePal += 8;
 
