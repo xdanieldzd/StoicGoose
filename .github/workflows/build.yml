@@ -54,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifacts }}
-          path: $GITHUB_WORKSPACE/release/*
+          path: ${{ github.workspace }}/release/*
