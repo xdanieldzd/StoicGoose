@@ -20,4 +20,4 @@ jobs:
 
       - name: ls
         run: |
-            ls -la $GITHUB_WORKSPACE
+            ls -R ${{ github.workspace }}
