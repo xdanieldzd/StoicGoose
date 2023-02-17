@@ -29,6 +29,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: ls
+        run: ls -R $GITHUB_WORKSPACE
+
       - uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
@@ -49,9 +52,6 @@ jobs:
 
       - name: Publish
         run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
-
-      - name: ls
-        run: ls -R ~
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
