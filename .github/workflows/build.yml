@@ -50,6 +50,9 @@ jobs:
       - name: Publish
         run: dotnet publish ${{ matrix.csproj }} -c Release -o release --nologo
 
+      - name: ls
+        run: ls -R ~
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
