@@ -53,5 +53,5 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifacts }}
+          name: ${{ matrix.artifacts }}-${{ github.ref_name }}-${{ github.sha }}
           path: ${{ github.workspace }}/release/*
