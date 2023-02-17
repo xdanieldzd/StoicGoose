@@ -20,17 +20,14 @@ jobs:
         project: ['StoicGoose.WinForms', 'StoicGoose.GLWindow']
         include:
           - project: StoicGoose.WinForms
-            csproj: StoicGoose.WinForms\StoicGoose.WinForms.csproj
+            csproj: StoicGoose.WinForms/StoicGoose.WinForms.csproj
             artifacts: StoicGoose.WinForms-artifacts
           - project: StoicGoose.GLWindow
-            csproj: StoicGoose.GLWindow\StoicGoose.GLWindow.csproj
+            csproj: StoicGoose.GLWindow/StoicGoose.GLWindow.csproj
             artifacts: StoicGoose.GLWindow-artifacts
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: ls
-        run: ls -R $GITHUB_WORKSPACE
 
       - uses: actions/cache@v3
         with:
@@ -57,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifacts }}
-          path: D:\a\StoicGoose\StoicGoose\release\*
+          path: $GITHUB_WORKSPACE/release/*
