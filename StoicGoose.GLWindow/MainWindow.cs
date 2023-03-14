@@ -308,6 +308,8 @@ namespace StoicGoose.GLWindow
 			if (Program.Configuration.BootstrapFiles.ContainsKey(typeName))
 				bootstrapFilename = Program.Configuration.BootstrapFiles[typeName];
 
+			machine.UseBootstrap = Program.Configuration.UseBootstrap;
+
 			systemControllerStatusWindow.SetComponentType(machine.GetType());
 			displayControllerStatusWindow.SetComponentType(machine.DisplayController.GetType());
 			soundControllerStatusWindow.SetComponentType(machine.SoundController.GetType());
@@ -508,12 +510,16 @@ namespace StoicGoose.GLWindow
 		{
 			if (machine == null) return;
 
-			if (!isRunning && Program.Configuration.UseBootstrap && File.Exists(bootstrapFilename) && !machine.IsBootstrapLoaded)
+			if (!isRunning)
 			{
-				using var stream = new FileStream(bootstrapFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				var data = new byte[stream.Length];
-				stream.Read(data, 0, data.Length);
-				machine.LoadBootstrap(data);
+				if (File.Exists(bootstrapFilename))
+				{
+					using var stream = new FileStream(bootstrapFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+					var data = new byte[stream.Length];
+					stream.Read(data, 0, data.Length);
+					machine.LoadBootstrap(data);
+				}
+				machine.UseBootstrap = Program.Configuration.UseBootstrap;
 			}
 		}
 

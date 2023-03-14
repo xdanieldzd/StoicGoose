@@ -581,13 +581,16 @@ namespace StoicGoose.WinForms
 		{
 			if (GlobalVariables.EnableSkipBootstrapIfFound) return;
 
-			if (!emulatorHandler.IsRunning &&
-				Program.Configuration.General.UseBootstrap && File.Exists(filename) && !emulatorHandler.Machine.IsBootstrapLoaded)
+			if (!emulatorHandler.IsRunning)
 			{
-				using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				var data = new byte[stream.Length];
-				stream.Read(data, 0, data.Length);
-				emulatorHandler.Machine.LoadBootstrap(data);
+				if (File.Exists(filename))
+				{
+					using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+					var data = new byte[stream.Length];
+					stream.Read(data, 0, data.Length);
+					emulatorHandler.Machine.LoadBootstrap(data);
+				}
+				emulatorHandler.Machine.UseBootstrap = Program.Configuration.General.UseBootstrap;
 			}
 		}
 
@@ -831,6 +834,8 @@ namespace StoicGoose.WinForms
 
 				inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
 				soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
+
+				emulatorHandler.Machine.UseBootstrap = Program.Configuration.General.UseBootstrap;
 			}
 
 			UnpauseEmulation();

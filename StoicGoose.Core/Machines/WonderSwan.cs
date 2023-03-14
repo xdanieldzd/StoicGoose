@@ -40,6 +40,9 @@ namespace StoicGoose.Core.Machines
 		public override int InternalEepromSize => 64 * 2;
 		public override int InternalEepromAddressBits => 6;
 
+		public override int BootstrapRomAddress => 0xFF000;
+		public override int BootstrapRomSize => 0x1000;
+
 		public override void Initialize()
 		{
 			DisplayController = new AswanDisplayController(this);

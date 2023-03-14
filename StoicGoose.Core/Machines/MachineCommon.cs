@@ -38,15 +38,18 @@ namespace StoicGoose.Core.Machines
 		public uint InternalRamMask { get; protected set; } = 0;
 		public byte[] InternalRam { get; protected set; } = default;
 
-		public abstract int InternalEepromSize { get; }
-		public abstract int InternalEepromAddressBits { get; }
-
 		public Cartridge Cartridge { get; protected set; } = new();
 		public V30MZ Cpu { get; protected set; } = default;
 		public DisplayControllerCommon DisplayController { get; protected set; } = default;
 		public SoundControllerCommon SoundController { get; protected set; } = default;
 		public EEPROM InternalEeprom { get; protected set; } = default;
-		public byte[] BootstrapRom { get; protected set; } = default;
+		public Bootstrap BootstrapRom { get; protected set; } = default;
+
+		public abstract int InternalEepromSize { get; }
+		public abstract int InternalEepromAddressBits { get; }
+
+		public abstract int BootstrapRomAddress { get; }
+		public abstract int BootstrapRomSize { get; }
 
 		public Func<(List<string> buttonsPressed, List<string> buttonsHeld)> ReceiveInput { get; set; } = default;
 
@@ -74,7 +77,8 @@ namespace StoicGoose.Core.Machines
 		/* REG_SER_STATUS */
 		protected bool serialEnable, serialBaudRateSelect, serialOverrunReset, serialSendBufferEmpty, serialOverrun, serialDataReceived;
 
-		public bool IsBootstrapLoaded => BootstrapRom != null;
+		public bool IsBootstrapLoaded { get; private set; } = false;
+		public bool UseBootstrap { get; set; } = false;
 
 		public virtual void Initialize()
 		{
@@ -83,8 +87,9 @@ namespace StoicGoose.Core.Machines
 			InternalRamMask = (uint)(InternalRamSize - 1);
 			InternalRam = new byte[InternalRamSize];
 
-			Cpu = new V30MZ(this);
-			InternalEeprom = new EEPROM(InternalEepromSize, InternalEepromAddressBits);
+			Cpu = new(this);
+			InternalEeprom = new(InternalEepromSize, InternalEepromAddressBits);
+			BootstrapRom = new(BootstrapRomSize);
 
 			InitializeEepromToDefaults();
 
@@ -112,7 +117,7 @@ namespace StoicGoose.Core.Machines
 
 		public virtual void ResetRegisters()
 		{
-			cartEnable = BootstrapRom == null;
+			cartEnable = !IsBootstrapLoaded || !UseBootstrap;
 			is16BitExtBus = true;
 			cartRom1CycleSpeed = false;
 			builtInSelfTestOk = true;
@@ -223,8 +228,9 @@ namespace StoicGoose.Core.Machines
 
 		public void LoadBootstrap(byte[] data)
 		{
-			BootstrapRom = new byte[data.Length];
-			Buffer.BlockCopy(data, 0, BootstrapRom, 0, data.Length);
+			BootstrapRom.LoadRom(data);
+
+			IsBootstrapLoaded = true;
 		}
 
 		public void LoadInternalEeprom(byte[] data)
@@ -267,10 +273,10 @@ namespace StoicGoose.Core.Machines
 		{
 			byte retVal;
 
-			if (!cartEnable && BootstrapRom != null && address >= (0x100000 - BootstrapRom.Length))
+			if (!cartEnable && BootstrapRom != null && address >= BootstrapRomAddress)
 			{
 				/* Bootstrap enabled */
-				retVal = BootstrapRom[address & (BootstrapRom.Length - 1)];
+				retVal = BootstrapRom.ReadMemory(address);
 			}
 			else
 			{

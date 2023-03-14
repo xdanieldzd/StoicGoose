@@ -52,6 +52,7 @@ namespace StoicGoose.Core.Interfaces
 
 		void LoadBootstrap(byte[] data);
 		bool IsBootstrapLoaded { get; }
+		bool UseBootstrap { get; set; }
 		void LoadInternalEeprom(byte[] data);
 		void LoadRom(byte[] data);
 		void LoadSaveData(byte[] data);

@@ -41,6 +41,9 @@ namespace StoicGoose.Core.Machines
 		public override int InternalEepromSize => 1024 * 2;
 		public override int InternalEepromAddressBits => 10;
 
+		public override int BootstrapRomAddress => 0xFE000;
+		public override int BootstrapRomSize => 0x2000;
+
 		public SphinxGeneralDMAController DmaController { get; protected set; } = default;
 		public SphinxSoundDMAController SoundDmaController { get; protected set; } = default;
 
