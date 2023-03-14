@@ -8,14 +8,14 @@
 
 StoicGoose is a work-in-progress Bandai WonderSwan and WonderSwan Color emulator. It is written in C# via Visual Studio Community 2022 under Windows 10 Pro 21H2, and uses .NET 6.0 along with the following NuGet packages:
 
-* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.5 (for OpenGL rendering, OpenAL sound, etc.)
+* [OpenTK](https://www.nuget.org/packages/OpenTK) 4.7.7 (for OpenGL rendering, OpenAL sound, etc.)
 * [OpenTK.WinForms](https://www.nuget.org/packages/OpenTK.WinForms) 4.0.0-pre.6 (for WinForms OpenGL control)
 * [OpenAL-Soft.Win](https://www.nuget.org/packages/OpenAL-Soft.Win) 1.2.0 (for OpenAL Soft runtime)
-* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.2 (for configuration, cheats and breakpoint storage)
+* [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) 13.0.3 (for configuration, cheats and breakpoint storage)
 * [GitInfo](https://www.nuget.org/packages/GitInfo) 2.3.0 (for versioning information)
 * [ImGui.NET](https://www.nuget.org/packages/ImGui.NET) 1.89.4 (for debugger UI)
 * [Iced](https://www.nuget.org/packages/Iced) 1.18.0 (for x86 disassembly)
-* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.4.0 (for breakpoint support)
+* [Microsoft.CodeAnalysis.CSharp.Scripting](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp.Scripting) 4.5.0 (for breakpoint support)
 * [Serilog](https://www.nuget.org/packages/Serilog) 2.12.0, [Serilog.Sinks.File](https://www.nuget.org/packages/Serilog.Sinks.File) 5.0.0 and [Serilog.Sinks.Console](https://www.nuget.org/packages/Serilog.Sinks.Console) 4.1.0 (for error and general message logging)
 
 ## Versions

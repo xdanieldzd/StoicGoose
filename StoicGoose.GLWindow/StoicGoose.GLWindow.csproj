@@ -39,10 +39,10 @@
     <PackageReference Include="GitInfo" Version="2.3.0" />
     <PackageReference Include="Iced" Version="1.18.0" />
     <PackageReference Include="ImGui.NET" Version="1.89.4" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenAL-Soft.Win" Version="1.2.0" />
-    <PackageReference Include="OpenTK" Version="4.7.5" />
+    <PackageReference Include="OpenTK" Version="4.7.7" />
   </ItemGroup>
 
   <ItemGroup>
