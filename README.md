@@ -26,11 +26,8 @@ Two flavors of StoicGoose are available:
 
 ## Requirements
 
-* A GPU supporting OpenGL 4.0 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later, Intel Ivy Bridge iGPUs or later) _and_ appropriate drivers
 * [.NET 6.0 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
-* A working implementation of OpenAL
-  * ~~If the emulator fails to run because **openal32.dll** is missing, get the [OpenAL Soft](https://www.openal-soft.org/) binaries, extract the correct DLL file to the emulator directory and name it openal32.dll~~
-  * This *should* no longer be necessary, due to including the OpenAL-Soft.Win NuGet package
+* A GPU supporting OpenGL 4.0 (ex. Nvidia GeForce 400 series or later, Radeon HD 5000 series or later, Intel Ivy Bridge iGPUs or later) _and_ appropriate drivers
 * Optionally, copies of the WonderSwan and WonderSwan Color bootstrap ROMs (supported but not required); correct MD5 hashes are as follows
   * 54b915694731cc22e07d3fb8a00ee2db (WonderSwan)
   * 880893bd5a7d53fff826bd76a83d566e (WonderSwan Color)
