@@ -117,6 +117,9 @@ namespace StoicGoose.GLWindow
 
 			Log.WriteEvent(LogSeverity.Information, this, $"{nameof(OnLoad)} override finished.");
 
+			if (GlobalVariables.IsAuthorsMachine)
+				TryLoadAndRunCartridge(@"C:\Emulation\Games\WonderSwan\timingtest.ws");
+
 			base.OnLoad();
 		}
 

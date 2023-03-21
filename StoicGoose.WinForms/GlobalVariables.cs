@@ -5,7 +5,7 @@ namespace StoicGoose.WinForms
 {
 	public static class GlobalVariables
 	{
-		public static readonly bool IsAuthorsMachine = System.Environment.MachineName == "KAMIKO";
+		public static readonly bool IsAuthorsMachine = System.Environment.MachineName == "RYO-RYZEN" || System.Environment.MachineName == "NADESHIKO-CORE";
 #if DEBUG
 		public static readonly bool IsDebugBuild = true;
 #else
