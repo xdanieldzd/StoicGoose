@@ -26,16 +26,15 @@
 
 		public bool Step()
 		{
+			var counterNew = (ushort)(Counter - 1);
+
 			if (Enable && Counter != 0)
 			{
-				Counter--;
-				if (Counter == 0)
-				{
-					if (Repeating) Reload();
-					return true;
-				}
+				Counter = counterNew;
+				if (Repeating && Counter == 0)
+					Reload();
 			}
-			return false;
+			return counterNew == 0;
 		}
 	}
 }

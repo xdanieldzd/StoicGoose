@@ -570,9 +570,6 @@ namespace StoicGoose.Core.Display
 
 				case 0xA2:
 					/* REG_TMR_CTRL */
-					if (!hBlankTimer.Enable && IsBitSet(value, 0)) hBlankTimer.Reload();
-					if (!vBlankTimer.Enable && IsBitSet(value, 2)) vBlankTimer.Reload();
-
 					hBlankTimer.Enable = IsBitSet(value, 0);
 					hBlankTimer.Repeating = IsBitSet(value, 1);
 					vBlankTimer.Enable = IsBitSet(value, 2);

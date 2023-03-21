@@ -8,6 +8,7 @@ using StoicGoose.Core.CPU;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
 using StoicGoose.Core.Interfaces;
+using StoicGoose.Core.Serial;
 using StoicGoose.Core.Sound;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -44,6 +45,7 @@ namespace StoicGoose.Core.Machines
 		public SoundControllerCommon SoundController { get; protected set; } = default;
 		public EEPROM InternalEeprom { get; protected set; } = default;
 		public Bootstrap BootstrapRom { get; protected set; } = default;
+		public SerialPort Serial { get; protected set; } = default;
 
 		public abstract int InternalEepromSize { get; }
 		public abstract int InternalEepromAddressBits { get; }
@@ -72,10 +74,6 @@ namespace StoicGoose.Core.Machines
 		protected bool keypadYEnable, keypadXEnable, keypadButtonEnable;
 		/* REG_INT_xxx */
 		protected byte interruptBase, interruptEnable, interruptStatus;
-		/* REG_SER_DATA */
-		protected byte serialData;
-		/* REG_SER_STATUS */
-		protected bool serialEnable, serialBaudRateSelect, serialOverrunReset, serialSendBufferEmpty, serialOverrun, serialDataReceived;
 
 		public bool IsBootstrapLoaded { get; private set; } = false;
 		public bool UseBootstrap { get; set; } = false;
@@ -90,6 +88,7 @@ namespace StoicGoose.Core.Machines
 			Cpu = new(this);
 			InternalEeprom = new(InternalEepromSize, InternalEepromAddressBits);
 			BootstrapRom = new(BootstrapRomSize);
+			Serial = new();
 
 			InitializeEepromToDefaults();
 
@@ -105,6 +104,7 @@ namespace StoicGoose.Core.Machines
 			DisplayController?.Reset();
 			SoundController?.Reset();
 			InternalEeprom?.Reset();
+			Serial?.Reset();
 
 			CurrentClockCyclesInFrame = 0;
 			CurrentClockCyclesInLine = 0;
@@ -125,12 +125,6 @@ namespace StoicGoose.Core.Machines
 			keypadYEnable = keypadXEnable = keypadButtonEnable = false;
 
 			interruptBase = interruptEnable = interruptStatus = 0;
-
-			serialData = 0;
-			serialEnable = serialBaudRateSelect = serialOverrunReset = serialOverrun = serialDataReceived = false;
-
-			// TODO: hack for serial stub, always report buffer as empty (fixes ex. Puyo Puyo Tsuu hanging on boot)
-			serialSendBufferEmpty = true;
 		}
 
 		public virtual void Shutdown()
@@ -140,6 +134,7 @@ namespace StoicGoose.Core.Machines
 			DisplayController?.Shutdown();
 			SoundController?.Shutdown();
 			InternalEeprom?.Shutdown();
+			Serial?.Shutdown();
 
 			Log.WriteEvent(LogSeverity.Information, this, "Machine shutdown.");
 		}
@@ -218,7 +213,7 @@ namespace StoicGoose.Core.Machines
 
 			for (var i = 7; i >= 0; i--)
 			{
-				if (!IsBitSet(interruptEnable, i) || !IsBitSet(interruptStatus, i)) continue;
+				if (!IsBitSet(interruptStatus, i)) continue;
 
 				Cpu.IsHalted = false;
 				Cpu.Interrupt((interruptBase & 0b11111000) | i);
@@ -360,28 +355,5 @@ namespace StoicGoose.Core.Machines
 		[BitDescription("Interrupt status bitmask", 4)]
 		[Format("X2")]
 		public byte InterruptStatus => interruptStatus;
-
-		[Port("REG_SER_DATA", 0x0B1)]
-		[BitDescription("Serial data TX/RX")]
-		[Format("X2")]
-		public byte SerialData => serialData;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Serial enabled", 7)]
-		public bool SerialEnable => serialEnable;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Baud rate; is 38400 baud?", 6)]
-		public bool SerialBaudRateSelect => serialBaudRateSelect;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Overrun reset", 5)]
-		public bool SerialOverrunReset => serialOverrunReset;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Serial buffer empty?", 2)]
-		public bool SerialSendBufferEmpty => serialSendBufferEmpty;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Overrun", 1)]
-		public bool SerialOverrun => serialOverrun;
-		[Port("REG_SER_STATUS", 0x0B3)]
-		[BitDescription("Data received", 0)]
-		public bool SerialDataReceived => serialDataReceived;
 	}
 }

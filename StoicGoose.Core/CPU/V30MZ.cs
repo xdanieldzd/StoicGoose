@@ -121,12 +121,7 @@ namespace StoicGoose.Core.CPU
 
 				/* Execute instruction */
 				opCycles = instructions[opcode](this);
-				if (opCycles == 0)
-				{
-					/* Assume invalid opcode, raise interrupt */
-					Interrupt(6);
-					cycles = 8;
-				}
+
 				cycles += opCycles;
 				opCycles = 0;
 			}

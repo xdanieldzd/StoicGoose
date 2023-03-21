@@ -2,6 +2,7 @@
 
 using StoicGoose.Common.Attributes;
 using StoicGoose.Core.Display;
+using StoicGoose.Core.Serial;
 using StoicGoose.Core.Sound;
 
 using static StoicGoose.Common.Utilities.BitHandling;
@@ -77,6 +78,10 @@ namespace StoicGoose.Core.Machines
 				if (Cartridge.Step(currentCpuClockCycles)) RaiseInterrupt(2);
 				else LowerInterrupt(2);
 
+				var serialInterrupt = Serial.Step();
+				if (serialInterrupt.HasFlag(SerialPort.SerialInterrupts.SerialSend)) RaiseInterrupt(0);
+				if (serialInterrupt.HasFlag(SerialPort.SerialInterrupts.SerialRecieve)) RaiseInterrupt(3);
+
 				CurrentClockCyclesInLine += currentCpuClockCycles;
 
 				cancelFrameExecution = false;
@@ -101,6 +106,11 @@ namespace StoicGoose.Core.Machines
 					retVal = SoundController.ReadPort(port);
 					break;
 
+				/* Serial port */
+				case var n when n == 0xB1 || n == 0xB3:
+					retVal = Serial.ReadPort(port);
+					break;
+
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
@@ -117,25 +127,9 @@ namespace StoicGoose.Core.Machines
 					retVal |= 0b11;
 					break;
 
-				case 0xB1:
-					/* REG_SER_DATA */
-					retVal = serialData;
-					break;
-
 				case 0xB2:
 					/* REG_INT_ENABLE */
 					retVal = interruptEnable;
-					break;
-
-				case 0xB3:
-					/* REG_SER_STATUS */
-					//TODO: Puyo Puyo Tsuu accesses this, stub properly?
-					ChangeBit(ref retVal, 7, serialEnable);
-					ChangeBit(ref retVal, 6, serialBaudRateSelect);
-					ChangeBit(ref retVal, 5, serialOverrunReset);
-					ChangeBit(ref retVal, 2, serialSendBufferEmpty);
-					ChangeBit(ref retVal, 1, serialOverrun);
-					ChangeBit(ref retVal, 0, serialDataReceived);
 					break;
 
 				case 0xB4:
@@ -237,6 +231,11 @@ namespace StoicGoose.Core.Machines
 					SoundController.WritePort(port, value);
 					break;
 
+				/* Serial port */
+				case var n when n == 0xB1 || n == 0xB3:
+					Serial.WritePort(port, value);
+					break;
+
 				/* System controller */
 				case 0xA0:
 					/* REG_HW_FLAGS */
@@ -251,20 +250,9 @@ namespace StoicGoose.Core.Machines
 					interruptBase = (byte)(value & 0b11111000);
 					break;
 
-				case 0xB1:
-					/* REG_SER_DATA */
-					serialData = value;
-					break;
-
 				case 0xB2:
 					/* REG_INT_ENABLE */
 					interruptEnable = value;
-					break;
-
-				case 0xB3:
-					/* REG_SER_STATUS */
-					serialEnable = IsBitSet(value, 7);
-					serialBaudRateSelect = IsBitSet(value, 6);
 					break;
 
 				case 0xB4:
@@ -280,7 +268,7 @@ namespace StoicGoose.Core.Machines
 
 				case 0xB6:
 					/* REG_INT_ACK */
-					interruptStatus &= (byte)~(value & 0b11110010);
+					interruptStatus &= (byte)~(value & (0b11110010 | ~interruptEnable));
 					break;
 
 				case 0xB7:
