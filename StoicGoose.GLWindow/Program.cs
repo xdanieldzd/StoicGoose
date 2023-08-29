@@ -77,7 +77,6 @@ namespace StoicGoose.GLWindow
 
 				using var mainWindow = new MainWindow(new()
 				{
-					RenderFrequency = 0.0,
 					UpdateFrequency = 0.0
 				}, new()
 				{

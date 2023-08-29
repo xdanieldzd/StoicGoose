@@ -131,7 +131,7 @@ namespace StoicGoose.GLWindow
 			Program.SaveConfiguration();
 
 			/* Ensure imgui.ini gets written */
-			ImGuiNET.ImGui.SaveIniSettingsToDisk(ImGuiNET.ImGui.GetIO().IniFilename);
+			ImGuiNET.ImGui.SaveIniSettingsToDisk(ImGuiNET.ImGui.GetIO().IniFilename.ToString());
 
 			soundHandler.Dispose();
 

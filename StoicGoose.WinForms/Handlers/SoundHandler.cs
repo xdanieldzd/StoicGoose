@@ -6,7 +6,6 @@ using System.Threading;
 using System.Windows.Forms;
 
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 
 using StoicGoose.Common.Utilities;
 
@@ -87,10 +86,10 @@ namespace StoicGoose.WinForms.Handlers
 
 		private void InitializeFilters()
 		{
-			filter = EFX.GenFilter();
-			EFX.Filter(filter, FilterInteger.FilterType, (int)FilterType.Lowpass);
-			EFX.Filter(filter, FilterFloat.LowpassGain, 0.9f);
-			EFX.Filter(filter, FilterFloat.LowpassGainHF, 0.75f);
+			filter = ALC.EFX.GenFilter();
+			ALC.EFX.Filter(filter, FilterInteger.FilterType, (int)FilterType.Lowpass);
+			ALC.EFX.Filter(filter, FilterFloat.LowpassGain, 0.9f);
+			ALC.EFX.Filter(filter, FilterFloat.LowpassGainHF, 0.75f);
 		}
 
 		public void Startup()
