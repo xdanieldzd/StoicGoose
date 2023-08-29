@@ -287,17 +287,17 @@ namespace StoicGoose.WinForms.Windows
 						if (controller.LeftThumbstick != ThumbstickPosition.Zero)
 						{
 							if (controller.LeftThumbstick.X < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}Left").OrderBy(x => x).Distinct().ToList();
-							else if (controller.LeftThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbRight").OrderBy(x => x).Distinct().ToList();
-							if (controller.LeftThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbDown").OrderBy(x => x).Distinct().ToList();
-							else if (controller.LeftThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}ThumbUp").OrderBy(x => x).Distinct().ToList();
+							else if (controller.LeftThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}Right").OrderBy(x => x).Distinct().ToList();
+							if (controller.LeftThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}Down").OrderBy(x => x).Distinct().ToList();
+							else if (controller.LeftThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.LeftThumbstick)}Up").OrderBy(x => x).Distinct().ToList();
 							doUpdate = true;
 						}
 						if (controller.RightThumbstick != ThumbstickPosition.Zero)
 						{
-							if (controller.RightThumbstick.X < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbLeft").OrderBy(x => x).Distinct().ToList();
-							else if (controller.RightThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbRight").OrderBy(x => x).Distinct().ToList();
-							if (controller.RightThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbDown").OrderBy(x => x).Distinct().ToList();
-							else if (controller.RightThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}ThumbUp").OrderBy(x => x).Distinct().ToList();
+							if (controller.RightThumbstick.X < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}Left").OrderBy(x => x).Distinct().ToList();
+							else if (controller.RightThumbstick.X > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}Right").OrderBy(x => x).Distinct().ToList();
+							if (controller.RightThumbstick.Y < -0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}Down").OrderBy(x => x).Distinct().ToList();
+							else if (controller.RightThumbstick.Y > 0.5f) keyValues = keyValues.Append($"{InputHandler.GamepadPrefix}{i}+{nameof(controller.RightThumbstick)}Up").OrderBy(x => x).Distinct().ToList();
 							doUpdate = true;
 						}
 						if (controller.LeftTrigger > 0.5f)
