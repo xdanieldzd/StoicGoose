@@ -298,6 +298,7 @@ namespace StoicGoose.GLWindow
 					Program.Configuration.SystemControls[button] = string.Empty;
 			}
 
+			inputHandler.SetEnableRemapping(Program.Configuration.AutoRemap);
 			inputHandler.SetVerticalRemapping(machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -484,7 +485,7 @@ namespace StoicGoose.GLWindow
 			machine.LoadRom(data);
 
 			isVerticalOrientation = machine.Cartridge.Metadata.Orientation == CartridgeMetadata.Orientations.Vertical;
-			inputHandler.IsVerticalOrientation = isVerticalOrientation;
+			inputHandler.SetVerticalOrientation(isVerticalOrientation);
 
 			LoadCartridgeRam();
 			LoadBootstrap();

@@ -227,6 +227,9 @@ namespace StoicGoose.GLWindow
 					clickAction: (_) => { ApplyMachinePatchHandlers(Program.Configuration.EnablePatchCallbacks = !Program.Configuration.EnablePatchCallbacks); },
 					updateAction: (s) => { s.IsChecked = Program.Configuration.EnablePatchCallbacks; }),
 					new("-"),
+					new(localization: "MainWindow.Menus.EnableAutoRemap",
+					clickAction: (_) => { inputHandler.SetEnableRemapping(Program.Configuration.AutoRemap = !Program.Configuration.AutoRemap); },
+					updateAction: (s) => { s.IsChecked = Program.Configuration.AutoRemap; }),
 					new(localization: "MainWindow.Menus.InputSettings",
 					clickAction: (_) => { inputSettingsWindow.IsWindowOpen = !inputSettingsWindow.IsWindowOpen; },
 					updateAction: (s) => { s.IsChecked = inputSettingsWindow.IsWindowOpen; })

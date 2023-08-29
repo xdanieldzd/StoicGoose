@@ -23,7 +23,7 @@ namespace StoicGoose.WinForms.Handlers
 		readonly List<string> lastPollHeldKeyboard = new();
 		readonly List<string> lastPollHeldGamepad = new();
 
-		public bool IsVerticalOrientation { get; set; } = false;
+		bool isVerticalOrientation, enableRemapping;
 
 		public InputHandler(GLControl glControl)
 		{
@@ -57,6 +57,16 @@ namespace StoicGoose.WinForms.Handlers
 			}
 		}
 
+		public void SetVerticalOrientation(bool vertical)
+		{
+			isVerticalOrientation = vertical;
+		}
+
+		public void SetEnableRemapping(bool enable)
+		{
+			enableRemapping = enable;
+		}
+
 		public void SetVerticalRemapping(Dictionary<string, string> remapDict)
 		{
 			verticalRemapping.Clear();
@@ -64,61 +74,48 @@ namespace StoicGoose.WinForms.Handlers
 				verticalRemapping.Add(key, value);
 		}
 
-		public List<string> GetMappedKeyboardInputsHeld() => keyboardMapping.Where(x => IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyboardMapping[verticalRemapping[x.Key]].Any(y => nativeInput.IsKeyDown(y)) : x.Value.Any(y => nativeInput.IsKeyDown(y))).Select(x => x.Key).ToList();
-		public List<string> GetMappedKeyboardInputsPressed() => keyboardMapping.Where(x => IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyboardMapping[verticalRemapping[x.Key]].Any(y => nativeInput.IsKeyDown(y)) : x.Value.Any(y => nativeInput.IsKeyDown(y)) && !lastPollHeldKeyboard.Contains(x.Key)).Select(x => x.Key).ToList();
-
-		public List<string> GetMappedGamepadInputsHeld()
+		public List<string> GetMappedKeyboardInputs() => GetMappedKeyboardInputs((_) => true);
+		public List<string> GetMappedKeyboardInputs(Func<string, bool> checkCondition)
 		{
 			var list = new List<string>();
 
-			foreach (var (key, value) in gamepadMapping)
+			foreach (var (key, value) in keyboardMapping)
 			{
-				var keyName = IsVerticalOrientation && verticalRemapping.ContainsKey(key) ? verticalRemapping[key] : key;
-				foreach (var (id, input) in value)
+				var keyName = isVerticalOrientation && enableRemapping && verticalRemapping.ContainsKey(key) ? verticalRemapping[key] : key;
+				foreach (var input in value)
 				{
-					var controller = ControllerManager.GetController(id);
-					if (!controller.IsConnected) continue;
-
-					if (Enum.TryParse(input, out Buttons result) && (controller.Buttons & result) != Buttons.None) list.Add(keyName);
-					if (input == $"{nameof(controller.LeftThumbstick)}Left" && controller.LeftThumbstick.X < -0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.LeftThumbstick)}Right" && controller.LeftThumbstick.X > 0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.LeftThumbstick)}Down" && controller.LeftThumbstick.Y < -0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.LeftThumbstick)}Up" && controller.LeftThumbstick.Y > 0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.RightThumbstick)}Left" && controller.RightThumbstick.X < -0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.RightThumbstick)}Right" && controller.RightThumbstick.X > 0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.RightThumbstick)}Down" && controller.RightThumbstick.Y < -0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.RightThumbstick)}Up" && controller.RightThumbstick.Y > 0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.LeftTrigger)}" && controller.LeftTrigger > 0.5f) list.Add(keyName);
-					if (input == $"{nameof(controller.RightTrigger)}" && controller.RightTrigger > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && nativeInput.IsKeyDown(input))
+						list.Add(keyName);
 				}
 			}
 
 			return list;
 		}
 
-		public List<string> GetMappedGamepadInputsPressed()
+		public List<string> GetMappedGamepadInputs() => GetMappedGamepadInputs((_) => true);
+		public List<string> GetMappedGamepadInputs(Func<string, bool> checkCondition)
 		{
 			var list = new List<string>();
 
 			foreach (var (key, value) in gamepadMapping)
 			{
-				var keyName = IsVerticalOrientation && verticalRemapping.ContainsKey(key) ? verticalRemapping[key] : key;
+				var keyName = isVerticalOrientation && enableRemapping && verticalRemapping.ContainsKey(key) ? verticalRemapping[key] : key;
 				foreach (var (id, input) in value)
 				{
 					var controller = ControllerManager.GetController(id);
 					if (!controller.IsConnected) continue;
 
-					if (!lastPollHeldGamepad.Contains(keyName) && Enum.TryParse(input, out Buttons result) && (controller.Buttons & result) != Buttons.None) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.LeftThumbstick)}Left" && controller.LeftThumbstick.X < -0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.LeftThumbstick)}Right" && controller.LeftThumbstick.X > 0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.LeftThumbstick)}Down" && controller.LeftThumbstick.Y < -0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.LeftThumbstick)}Up" && controller.LeftThumbstick.Y > 0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.RightThumbstick)}Left" && controller.RightThumbstick.X < -0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.RightThumbstick)}Right" && controller.RightThumbstick.X > 0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.RightThumbstick)}Down" && controller.RightThumbstick.Y < -0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.RightThumbstick)}Up" && controller.RightThumbstick.Y > 0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.LeftTrigger)}" && controller.LeftTrigger > 0.5f) list.Add(keyName);
-					if (!lastPollHeldGamepad.Contains(keyName) && input == $"{nameof(controller.RightTrigger)}" && controller.RightTrigger > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && Enum.TryParse(input, out Buttons result) && (controller.Buttons & result) != Buttons.None) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.LeftThumbstick)}Left" && controller.LeftThumbstick.X < -0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.LeftThumbstick)}Right" && controller.LeftThumbstick.X > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.LeftThumbstick)}Down" && controller.LeftThumbstick.Y < -0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.LeftThumbstick)}Up" && controller.LeftThumbstick.Y > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.RightThumbstick)}Left" && controller.RightThumbstick.X < -0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.RightThumbstick)}Right" && controller.RightThumbstick.X > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.RightThumbstick)}Down" && controller.RightThumbstick.Y < -0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.RightThumbstick)}Up" && controller.RightThumbstick.Y > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.LeftTrigger)}" && controller.LeftTrigger > 0.5f) list.Add(keyName);
+					if (checkCondition(keyName) && input == $"{nameof(controller.RightTrigger)}" && controller.RightTrigger > 0.5f) list.Add(keyName);
 				}
 			}
 
@@ -130,11 +127,11 @@ namespace StoicGoose.WinForms.Handlers
 			if (gamepadMapping.Count > 0)
 				ControllerManager.Update();
 
-			var keyboardHeldNow = GetMappedKeyboardInputsHeld();
-			var gamepadHeldNow = GetMappedGamepadInputsHeld();
+			var keyboardHeldNow = GetMappedKeyboardInputs();
+			var gamepadHeldNow = GetMappedGamepadInputs();
 
 			buttonsHeld.AddRange(keyboardHeldNow.Concat(gamepadHeldNow).Distinct());
-			buttonsPressed.AddRange(GetMappedKeyboardInputsPressed().Concat(GetMappedGamepadInputsPressed()).Distinct());
+			buttonsPressed.AddRange(GetMappedKeyboardInputs((x) => !lastPollHeldKeyboard.Contains(x)).Concat(GetMappedGamepadInputs((x) => !lastPollHeldGamepad.Contains(x))).Distinct());
 
 			lastPollHeldKeyboard.Clear();
 			lastPollHeldKeyboard.AddRange(keyboardHeldNow);

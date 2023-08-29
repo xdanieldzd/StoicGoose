@@ -249,8 +249,10 @@ namespace StoicGoose.WinForms
 			soundHandler.SetMute(Program.Configuration.Sound.Mute);
 			soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
 
-			inputHandler = new InputHandler(renderControl) { IsVerticalOrientation = isVerticalOrientation };
+			inputHandler = new InputHandler(renderControl);
 			inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
+			inputHandler.SetVerticalOrientation(isVerticalOrientation);
+			inputHandler.SetEnableRemapping(Program.Configuration.Input.AutoRemap);
 			inputHandler.SetVerticalRemapping(emulatorHandler.Machine.VerticalControlRemap
 				.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 				.Select(x => x.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -641,8 +643,8 @@ namespace StoicGoose.WinForms
 			stream.Read(data, 0, data.Length);
 			emulatorHandler.Machine.LoadRom(data);
 
-			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				emulatorHandler.Machine.Cartridge.Metadata.Orientation == CartridgeMetadata.Orientations.Vertical;
+			graphicsHandler.IsVerticalOrientation = isVerticalOrientation = emulatorHandler.Machine.Cartridge.Metadata.Orientation == CartridgeMetadata.Orientations.Vertical;
+			inputHandler.SetVerticalOrientation(isVerticalOrientation);
 
 			AddToRecentFiles(filename);
 			CreateRecentFilesMenu();
@@ -803,8 +805,8 @@ namespace StoicGoose.WinForms
 
 		private void rotateScreenToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			graphicsHandler.IsVerticalOrientation = inputHandler.IsVerticalOrientation = isVerticalOrientation =
-				!isVerticalOrientation;
+			graphicsHandler.IsVerticalOrientation = isVerticalOrientation = !isVerticalOrientation;
+			inputHandler.SetVerticalOrientation(isVerticalOrientation);
 
 			SizeAndPositionWindow();
 		}
@@ -833,6 +835,7 @@ namespace StoicGoose.WinForms
 				}
 
 				inputHandler.SetKeyMapping(Program.Configuration.Input.GameControls, Program.Configuration.Input.SystemControls);
+				inputHandler.SetEnableRemapping(Program.Configuration.Input.AutoRemap);
 				soundHandler.SetLowPassFilter(Program.Configuration.Sound.LowPassFilter);
 
 				emulatorHandler.Machine.UseBootstrap = Program.Configuration.General.UseBootstrap;

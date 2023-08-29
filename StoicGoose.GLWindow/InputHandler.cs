@@ -9,22 +9,32 @@ namespace StoicGoose.GLWindow
 {
 	public class InputHandler
 	{
-		readonly Dictionary<string, Keys> keyMapping = new();
+		readonly Dictionary<string, Keys> keyboardMapping = new();
 		readonly Dictionary<string, string> verticalRemapping = new();
 		readonly List<string> lastPollHeld = new();
 
 		GameWindow gameWindow = default;
 
-		public bool IsVerticalOrientation { get; set; } = false;
+		bool isVerticalOrientation, enableRemapping;
 
 		public void SetGameWindow(GameWindow window) => gameWindow = window;
 
 		public void SetKeyMapping(params Dictionary<string, string>[] keyConfigs)
 		{
-			keyMapping.Clear();
+			keyboardMapping.Clear();
 			foreach (var keyConfig in keyConfigs)
 				foreach (var (key, value) in keyConfig.Where(x => !string.IsNullOrEmpty(x.Value)))
-					keyMapping.Add(key, (Keys)Enum.Parse(typeof(Keys), value));
+					keyboardMapping.Add(key, (Keys)Enum.Parse(typeof(Keys), value));
+		}
+
+		public void SetVerticalOrientation(bool vertical)
+		{
+			isVerticalOrientation = vertical;
+		}
+
+		public void SetEnableRemapping(bool enable)
+		{
+			enableRemapping = enable;
 		}
 
 		public void SetVerticalRemapping(Dictionary<string, string> remapDict)
@@ -34,13 +44,27 @@ namespace StoicGoose.GLWindow
 				verticalRemapping.Add(key, value);
 		}
 
-		public List<string> GetMappedKeysHeld() => keyMapping.Where(x => gameWindow.IsKeyDown(IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]] : x.Value)).Select(x => x.Key).ToList();
-		public List<string> GetMappedKeysPressed() => keyMapping.Where(x => gameWindow.IsKeyDown(IsVerticalOrientation && verticalRemapping.ContainsKey(x.Key) ? keyMapping[verticalRemapping[x.Key]] : x.Value) && !lastPollHeld.Contains(x.Key)).Select(x => x.Key).ToList();
+		public List<string> GetMappedKeyboardInputs() => GetMappedKeyboardInputs((_) => true);
+		public List<string> GetMappedKeyboardInputs(Func<string, bool> checkCondition)
+		{
+			var list = new List<string>();
+
+			foreach (var (key, value) in keyboardMapping)
+			{
+				var keyName = isVerticalOrientation && enableRemapping && verticalRemapping.ContainsKey(key) ? verticalRemapping[key] : key;
+				{
+					if (checkCondition(keyName) && gameWindow.IsKeyDown(value))
+						list.Add(keyName);
+				}
+			}
+
+			return list;
+		}
 
 		public void PollInput(ref List<string> buttonsPressed, ref List<string> buttonsHeld)
 		{
-			buttonsHeld.AddRange(GetMappedKeysHeld().Distinct());
-			buttonsPressed.AddRange(GetMappedKeysPressed().Distinct());
+			buttonsHeld.AddRange(GetMappedKeyboardInputs().Distinct());
+			buttonsPressed.AddRange(GetMappedKeyboardInputs((x) => !lastPollHeld.Contains(x)).Distinct());
 
 			lastPollHeld.Clear();
 			lastPollHeld.AddRange(buttonsHeld);

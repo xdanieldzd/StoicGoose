@@ -40,6 +40,7 @@ namespace StoicGoose.WinForms
 			pageSound.Attach(tvSettings);
 
 			var pageInput = new SettingsPage(Configuration, nameof(Configuration.Input));
+			pageInput.Append(CreateToggle(Configuration.Input, nameof(Configuration.Input.AutoRemap)));
 			var pageInputGame = new SettingsPage(Configuration.Input, nameof(Configuration.Input.GameControls));
 			foreach (var (key, _) in Configuration.Input.GameControls)
 				pageInputGame.Append(CreateKeyInput(Configuration.Input, nameof(Configuration.Input.GameControls), key));

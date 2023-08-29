@@ -81,6 +81,9 @@ namespace StoicGoose.WinForms
 
 	public sealed class InputConfiguration : ConfigurationBase<InputConfiguration>
 	{
+		[DisplayName("Automatic Remapping")]
+		[Description("Automatically remap X-/Y-pads with game orientation.")]
+		public bool AutoRemap { get; set; } = true;
 		[DisplayName("Game Controls")]
 		[Description("Controls related to game input, i.e. X-/Y-pads, etc.")]
 		public Dictionary<string, List<string>> GameControls { get; set; } = new Dictionary<string, List<string>>();
