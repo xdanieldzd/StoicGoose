@@ -1,6 +1,6 @@
-﻿namespace StoicGoose.Core.CPU
+﻿namespace StoicGoose.Core.Processor
 {
-	public sealed partial class V30MZ
+	public sealed partial class V30MZ_OLD
 	{
 		private byte Add8(bool withCarry, byte a, byte b)
 		{

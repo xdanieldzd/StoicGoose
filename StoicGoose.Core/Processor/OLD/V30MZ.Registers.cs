@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StoicGoose.Core.CPU
+namespace StoicGoose.Core.Processor
 {
-	public sealed partial class V30MZ
+	public sealed partial class V30MZ_OLD
 	{
 		enum RegisterNumber8 : byte
 		{

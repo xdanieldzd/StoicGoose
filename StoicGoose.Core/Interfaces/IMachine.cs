@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 using StoicGoose.Core.Cartridges;
-using StoicGoose.Core.CPU;
+using StoicGoose.Core.Processor;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
 using StoicGoose.Core.Sound;
@@ -29,7 +29,7 @@ namespace StoicGoose.Core.Interfaces
 		Dictionary<ushort, byte> InternalEepromDefaultData { get; }
 
 		Cartridge Cartridge { get; }
-		V30MZ Cpu { get; }
+		CPU Cpu { get; }
 		DisplayControllerCommon DisplayController { get; }
 		SoundControllerCommon SoundController { get; }
 		EEPROM InternalEeprom { get; }

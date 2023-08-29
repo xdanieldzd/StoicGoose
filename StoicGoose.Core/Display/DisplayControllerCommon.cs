@@ -18,7 +18,7 @@ namespace StoicGoose.Core.Display
 		public const int VerticalDisp = 144;
 		public const int VerticalBlank = 15;
 		public const int VerticalTotal = VerticalDisp + VerticalBlank;
-		public const double VerticalClock = 12000.0 / VerticalTotal;
+		public const double VerticalClock = HorizontalClock / VerticalTotal;
 
 		public const int ScreenWidth = HorizontalDisp;
 		public const int ScreenHeight = VerticalDisp;
@@ -137,63 +137,66 @@ namespace StoicGoose.Core.Display
 		{
 			var interrupt = DisplayInterrupts.None;
 
-			cycleCount += clockCyclesInStep;
-
-			if (cycleCount >= HorizontalTotal)
+			for (var i = 0; i < clockCyclesInStep; i++)
 			{
-				/* Sprite fetch */
-				if (lineCurrent == VerticalDisp - 2)
+				/* Render pixel */
+				RenderPixel(lineCurrent, cycleCount++);
+
+				if (cycleCount == HorizontalDisp)
 				{
-					spriteCountNextFrame = 0;
-					for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
+					/* H-timer interrupt */
+					if (hBlankTimer.Step())
+						interrupt |= DisplayInterrupts.HBlankTimer;
+				}
+				else if (cycleCount == HorizontalTotal)
+				{
+					/* Sprite fetch */
+					if (lineCurrent == VerticalDisp - 2)
 					{
-						var k = (uint)((sprBase << 9) + (j << 2));
-						spriteDataNextFrame[spriteCountNextFrame++] = (uint)(machine.ReadMemory(k + 3) << 24 | machine.ReadMemory(k + 2) << 16 | machine.ReadMemory(k + 1) << 8 | machine.ReadMemory(k + 0));
+						spriteCountNextFrame = 0;
+						for (var j = sprFirst; j < sprFirst + Math.Min(maxSpriteCount, sprCount); j++)
+						{
+							var k = (uint)((sprBase << 9) + (j << 2));
+							spriteDataNextFrame[spriteCountNextFrame++] = (uint)(machine.ReadMemory(k + 3) << 24 | machine.ReadMemory(k + 2) << 16 | machine.ReadMemory(k + 1) << 8 | machine.ReadMemory(k + 0));
+						}
 					}
+
+					/* Advance scanline */
+					lineCurrent++;
+
+					/* Line compare interrupt */
+					if (lineCurrent == lineCompare)
+						interrupt |= DisplayInterrupts.LineCompare;
+
+					/* V-blank interrupt */
+					if (lineCurrent == VerticalDisp)
+					{
+						interrupt |= DisplayInterrupts.VBlank;
+
+						/* V-timer interrupt */
+						if (vBlankTimer.Step())
+							interrupt |= DisplayInterrupts.VBlankTimer;
+
+						/* Transfer framebuffer */
+						SendFramebuffer?.Invoke(outputFramebuffer.Clone() as byte[]);
+					}
+
+					/* Is frame finished? */
+					if (lineCurrent > Math.Max(VerticalDisp, vtotal))
+					{
+						/* Copy sprite data for next frame */
+						for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
+						Array.Fill<uint>(spriteDataNextFrame, 0);
+
+						/* Reset variables */
+						lineCurrent = 0;
+						Array.Fill(isUsedBySCR2, false);
+					}
+
+					/* End of scanline */
+					cycleCount = 0;
+					break;
 				}
-
-				/* Render pixels */
-				for (var x = 0; x < HorizontalDisp; x++)
-					RenderPixel(lineCurrent, x);
-
-				/* Line compare interrupt */
-				if (lineCurrent == lineCompare)
-					interrupt |= DisplayInterrupts.LineCompare;
-
-				/* H-timer interrupt */
-				if (hBlankTimer.Step())
-					interrupt |= DisplayInterrupts.HBlankTimer;
-
-				/* V-blank interrupt */
-				if (lineCurrent == VerticalDisp)
-				{
-					interrupt |= DisplayInterrupts.VBlank;
-
-					/* V-timer interrupt */
-					if (vBlankTimer.Step())
-						interrupt |= DisplayInterrupts.VBlankTimer;
-
-					/* Transfer framebuffer */
-					SendFramebuffer?.Invoke(outputFramebuffer.Clone() as byte[]);
-				}
-
-				/* Advance scanline */
-				lineCurrent++;
-
-				/* Is frame finished? */
-				if (lineCurrent > Math.Max(VerticalDisp, vtotal))
-				{
-					/* Copy sprite data for next frame */
-					for (int j = 0, k = spriteCountNextFrame - 1; k >= 0; j++, k--) spriteData[j] = spriteDataNextFrame[k];
-					Array.Fill<uint>(spriteDataNextFrame, 0);
-
-					/* Reset variables */
-					lineCurrent = 0;
-					Array.Fill(isUsedBySCR2, false);
-				}
-
-				/* End of scanline */
-				cycleCount = 0;
 			}
 
 			return interrupt;

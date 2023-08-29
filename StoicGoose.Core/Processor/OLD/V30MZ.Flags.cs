@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace StoicGoose.Core.CPU
+namespace StoicGoose.Core.Processor
 {
-	public sealed partial class V30MZ
+	public sealed partial class V30MZ_OLD
 	{
 		[Flags]
 		public enum Flags : ushort

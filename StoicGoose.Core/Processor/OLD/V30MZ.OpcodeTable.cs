@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace StoicGoose.Core.CPU
+namespace StoicGoose.Core.Processor
 {
-	public sealed partial class V30MZ
+	public sealed partial class V30MZ_OLD
 	{
-		delegate int Instruction(V30MZ cpu);
+		delegate int Instruction(V30MZ_OLD cpu);
 		readonly static Instruction[] instructions = new Instruction[256]
 		{
 			/* 0x00 */      /* ADD Eb Gb */                 (cpu) => { cpu.WriteOpcodeEb(cpu.Add8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeGb())); return 1; },
@@ -280,7 +280,7 @@ namespace StoicGoose.Core.CPU
 							/* GRP4 Ew */                   Opcode0xFF
 		};
 
-		private static int Opcode0x60(V30MZ cpu)
+		private static int Opcode0x60(V30MZ_OLD cpu)
 		{
 			/* PUSHA */
 			var oldSp = cpu.sp;
@@ -295,7 +295,7 @@ namespace StoicGoose.Core.CPU
 			return 8;
 		}
 
-		private static int Opcode0x61(V30MZ cpu)
+		private static int Opcode0x61(V30MZ_OLD cpu)
 		{
 			/* POPA */
 			cpu.di = cpu.Pop();
@@ -309,7 +309,7 @@ namespace StoicGoose.Core.CPU
 			return 8;
 		}
 
-		private static int Opcode0x62(V30MZ cpu)
+		private static int Opcode0x62(V30MZ_OLD cpu)
 		{
 			/* BOUND Gw E */
 			cpu.ReadModRM();
@@ -320,7 +320,7 @@ namespace StoicGoose.Core.CPU
 			return 12;
 		}
 
-		private static int Opcode0x6C(V30MZ cpu)
+		private static int Opcode0x6C(V30MZ_OLD cpu)
 		{
 			/* INSB */
 			var cycles = 5;
@@ -333,7 +333,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x6D(V30MZ cpu)
+		private static int Opcode0x6D(V30MZ_OLD cpu)
 		{
 			/* INSW */
 			var cycles = 5;
@@ -346,7 +346,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x6E(V30MZ cpu)
+		private static int Opcode0x6E(V30MZ_OLD cpu)
 		{
 			/* OUTSB */
 			var cycles = 5;
@@ -359,7 +359,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x6F(V30MZ cpu)
+		private static int Opcode0x6F(V30MZ_OLD cpu)
 		{
 			/* OUTSW */
 			var cycles = 5;
@@ -372,7 +372,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x80(V30MZ cpu)
+		private static int Opcode0x80(V30MZ_OLD cpu)
 		{
 			/* GRP1 Eb Ib */
 			int cycles;
@@ -392,7 +392,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x81(V30MZ cpu)
+		private static int Opcode0x81(V30MZ_OLD cpu)
 		{
 			/* GRP1 Ew Iw */
 			int cycles;
@@ -412,7 +412,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x83(V30MZ cpu)
+		private static int Opcode0x83(V30MZ_OLD cpu)
 		{
 			/* GRP1 Ew Ib */
 			int cycles;
@@ -432,7 +432,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0x8D(V30MZ cpu)
+		private static int Opcode0x8D(V30MZ_OLD cpu)
 		{
 			/* LEA Gw M */
 			cpu.ReadModRM();
@@ -443,7 +443,7 @@ namespace StoicGoose.Core.CPU
 			return 8;
 		}
 
-		private static int Opcode0x9A(V30MZ cpu)
+		private static int Opcode0x9A(V30MZ_OLD cpu)
 		{
 			/* CALL Ap */
 			var newIp = cpu.ReadOpcodeIw();
@@ -458,7 +458,7 @@ namespace StoicGoose.Core.CPU
 			return 9;
 		}
 
-		private static int Opcode0x9E(V30MZ cpu)
+		private static int Opcode0x9E(V30MZ_OLD cpu)
 		{
 			/* SAHF */
 			cpu.SetClearFlagConditional(Flags.Sign, ((Flags)cpu.ax.High & Flags.Sign) == Flags.Sign);
@@ -469,7 +469,7 @@ namespace StoicGoose.Core.CPU
 			return 4;
 		}
 
-		private static int Opcode0xA4(V30MZ cpu)
+		private static int Opcode0xA4(V30MZ_OLD cpu)
 		{
 			/* MOVSB */
 			var cycles = 5;
@@ -482,7 +482,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xA5(V30MZ cpu)
+		private static int Opcode0xA5(V30MZ_OLD cpu)
 		{
 			/* MOVSW */
 			var cycles = 5;
@@ -495,7 +495,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xA6(V30MZ cpu)
+		private static int Opcode0xA6(V30MZ_OLD cpu)
 		{
 			/* CMPSB */
 			var cycles = 5;
@@ -508,7 +508,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xA7(V30MZ cpu)
+		private static int Opcode0xA7(V30MZ_OLD cpu)
 		{
 			/* CMPSW */
 			var cycles = 5;
@@ -521,7 +521,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAA(V30MZ cpu)
+		private static int Opcode0xAA(V30MZ_OLD cpu)
 		{
 			/* STOSB */
 			var cycles = 5;
@@ -534,7 +534,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAB(V30MZ cpu)
+		private static int Opcode0xAB(V30MZ_OLD cpu)
 		{
 			/* STOSW */
 			var cycles = 5;
@@ -547,7 +547,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAC(V30MZ cpu)
+		private static int Opcode0xAC(V30MZ_OLD cpu)
 		{
 			/* LODSB */
 			var cycles = 5;
@@ -560,7 +560,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAD(V30MZ cpu)
+		private static int Opcode0xAD(V30MZ_OLD cpu)
 		{
 			/* LODSW */
 			var cycles = 5;
@@ -573,7 +573,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAE(V30MZ cpu)
+		private static int Opcode0xAE(V30MZ_OLD cpu)
 		{
 			/* SCASB */
 			var cycles = 5;
@@ -586,7 +586,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xAF(V30MZ cpu)
+		private static int Opcode0xAF(V30MZ_OLD cpu)
 		{
 			/* SCASW */
 			var cycles = 5;
@@ -599,7 +599,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xC0(V30MZ cpu)
+		private static int Opcode0xC0(V30MZ_OLD cpu)
 		{
 			/* GRP2 Eb Ib */
 			int cycles;
@@ -619,7 +619,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xC1(V30MZ cpu)
+		private static int Opcode0xC1(V30MZ_OLD cpu)
 		{
 			/* GRP2 Ew Ib */
 			int cycles;
@@ -639,7 +639,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xC4(V30MZ cpu)
+		private static int Opcode0xC4(V30MZ_OLD cpu)
 		{
 			/* LES Gw Mp */
 			cpu.ReadModRM();
@@ -651,7 +651,7 @@ namespace StoicGoose.Core.CPU
 			return 8;
 		}
 
-		private static int Opcode0xC5(V30MZ cpu)
+		private static int Opcode0xC5(V30MZ_OLD cpu)
 		{
 			/* LDS Gw Mp */
 			cpu.ReadModRM();
@@ -663,7 +663,7 @@ namespace StoicGoose.Core.CPU
 			return 8;
 		}
 
-		private static int Opcode0xC8(V30MZ cpu)
+		private static int Opcode0xC8(V30MZ_OLD cpu)
 		{
 			/* ENTER */
 			var offset = cpu.ReadOpcodeIw();
@@ -682,7 +682,7 @@ namespace StoicGoose.Core.CPU
 			return 7;
 		}
 
-		private static int Opcode0xD0(V30MZ cpu)
+		private static int Opcode0xD0(V30MZ_OLD cpu)
 		{
 			/* GRP2 Eb 1 */
 			int cycles;
@@ -702,7 +702,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xD1(V30MZ cpu)
+		private static int Opcode0xD1(V30MZ_OLD cpu)
 		{
 			/* GRP2 Ew 1 */
 			int cycles;
@@ -722,7 +722,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xD2(V30MZ cpu)
+		private static int Opcode0xD2(V30MZ_OLD cpu)
 		{
 			/* GRP2 Eb CL */
 			int cycles;
@@ -742,7 +742,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xD3(V30MZ cpu)
+		private static int Opcode0xD3(V30MZ_OLD cpu)
 		{
 			/* GRP2 Ew CL */
 			int cycles;
@@ -767,7 +767,7 @@ namespace StoicGoose.Core.CPU
 		 * (2): https://github.com/xdanieldzd/StoicGoose/issues/9
 		 */
 
-		private static int Opcode0xD4(V30MZ cpu)
+		private static int Opcode0xD4(V30MZ_OLD cpu)
 		{
 			/* AAM */
 			var value = cpu.ReadOpcodeIb();
@@ -787,7 +787,7 @@ namespace StoicGoose.Core.CPU
 			return 16;
 		}
 
-		private static int Opcode0xD5(V30MZ cpu)
+		private static int Opcode0xD5(V30MZ_OLD cpu)
 		{
 			/* AAD */
 			var value = cpu.ReadOpcodeIb();
@@ -799,7 +799,7 @@ namespace StoicGoose.Core.CPU
 			return 6;
 		}
 
-		private static int Opcode0xF6(V30MZ cpu)
+		private static int Opcode0xF6(V30MZ_OLD cpu)
 		{
 			/* GRP3 Eb */
 			int cycles;
@@ -819,7 +819,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xF7(V30MZ cpu)
+		private static int Opcode0xF7(V30MZ_OLD cpu)
 		{
 			/* GRP3 Ew */
 			int cycles;
@@ -839,7 +839,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xFE(V30MZ cpu)
+		private static int Opcode0xFE(V30MZ_OLD cpu)
 		{
 			/* GRP4 Eb */
 			int cycles;
@@ -853,7 +853,7 @@ namespace StoicGoose.Core.CPU
 			return cycles;
 		}
 
-		private static int Opcode0xFF(V30MZ cpu)
+		private static int Opcode0xFF(V30MZ_OLD cpu)
 		{
 			/* GRP4 Ew */
 			int cycles;

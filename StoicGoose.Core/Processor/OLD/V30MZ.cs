@@ -1,8 +1,8 @@
 ﻿using StoicGoose.Core.Interfaces;
 
-namespace StoicGoose.Core.CPU
+namespace StoicGoose.Core.Processor
 {
-	public sealed partial class V30MZ : IComponent
+	public sealed partial class V30MZ_OLD : IComponent
 	{
 		// TODO: attempt prefetch emulation (Meitantei Conan - Nishi no Meitantei Saidai no Kiki; cart changes banks on startup, can no longer execute jump, execs garbage)
 
@@ -38,7 +38,7 @@ namespace StoicGoose.Core.CPU
 
 		public bool IsHalted { get => halted; set => halted = value; }
 
-		public V30MZ(IMachine machine)
+		public V30MZ_OLD(IMachine machine)
 		{
 			this.machine = machine;
 

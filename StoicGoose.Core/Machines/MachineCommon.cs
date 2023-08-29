@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using StoicGoose.Common.Attributes;
 using StoicGoose.Common.Utilities;
 using StoicGoose.Core.Cartridges;
-using StoicGoose.Core.CPU;
+using StoicGoose.Core.Processor;
 using StoicGoose.Core.Display;
 using StoicGoose.Core.EEPROMs;
 using StoicGoose.Core.Interfaces;
@@ -40,7 +40,7 @@ namespace StoicGoose.Core.Machines
 		public byte[] InternalRam { get; protected set; } = default;
 
 		public Cartridge Cartridge { get; protected set; } = new();
-		public V30MZ Cpu { get; protected set; } = default;
+		public CPU Cpu { get; protected set; } = default;
 		public DisplayControllerCommon DisplayController { get; protected set; } = default;
 		public SoundControllerCommon SoundController { get; protected set; } = default;
 		public EEPROM InternalEeprom { get; protected set; } = default;
@@ -176,7 +176,7 @@ namespace StoicGoose.Core.Machines
 				if (cancelFrameExecution) return;
 			}
 
-			CurrentClockCyclesInFrame -= TotalClockCyclesInFrame;
+			CurrentClockCyclesInFrame = 0;
 
 			_ = ReceiveInput?.Invoke();
 		}
@@ -209,7 +209,7 @@ namespace StoicGoose.Core.Machines
 
 		protected void HandleInterrupts()
 		{
-			if (!Cpu.IsFlagSet(V30MZ.Flags.InterruptEnable)) return;
+			if (!Cpu.PSW.InterruptEnable) return;
 
 			for (var i = 7; i >= 0; i--)
 			{
