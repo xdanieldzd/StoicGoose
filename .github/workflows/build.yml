@@ -31,3 +31,4 @@ jobs:
         with:
           name: ${{ matrix.artifacts }}
           path: D:\a\StoicGoose\StoicGoose\release\*
+
