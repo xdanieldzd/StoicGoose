@@ -6,133 +6,124 @@ using System.Text;
 
 namespace StoicGoose.WinForms.IO
 {
-	public sealed class WaveFileWriter : IDisposable
-	{
-		readonly Stream outStream = default;
+    public sealed class WaveFileWriter(string filename, int sampleRate, int numChannels) : IDisposable
+    {
+        readonly Stream outStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 
-		readonly WaveHeader waveHeader = default;
-		readonly FormatChunk formatChunk = default;
-		readonly DataChunk dataChunk = default;
+        readonly WaveHeader waveHeader = new();
+        readonly FormatChunk formatChunk = new(sampleRate, numChannels);
+        readonly DataChunk dataChunk = new();
 
-		public WaveFileWriter(string filename, int sampleRate, int numChannels)
-		{
-			outStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+        ~WaveFileWriter()
+        {
+            Dispose();
+        }
 
-			waveHeader = new();
-			formatChunk = new FormatChunk(sampleRate, numChannels);
-			dataChunk = new();
-		}
+        public void Dispose()
+        {
+            outStream.Flush();
+            outStream.Dispose();
 
-		~WaveFileWriter()
-		{
-			Dispose();
-		}
+            GC.SuppressFinalize(this);
+        }
 
-		public void Dispose()
-		{
-			outStream.Flush();
-			outStream.Dispose();
+        public void Write(short[] samples) => dataChunk.Write(samples);
 
-			GC.SuppressFinalize(this);
-		}
+        public void Save()
+        {
+            waveHeader.FileLength += FormatChunk.ChunkSize + 8;
+            waveHeader.FileLength += dataChunk.ChunkSize + 8;
 
-		public void Write(short[] samples) => dataChunk.Write(samples);
+            outStream.Write(waveHeader.Bytes);
+            outStream.Write(formatChunk.Bytes);
+            outStream.Write(dataChunk.Bytes);
 
-		public void Save()
-		{
-			waveHeader.FileLength += FormatChunk.ChunkSize + 8;
-			waveHeader.FileLength += dataChunk.ChunkSize + 8;
+            outStream.Flush();
+        }
 
-			outStream.Write(waveHeader.Bytes);
-			outStream.Write(formatChunk.Bytes);
-			outStream.Write(dataChunk.Bytes);
+        private class WaveHeader
+        {
+            public static string FileTypeId => "RIFF";
+            public uint FileLength { get; set; } = 4;   /* Minimum size is always 4 bytes */
+            public static string MediaTypeId => "WAVE";
 
-			outStream.Flush();
-		}
+            public ReadOnlySpan<byte> Bytes
+            {
+                get
+                {
+                    var chunkData = new List<byte>();
+                    chunkData.AddRange(Encoding.ASCII.GetBytes(FileTypeId));
+                    chunkData.AddRange(BitConverter.GetBytes(FileLength));
+                    chunkData.AddRange(Encoding.ASCII.GetBytes(MediaTypeId));
+                    return new([.. chunkData]);
+                }
+            }
+        }
 
-		private class WaveHeader
-		{
-			public static string FileTypeId => "RIFF";
-			public uint FileLength { get; set; } = 4;   /* Minimum size is always 4 bytes */
-			public static string MediaTypeId => "WAVE";
+        private class FormatChunk
+        {
+            public static string ChunkId => "fmt ";
+            public static uint ChunkSize => 16;
+            public static ushort FormatTag => 1;        /* MS PCM (Uncompressed wave file) */
+            public ushort Channels => channels;
+            public uint Frequency => frequency;
+            public uint AverageBytesPerSec { get; private set; } = 0;
+            public ushort BlockAlign { get; private set; } = 0;
+            public static ushort BitsPerSample => 16;
 
-			public ReadOnlySpan<byte> Bytes
-			{
-				get
-				{
-					var chunkData = new List<byte>();
-					chunkData.AddRange(Encoding.ASCII.GetBytes(FileTypeId));
-					chunkData.AddRange(BitConverter.GetBytes(FileLength));
-					chunkData.AddRange(Encoding.ASCII.GetBytes(MediaTypeId));
-					return new(chunkData.ToArray());
-				}
-			}
-		}
+            readonly ushort channels = 2;               /* Default to stereo */
+            readonly uint frequency = 44100;            /* Default to 44100hz */
 
-		private class FormatChunk
-		{
-			public static string ChunkId => "fmt ";
-			public static uint ChunkSize => 16;
-			public static ushort FormatTag => 1;        /* MS PCM (Uncompressed wave file) */
-			public ushort Channels => channels;
-			public uint Frequency => frequency;
-			public uint AverageBytesPerSec { get; private set; } = 0;
-			public ushort BlockAlign { get; private set; } = 0;
-			public static ushort BitsPerSample => 16;
+            public FormatChunk(int frequency, int channels)
+            {
+                this.channels = (ushort)channels;
+                this.frequency = (ushort)frequency;
+                RecalcBlockSizes();
+            }
 
-			readonly ushort channels = 2;               /* Default to stereo */
-			readonly uint frequency = 44100;            /* Default to 44100hz */
+            private void RecalcBlockSizes()
+            {
+                BlockAlign = (ushort)(channels * (BitsPerSample / 8));
+                AverageBytesPerSec = frequency * BlockAlign;
+            }
 
-			public FormatChunk(int frequency, int channels)
-			{
-				this.channels = (ushort)channels;
-				this.frequency = (ushort)frequency;
-				RecalcBlockSizes();
-			}
+            public ReadOnlySpan<byte> Bytes
+            {
+                get
+                {
+                    var chunkData = new List<byte>();
+                    chunkData.AddRange(Encoding.ASCII.GetBytes(ChunkId));
+                    chunkData.AddRange(BitConverter.GetBytes(ChunkSize));
+                    chunkData.AddRange(BitConverter.GetBytes(FormatTag));
+                    chunkData.AddRange(BitConverter.GetBytes(Channels));
+                    chunkData.AddRange(BitConverter.GetBytes(Frequency));
+                    chunkData.AddRange(BitConverter.GetBytes(AverageBytesPerSec));
+                    chunkData.AddRange(BitConverter.GetBytes(BlockAlign));
+                    chunkData.AddRange(BitConverter.GetBytes(BitsPerSample));
+                    return new([.. chunkData]);
+                }
+            }
+        }
 
-			private void RecalcBlockSizes()
-			{
-				BlockAlign = (ushort)(channels * (BitsPerSample / 8));
-				AverageBytesPerSec = frequency * BlockAlign;
-			}
+        private class DataChunk
+        {
+            public static string ChunkId => "data";
+            public uint ChunkSize => (uint)(WaveData.Count * 2);
+            public List<short> WaveData { get; private set; } = [];
 
-			public ReadOnlySpan<byte> Bytes
-			{
-				get
-				{
-					var chunkData = new List<byte>();
-					chunkData.AddRange(Encoding.ASCII.GetBytes(ChunkId));
-					chunkData.AddRange(BitConverter.GetBytes(ChunkSize));
-					chunkData.AddRange(BitConverter.GetBytes(FormatTag));
-					chunkData.AddRange(BitConverter.GetBytes(Channels));
-					chunkData.AddRange(BitConverter.GetBytes(Frequency));
-					chunkData.AddRange(BitConverter.GetBytes(AverageBytesPerSec));
-					chunkData.AddRange(BitConverter.GetBytes(BlockAlign));
-					chunkData.AddRange(BitConverter.GetBytes(BitsPerSample));
-					return new(chunkData.ToArray());
-				}
-			}
-		}
+            public ReadOnlySpan<byte> Bytes
+            {
+                get
+                {
+                    var chunkData = new List<byte>();
+                    chunkData.AddRange(Encoding.ASCII.GetBytes(ChunkId));
+                    chunkData.AddRange(BitConverter.GetBytes(ChunkSize));
+                    chunkData.AddRange(MemoryMarshal.Cast<short, byte>(WaveData.ToArray()).ToArray());
+                    return new([.. chunkData]);
+                }
+            }
 
-		private class DataChunk
-		{
-			public static string ChunkId => "data";
-			public uint ChunkSize => (uint)(WaveData.Count * 2);
-			public List<short> WaveData { get; private set; } = new();
-
-			public ReadOnlySpan<byte> Bytes
-			{
-				get
-				{
-					var chunkData = new List<byte>();
-					chunkData.AddRange(Encoding.ASCII.GetBytes(ChunkId));
-					chunkData.AddRange(BitConverter.GetBytes(ChunkSize));
-					chunkData.AddRange(MemoryMarshal.Cast<short, byte>(WaveData.ToArray()).ToArray());
-					return new(chunkData.ToArray());
-				}
-			}
-
-			public void Write(short[] samples) => WaveData.AddRange(samples);
-		}
-	}
+            public void Write(short[] samples) => WaveData.AddRange(samples);
+        }
+    }
 }

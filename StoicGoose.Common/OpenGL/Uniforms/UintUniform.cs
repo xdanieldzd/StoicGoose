@@ -2,14 +2,13 @@
 
 namespace StoicGoose.Common.OpenGL.Uniforms
 {
-	public sealed class UintUniform : GenericUniform<uint>
-	{
-		public UintUniform(string name) : this(name, 0) { }
-		public UintUniform(string name, uint value) : base(name, value) { }
+    public sealed class UintUniform(string name, uint value) : GenericUniform<uint>(name, value)
+    {
+        public UintUniform(string name) : this(name, 0) { }
 
-		protected override void SubmitUniform(int location)
-		{
-			GL.Uniform1(location, value);
-		}
-	}
+        protected override void SubmitUniform(int location)
+        {
+            GL.Uniform1(location, value);
+        }
+    }
 }

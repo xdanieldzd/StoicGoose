@@ -1,4 +1,4 @@
 ﻿namespace StoicGoose.Common.OpenGL.Vertices
 {
-	public interface IVertexStruct { }
+    public interface IVertexStruct { }
 }

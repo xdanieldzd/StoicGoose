@@ -1,165 +1,166 @@
+using StoicGoose.Common.Extensions;
+using StoicGoose.Common.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-
-using StoicGoose.Common.Extensions;
-using StoicGoose.Common.Utilities;
-
 using GLFWException = OpenTK.Windowing.GraphicsLibraryFramework.GLFWException;
 
 namespace StoicGoose.WinForms
 {
-	static class Program
-	{
-		public readonly static Version RequiredGLVersion = new(4, 0, 0);
+    static class Program
+    {
+        public readonly static Version RequiredGLVersion = new(4, 0, 0);
 
-		const string jsonConfigFileName = "Config.json";
-		const string logFileName = "Log.txt";
+        const string jsonConfigFileName = "Config.json";
+        const string logFileName = "Log.txt";
 
-		const string internalDataDirectoryName = "Internal";
-		const string saveDataDirectoryName = "Saves";
-		const string cheatDataDirectoryName = "Cheats";
-		const string debuggingDataDirectoryName = "Debugging";
+        const string internalDataDirectoryName = "Internal";
+        const string saveDataDirectoryName = "Saves";
+        const string cheatDataDirectoryName = "Cheats";
+        const string debuggingDataDirectoryName = "Debugging";
 
-		const string assetsDirectoryName = "Assets";
-		const string shaderDirectoryName = "Shaders";
-		const string noIntroDatDirectoryName = "No-Intro";
+        const string assetsDirectoryName = "Assets";
+        const string shaderDirectoryName = "Shaders";
+        const string noIntroDatDirectoryName = "No-Intro";
 
-		readonly static string mutexName = $"{Application.ProductName}_{GetVersionDetails()}";
+        readonly static FileVersionInfo assemblyVersionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
 
-		readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
-		readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
+        readonly static string mutexName = $"{Application.ProductName}_{GetVersionDetails()}";
 
-		public static Configuration Configuration { get; private set; } = LoadConfiguration(programConfigPath);
+        readonly static string programDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), Application.ProductName);
+        readonly static string programConfigPath = Path.Combine(programDataDirectory, jsonConfigFileName);
 
-		public static string DataPath { get; } = string.Empty;
-		public static string InternalDataPath { get; } = string.Empty;
-		public static string SaveDataPath { get; } = string.Empty;
-		public static string CheatsDataPath { get; } = string.Empty;
-		public static string DebuggingDataPath { get; } = string.Empty;
+        public static Configuration Configuration { get; private set; } = LoadConfiguration(programConfigPath);
 
-		readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
-		readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
+        public static string DataPath { get; } = string.Empty;
+        public static string InternalDataPath { get; } = string.Empty;
+        public static string SaveDataPath { get; } = string.Empty;
+        public static string CheatsDataPath { get; } = string.Empty;
+        public static string DebuggingDataPath { get; } = string.Empty;
 
-		public static string ShaderPath { get; } = string.Empty;
-		public static string NoIntroDatPath { get; } = string.Empty;
+        readonly static string programApplicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        readonly static string programAssetsDirectory = Path.Combine(programApplicationDirectory, assetsDirectoryName);
 
-		static MainForm mainForm = default;
+        public static string ShaderPath { get; } = string.Empty;
+        public static string NoIntroDatPath { get; } = string.Empty;
 
-		static Program()
-		{
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+        static MainForm mainForm = default;
 
-				Log.Initialize(Path.Combine(programDataDirectory, logFileName));
+        static Program()
+        {
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
 
-				Directory.CreateDirectory(DataPath = programDataDirectory);
-				Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
-				Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
-				Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
-				Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
+                Log.Initialize(Path.Combine(programDataDirectory, logFileName));
 
-				if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
-					throw new DirectoryNotFoundException("Shader directory missing");
+                Directory.CreateDirectory(DataPath = programDataDirectory);
+                Directory.CreateDirectory(InternalDataPath = Path.Combine(programDataDirectory, internalDataDirectoryName));
+                Directory.CreateDirectory(SaveDataPath = Path.Combine(programDataDirectory, saveDataDirectoryName));
+                Directory.CreateDirectory(CheatsDataPath = Path.Combine(programDataDirectory, cheatDataDirectoryName));
+                Directory.CreateDirectory(DebuggingDataPath = Path.Combine(programDataDirectory, debuggingDataDirectoryName));
 
-				if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
-					throw new DirectoryNotFoundException("No-Intro .dat directory missing");
-			}
-			catch (DirectoryNotFoundException e)
-			{
-				MessageBox.Show($"Failed to start application: {e.Message}.\n\nPlease ensure that all files have been extracted.",
-					$"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Environment.Exit(-1);
-			}
-		}
+                if (!Directory.Exists(ShaderPath = Path.Combine(programAssetsDirectory, shaderDirectoryName)))
+                    throw new DirectoryNotFoundException("Shader directory missing");
 
-		[STAThread]
-		static void Main()
-		{
-			using var mutex = new Mutex(true, mutexName, out bool newInstance);
-			if (!newInstance)
-			{
-				MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.",
-					$"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Environment.Exit(-1);
-			}
+                if (!Directory.Exists(NoIntroDatPath = Path.Combine(programAssetsDirectory, noIntroDatDirectoryName)))
+                    throw new DirectoryNotFoundException("No-Intro .dat directory missing");
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                MessageBox.Show($"Failed to start application: {e.Message}.\n\nPlease ensure that all files have been extracted.",
+                    $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(-1);
+            }
+        }
 
-			Application.SetHighDpiMode(HighDpiMode.SystemAware);
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
+        [STAThread]
+        static void Main()
+        {
+            using var mutex = new Mutex(true, mutexName, out bool newInstance);
+            if (!newInstance)
+            {
+                MessageBox.Show($"Another instance of {Application.ProductName} is already running.\n\nThis instance will now shut down.",
+                    $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(-1);
+            }
 
-			if (!Debugger.IsAttached)
-			{
-				Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
-				Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-				AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-			}
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
 
-			Application.Run(mainForm = new MainForm());
-		}
+            if (!Debugger.IsAttached)
+            {
+                Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            }
 
-		static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
-		{
-			if (e.Exception is GLFWException glEx)
-			{
-				var renderControl = mainForm.Controls["renderControl"] as OpenGL.RenderControl;
-				MessageBox.Show($"{glEx.Message.EnsureEndsWithPeriod()}\n\n{Application.ProductName} requires GPU and drivers supporting OpenGL {renderControl.APIVersion.Major}.{renderControl.APIVersion.Minor}.", $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
-			else
-			{
-				MessageBox.Show(e.Exception.Message.EnsureEndsWithPeriod(), $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
+            Application.Run(mainForm = new MainForm());
+        }
 
-			Environment.Exit(-1);
-		}
+        static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            if (e.Exception is GLFWException glEx)
+            {
+                var renderControl = mainForm.Controls["renderControl"] as OpenGL.RenderControl;
+                MessageBox.Show($"{glEx.Message.EnsureEndsWithPeriod()}\n\n{Application.ProductName} requires GPU and drivers supporting OpenGL {renderControl.APIVersion.Major}.{renderControl.APIVersion.Minor}.", $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show(e.Exception.Message.EnsureEndsWithPeriod(), $"{Application.ProductName} Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
-		static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-		{
-			MessageBox.Show((e.ExceptionObject as Exception).Message, $"{Application.ProductName} Startup Error");
-			Environment.Exit(-1);
-		}
+            Environment.Exit(-1);
+        }
 
-		private static Configuration LoadConfiguration(string filename)
-		{
-			Directory.CreateDirectory(Path.GetDirectoryName(filename));
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show((e.ExceptionObject as Exception).Message, $"{Application.ProductName} Startup Error");
+            Environment.Exit(-1);
+        }
 
-			Configuration configuration;
-			if (!File.Exists(filename) || (configuration = filename.DeserializeFromFile<Configuration>()) == null)
-			{
-				configuration = new Configuration();
-				configuration.SerializeToFile(filename);
-			}
+        private static Configuration LoadConfiguration(string filename)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(filename));
 
-			return configuration;
-		}
+            Configuration configuration;
+            if (!File.Exists(filename) || (configuration = filename.DeserializeFromFile<Configuration>()) == null)
+            {
+                configuration = new Configuration();
+                configuration.SerializeToFile(filename);
+            }
 
-		public static void ReplaceConfiguration(Configuration newConfig)
-		{
-			ConfigurationBase.CopyConfiguration(newConfig, Configuration);
-			SaveConfiguration();
-		}
+            return configuration;
+        }
 
-		public static void SaveConfiguration()
-		{
-			Configuration?.SerializeToFile(programConfigPath);
-		}
+        public static void ReplaceConfiguration(Configuration newConfig)
+        {
+            ConfigurationBase.CopyConfiguration(newConfig, Configuration);
+            SaveConfiguration();
+        }
 
-		private static string GetVersionDetails()
-		{
-			return $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : string.Empty)}{(GlobalVariables.IsDebugBuild ? "+debug" : string.Empty)}";
-		}
+        public static void SaveConfiguration()
+        {
+            Configuration?.SerializeToFile(programConfigPath);
+        }
 
-		public static string GetVersionString(bool detailed)
-		{
-			var version = new Version(Application.ProductVersion);
-			var stringBuilder = new StringBuilder();
-			stringBuilder.Append($"v{version.Major:D3}{(version.Minor != 0 ? $".{version.Minor}" : string.Empty)}");
-			if (detailed) stringBuilder.Append($" ({GetVersionDetails()})");
-			return stringBuilder.ToString();
-		}
-	}
+        private static string GetVersionDetails()
+        {
+            return $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}{(ThisAssembly.Git.IsDirty ? "-dirty" : string.Empty)}{(GlobalVariables.IsDebugBuild ? "+debug" : string.Empty)}";
+        }
+
+        public static string GetVersionString(bool detailed)
+        {
+            var version = new Version(assemblyVersionInfo.FileVersion);
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append($"v{version.Major:D3}{(version.Minor != 0 ? $".{version.Minor}" : string.Empty)}");
+            if (detailed) stringBuilder.Append($" ({GetVersionDetails()})");
+            return stringBuilder.ToString();
+        }
+    }
 }

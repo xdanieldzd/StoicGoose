@@ -2,14 +2,13 @@
 
 namespace StoicGoose.Common.OpenGL.Uniforms
 {
-	public sealed class FloatUniform : GenericUniform<float>
-	{
-		public FloatUniform(string name) : this(name, 0.0f) { }
-		public FloatUniform(string name, float value) : base(name, value) { }
+    public sealed class FloatUniform(string name, float value) : GenericUniform<float>(name, value)
+    {
+        public FloatUniform(string name) : this(name, 0.0f) { }
 
-		protected override void SubmitUniform(int location)
-		{
-			GL.Uniform1(location, value);
-		}
-	}
+        protected override void SubmitUniform(int location)
+        {
+            GL.Uniform1(location, value);
+        }
+    }
 }

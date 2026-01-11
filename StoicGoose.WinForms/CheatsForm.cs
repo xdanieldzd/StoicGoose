@@ -1,94 +1,96 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace StoicGoose.WinForms
 {
-	public partial class CheatsForm : Form
-	{
-		readonly CheatEditForm cheatEditForm = new();
+    public partial class CheatsForm : Form
+    {
+        readonly CheatEditForm cheatEditForm = new();
 
-		public Action<Cheat[]> Callback { get; set; } = default;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Action<Cheat[]> Callback { get; set; } = default;
 
-		public CheatsForm()
-		{
-			InitializeComponent();
+        public CheatsForm()
+        {
+            InitializeComponent();
 
-			UpdateControls();
-		}
+            UpdateControls();
+        }
 
-		private void CheatsForm_FormClosing(object sender, FormClosingEventArgs e)
-		{
-			Callback?.Invoke(clvCheats.Items.Cast<ListViewItem>().Select(x => (Cheat)x.Tag).ToArray());
-		}
+        private void CheatsForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Callback?.Invoke([.. clvCheats.Items.Cast<ListViewItem>().Select(x => (Cheat)x.Tag)]);
+        }
 
-		private void btnClose_Click(object sender, EventArgs e)
-		{
-			Hide();
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            Hide();
 
-			Callback?.Invoke(clvCheats.Items.Cast<ListViewItem>().Select(x => (Cheat)x.Tag).ToArray());
-		}
+            Callback?.Invoke([.. clvCheats.Items.Cast<ListViewItem>().Select(x => (Cheat)x.Tag)]);
+        }
 
-		private void clvCheats_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			UpdateControls();
-		}
+        private void clvCheats_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateControls();
+        }
 
-		private void btnAdd_Click(object sender, EventArgs e)
-		{
-			cheatEditForm.SetFormAddMode(true);
-			cheatEditForm.SetCheat(new());
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            cheatEditForm.SetFormAddMode(true);
+            cheatEditForm.SetCheat(new());
 
-			if (cheatEditForm.ShowDialog() == DialogResult.OK)
-				clvCheats.Add(cheatEditForm.Cheat);
+            if (cheatEditForm.ShowDialog() == DialogResult.OK)
+                clvCheats.Add(cheatEditForm.Cheat);
 
-			UpdateControls();
-		}
+            UpdateControls();
+        }
 
-		private void btnEdit_Click(object sender, EventArgs e)
-		{
-			var selectedCheat = clvCheats.GetSelectedItems().First();
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            var selectedCheat = clvCheats.GetSelectedItems().First();
 
-			cheatEditForm.SetFormAddMode(false);
-			cheatEditForm.SetCheat(selectedCheat);
+            cheatEditForm.SetFormAddMode(false);
+            cheatEditForm.SetCheat(selectedCheat);
 
-			if (cheatEditForm.ShowDialog() == DialogResult.OK)
-				clvCheats.Replace(selectedCheat, cheatEditForm.Cheat);
+            if (cheatEditForm.ShowDialog() == DialogResult.OK)
+                clvCheats.Replace(selectedCheat, cheatEditForm.Cheat);
 
-			UpdateControls();
-		}
+            UpdateControls();
+        }
 
-		private void btnDelete_Click(object sender, EventArgs e)
-		{
-			if (MessageBox.Show("Do you really want to delete this cheat?", "Delete Cheat", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-			{
-				var selected = clvCheats.GetSelectedItems().First();
-				clvCheats.Remove(selected);
-			}
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Do you really want to delete this cheat?", "Delete Cheat", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                var selected = clvCheats.GetSelectedItems().First();
+                clvCheats.Remove(selected);
+            }
 
-			UpdateControls();
-		}
+            UpdateControls();
+        }
 
-		public void SetCheatList(Cheat[] cheats)
-		{
-			clvCheats.RemoveAll();
-			clvCheats.AddRange(cheats);
+        public void SetCheatList(Cheat[] cheats)
+        {
+            clvCheats.RemoveAll();
+            clvCheats.AddRange(cheats);
 
-			UpdateControls();
-		}
+            UpdateControls();
+        }
 
-		private void UpdateControls()
-		{
-			btnDelete.Enabled = clvCheats.Items.Count != 0 && clvCheats.SelectedItems.Count != 0;
-			btnEdit.Enabled = clvCheats.SelectedItems.Count != 0;
-			btnAdd.Enabled = true;
-		}
+        private void UpdateControls()
+        {
+            btnDelete.Enabled = clvCheats.Items.Count != 0 && clvCheats.SelectedItems.Count != 0;
+            btnEdit.Enabled = clvCheats.SelectedItems.Count != 0;
+            btnAdd.Enabled = true;
+        }
 
-		private void clvCheats_DoubleClick(object sender, EventArgs e)
-		{
-			if (clvCheats.SelectedIndices.Count != 0)
-				btnEdit_Click(btnEdit, EventArgs.Empty);
-		}
-	}
+        private void clvCheats_DoubleClick(object sender, EventArgs e)
+        {
+            if (clvCheats.SelectedIndices.Count != 0)
+                btnEdit_Click(btnEdit, EventArgs.Empty);
+        }
+    }
 }

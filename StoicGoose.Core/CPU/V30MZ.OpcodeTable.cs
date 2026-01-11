@@ -2,11 +2,11 @@
 
 namespace StoicGoose.Core.CPU
 {
-	public sealed partial class V30MZ
-	{
-		delegate int Instruction(V30MZ cpu);
-		readonly static Instruction[] instructions = new Instruction[256]
-		{
+    public sealed partial class V30MZ
+    {
+        delegate int Instruction(V30MZ cpu);
+        readonly static Instruction[] instructions =
+        [
 			/* 0x00 */      /* ADD Eb Gb */                 (cpu) => { cpu.WriteOpcodeEb(cpu.Add8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeGb())); return 1; },
 							/* ADD Ew Gw */                 (cpu) => { cpu.WriteOpcodeEw(cpu.Add16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeGw())); return 1; },
 							/* ADD Gb Eb */                 (cpu) => { cpu.WriteOpcodeGb(cpu.Add8(false, cpu.ReadOpcodeGb(), cpu.ReadOpcodeEb())); return 1; },
@@ -22,7 +22,7 @@ namespace StoicGoose.Core.CPU
 			/* 0x0C */      /* OR AL Ib */                  (cpu) => { cpu.ax.Low = cpu.Or8(cpu.ax.Low, cpu.ReadOpcodeIb()); return 1; },
 							/* OR AX Iw */                  (cpu) => { cpu.ax.Word = cpu.Or16(cpu.ax.Word, cpu.ReadOpcodeIw()); return 1; },
 							/* PUSH CS */                   (cpu) => { cpu.Push(cpu.cs); return 1; },
-							/* (Invalid; NOP?) */			(cpu) => 3,
+							/* (Invalid; NOP?) */			(cpu) => 1,
 
 			/* 0x10 */      /* ADC Eb Gb */                 (cpu) => { cpu.WriteOpcodeEb(cpu.Add8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeGb())); return 1; },
 							/* ADC Ew Gw */                 (cpu) => { cpu.WriteOpcodeEw(cpu.Add16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeGw())); return 1; },
@@ -96,7 +96,7 @@ namespace StoicGoose.Core.CPU
 							/* PUSH CX */                   (cpu) => { cpu.Push(cpu.cx.Word); return 1; },
 							/* PUSH DX */                   (cpu) => { cpu.Push(cpu.dx.Word); return 1; },
 							/* PUSH BX */                   (cpu) => { cpu.Push(cpu.bx.Word); return 1; },
-			/* 0x54 */      /* PUSH SP */                   (cpu) => { cpu.Push(cpu.sp); return 1; },
+			/* 0x54 */      /* PUSH SP */                   (cpu) => { cpu.Push((ushort)(cpu.sp - 2)); return 1; },
 							/* PUSH BP */                   (cpu) => { cpu.Push(cpu.bp); return 1; },
 							/* PUSH SI */                   (cpu) => { cpu.Push(cpu.si); return 1; },
 							/* PUSH DI */                   (cpu) => { cpu.Push(cpu.di); return 1; },
@@ -112,11 +112,11 @@ namespace StoicGoose.Core.CPU
 			/* 0x60 */      /* PUSHA */                     Opcode0x60,
 							/* POPA */                      Opcode0x61,
 							/* BOUND Gw E */                Opcode0x62,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-			/* 0x64 */      /* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
+							/* (Invalid; NOP?) */			(cpu) => 1,
+			/* 0x64 */      /* (Invalid; NOP?) */			(cpu) => 1,
+							/* (Invalid; NOP?) */			(cpu) => 1,
+							/* (Invalid; NOP?) */			(cpu) => 1,
+							/* (Invalid; NOP?) */			(cpu) => 1,
 			/* 0x68 */      /* PUSH Iw */                   (cpu) => { cpu.Push(cpu.ReadOpcodeIw()); return 1; },
 							/* IMUL Gw Ew Iw */             (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeGw((ushort)cpu.Mul16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); return 4; },
 							/* PUSH Ib */                   (cpu) => { cpu.Push((ushort)(sbyte)cpu.ReadOpcodeIb()); return 1; },
@@ -138,8 +138,8 @@ namespace StoicGoose.Core.CPU
 							/* JNS */                       (cpu) => cpu.JumpConditional(!cpu.IsFlagSet(Flags.Sign)),
 							/* JPE */                       (cpu) => cpu.JumpConditional(cpu.IsFlagSet(Flags.Parity)),
 							/* JPO */                       (cpu) => cpu.JumpConditional(!cpu.IsFlagSet(Flags.Parity)),
-			/* 0x7C */      /* JL */                        (cpu) => cpu.JumpConditional(!cpu.IsFlagSet(Flags.Zero) && cpu.IsFlagSet(Flags.Sign) != cpu.IsFlagSet(Flags.Overflow)),
-							/* JGE */                       (cpu) => cpu.JumpConditional(cpu.IsFlagSet(Flags.Zero) || cpu.IsFlagSet(Flags.Sign) == cpu.IsFlagSet(Flags.Overflow)),
+			/* 0x7C */      /* JL */                        (cpu) => cpu.JumpConditional(cpu.IsFlagSet(Flags.Sign) != cpu.IsFlagSet(Flags.Overflow)),
+							/* JGE */                       (cpu) => cpu.JumpConditional(cpu.IsFlagSet(Flags.Sign) == cpu.IsFlagSet(Flags.Overflow)),
 							/* JLE */                       (cpu) => cpu.JumpConditional(cpu.IsFlagSet(Flags.Zero) || cpu.IsFlagSet(Flags.Sign) != cpu.IsFlagSet(Flags.Overflow)),
 							/* JG */                        (cpu) => cpu.JumpConditional(!cpu.IsFlagSet(Flags.Zero) && cpu.IsFlagSet(Flags.Sign) == cpu.IsFlagSet(Flags.Overflow)),
 
@@ -171,7 +171,7 @@ namespace StoicGoose.Core.CPU
 			/* 0x98 */      /* CBW */                       (cpu) => { cpu.ax.Word = (ushort)(sbyte)cpu.ax.Low; return 2; },
 							/* CWD */                       (cpu) => { var value = (uint)(short)cpu.ax.Word; cpu.dx.Word = (ushort)((value >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((value >> 0) & 0xFFFF); return 2; },
 							/* CALL Ap */                   Opcode0x9A,
-							/* WAIT */                      (cpu) => 1,
+							/* WAIT */                      (cpu) => 9,
 			/* 0x9C */      /* PUSHF */                     (cpu) => { cpu.Push((ushort)cpu.flags); return 1; },
 							/* POPF */                      (cpu) => { cpu.flags = (Flags)cpu.Pop(); return 1; },
 							/* SAHF */                      Opcode0x9E,
@@ -220,7 +220,7 @@ namespace StoicGoose.Core.CPU
 							/* MOV Eb Ib */                 (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeEb(cpu.ReadOpcodeIb()); return 1; },
 							/* MOV Ew Iw */                 (cpu) => { cpu.ReadModRM(); cpu.WriteOpcodeEw(cpu.ReadOpcodeIw()); return 1; },
 			/* 0xC8 */      /* ENTER */                     Opcode0xC8,
-							/* LEAVE */                     (cpu) => { cpu.sp = cpu.bp; cpu.bp = cpu.Pop(); return 1; },
+							/* LEAVE */                     (cpu) => { cpu.sp = cpu.bp; cpu.bp = cpu.Pop(); return 2; },
 							/* RETF Iw */                   (cpu) => { var offset = cpu.ReadOpcodeIw(); cpu.ip = cpu.Pop(); cpu.cs = cpu.Pop(); cpu.sp += offset; return 8; },
 							/* RETF */                      (cpu) => { cpu.ip = cpu.Pop(); cpu.cs = cpu.Pop(); return 7; },
 			/* 0xCC */      /* INT 3 */                     (cpu) => { cpu.Interrupt(3); return 8; },
@@ -234,16 +234,16 @@ namespace StoicGoose.Core.CPU
 							/* GRP2 Ew CL */                Opcode0xD3,
 			/* 0xD4 */      /* AAM */                       Opcode0xD4,
 							/* AAD */                       Opcode0xD5,
-							/* (undocumented XLAT) */       (cpu) => { cpu.ax.Low = cpu.ReadMemory8(cpu.GetSegmentViaOverride(SegmentNumber.DS), (ushort)(cpu.bx.Word + cpu.ax.Low)); return 4; },
+							/* (SALC) */                    (cpu) => { cpu.ax.Low = (byte)(cpu.IsFlagSet(Flags.Carry) ? 0xFF : 0); return 8; },
 							/* XLAT */                      (cpu) => { cpu.ax.Low = cpu.ReadMemory8(cpu.GetSegmentViaOverride(SegmentNumber.DS), (ushort)(cpu.bx.Word + cpu.ax.Low)); return 4; },
-			/* 0xD8 */      /* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-			/* 0xDC */      /* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
-							/* (Invalid; NOP?) */			(cpu) => 3,
+			/* 0xD8 */      /* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+			/* 0xDC */      /* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
+							/* (Invalid; NOP?) */			(cpu) => { cpu.ReadOpcodeIb(); return 1; },
 
 			/* 0xE0 */      /* LOOPNZ Jb */                 (cpu) => { return cpu.LoopWhile(!cpu.IsFlagSet(Flags.Zero)); },
 							/* LOOPZ Jb */                  (cpu) => { return cpu.LoopWhile(cpu.IsFlagSet(Flags.Zero)); },
@@ -278,628 +278,725 @@ namespace StoicGoose.Core.CPU
 							/* STD */                       (cpu) => { cpu.SetFlags(Flags.Direction); return 4; },
 							/* GRP4 Eb */                   Opcode0xFE,
 							/* GRP4 Ew */                   Opcode0xFF
-		};
+        ];
 
-		private static int Opcode0x60(V30MZ cpu)
-		{
-			/* PUSHA */
-			var oldSp = cpu.sp;
-			cpu.Push(cpu.ax.Word);
-			cpu.Push(cpu.cx.Word);
-			cpu.Push(cpu.dx.Word);
-			cpu.Push(cpu.bx.Word);
-			cpu.Push(oldSp);
-			cpu.Push(cpu.bp);
-			cpu.Push(cpu.si);
-			cpu.Push(cpu.di);
-			return 8;
-		}
+        private static int Opcode0x60(V30MZ cpu)
+        {
+            /* PUSHA */
+            var oldSp = cpu.sp;
+            cpu.Push(cpu.ax.Word);
+            cpu.Push(cpu.cx.Word);
+            cpu.Push(cpu.dx.Word);
+            cpu.Push(cpu.bx.Word);
+            cpu.Push(oldSp);
+            cpu.Push(cpu.bp);
+            cpu.Push(cpu.si);
+            cpu.Push(cpu.di);
+            return 8;
+        }
 
-		private static int Opcode0x61(V30MZ cpu)
-		{
-			/* POPA */
-			cpu.di = cpu.Pop();
-			cpu.si = cpu.Pop();
-			cpu.bp = cpu.Pop();
-			cpu.Pop(); /* don't restore SP */
-			cpu.bx.Word = cpu.Pop();
-			cpu.dx.Word = cpu.Pop();
-			cpu.cx.Word = cpu.Pop();
-			cpu.ax.Word = cpu.Pop();
-			return 8;
-		}
+        private static int Opcode0x61(V30MZ cpu)
+        {
+            /* POPA */
+            cpu.di = cpu.Pop();
+            cpu.si = cpu.Pop();
+            cpu.bp = cpu.Pop();
+            cpu.Pop(); /* don't restore SP */
+            cpu.bx.Word = cpu.Pop();
+            cpu.dx.Word = cpu.Pop();
+            cpu.cx.Word = cpu.Pop();
+            cpu.ax.Word = cpu.Pop();
+            return 8;
+        }
 
-		private static int Opcode0x62(V30MZ cpu)
-		{
-			/* BOUND Gw E */
-			cpu.ReadModRM();
-			var lo = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
-			var hi = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
-			var reg = cpu.GetRegister16((RegisterNumber16)cpu.modRm.Mem);
-			if (reg < lo || reg > hi) cpu.Interrupt(5);
-			return 12;
-		}
+        private static int Opcode0x62(V30MZ cpu)
+        {
+            /* BOUND Gw E */
+            cpu.ReadModRM();
+            var lo = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
+            var hi = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+            var reg = cpu.GetRegister16((RegisterNumber16)cpu.modRm.Mem);
+            if (reg < lo || reg > hi) cpu.Interrupt(5);
+            return 12;
+        }
 
-		private static int Opcode0x6C(V30MZ cpu)
-		{
-			/* INSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.InString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.InString(false); cycles += 5; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0x6C(V30MZ cpu)
+        {
+            /* INSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.InString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.InString(false); cycles += 5; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x6D(V30MZ cpu)
-		{
-			/* INSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.InString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.InString(true); cycles += 5; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0x6D(V30MZ cpu)
+        {
+            /* INSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.InString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.InString(true); cycles += 5; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x6E(V30MZ cpu)
-		{
-			/* OUTSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.OutString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.OutString(false); cycles += 6; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0x6E(V30MZ cpu)
+        {
+            /* OUTSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.OutString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.OutString(false); cycles += 6; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x6F(V30MZ cpu)
-		{
-			/* OUTSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.OutString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.OutString(true); cycles += 6; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0x6F(V30MZ cpu)
+        {
+            /* OUTSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.OutString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.OutString(true); cycles += 6; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x80(V30MZ cpu)
-		{
-			/* GRP1 Eb Ib */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ADD */ cpu.WriteOpcodeEb(cpu.Add8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x1: /* OR  */ cpu.WriteOpcodeEb(cpu.Or8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x2: /* ADC */ cpu.WriteOpcodeEb(cpu.Add8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x3: /* SBB */ cpu.WriteOpcodeEb(cpu.Sub8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x4: /* AND */ cpu.WriteOpcodeEb(cpu.And8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x5: /* SUB */ cpu.WriteOpcodeEb(cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x6: /* XOR */ cpu.WriteOpcodeEb(cpu.Xor8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x7: /* CMP */ cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0x80(V30MZ cpu)
+        {
+            /* GRP1 Eb Ib */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ADD */ cpu.WriteOpcodeEb(cpu.Add8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x1: /* OR  */ cpu.WriteOpcodeEb(cpu.Or8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x2: /* ADC */ cpu.WriteOpcodeEb(cpu.Add8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x3: /* SBB */ cpu.WriteOpcodeEb(cpu.Sub8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x4: /* AND */ cpu.WriteOpcodeEb(cpu.And8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x5: /* SUB */ cpu.WriteOpcodeEb(cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x6: /* XOR */ cpu.WriteOpcodeEb(cpu.Xor8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x7: /* CMP */ cpu.Sub8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x81(V30MZ cpu)
-		{
-			/* GRP1 Ew Iw */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ADD */ cpu.WriteOpcodeEw(cpu.Add16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x1: /* OR  */ cpu.WriteOpcodeEw(cpu.Or16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x2: /* ADC */ cpu.WriteOpcodeEw(cpu.Add16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x3: /* SBB */ cpu.WriteOpcodeEw(cpu.Sub16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x4: /* AND */ cpu.WriteOpcodeEw(cpu.And16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
-				case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0x81(V30MZ cpu)
+        {
+            /* GRP1 Ew Iw */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ADD */ cpu.WriteOpcodeEw(cpu.Add16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x1: /* OR  */ cpu.WriteOpcodeEw(cpu.Or16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x2: /* ADC */ cpu.WriteOpcodeEw(cpu.Add16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x3: /* SBB */ cpu.WriteOpcodeEw(cpu.Sub16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x4: /* AND */ cpu.WriteOpcodeEw(cpu.And16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw())); cycles = 1; break;
+                case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x83(V30MZ cpu)
-		{
-			/* GRP1 Ew Ib */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ADD */ cpu.WriteOpcodeEw(cpu.Add16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x1: /* OR  */ cpu.WriteOpcodeEw(cpu.Or16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x2: /* ADC */ cpu.WriteOpcodeEw(cpu.Add16(true, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x3: /* SBB */ cpu.WriteOpcodeEw(cpu.Sub16(true, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x4: /* AND */ cpu.WriteOpcodeEw(cpu.And16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
-				case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb()); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0x83(V30MZ cpu)
+        {
+            /* GRP1 Ew Ib */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ADD */ cpu.WriteOpcodeEw(cpu.Add16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x1: /* OR  */ cpu.WriteOpcodeEw(cpu.Or16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x2: /* ADC */ cpu.WriteOpcodeEw(cpu.Add16(true, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x3: /* SBB */ cpu.WriteOpcodeEw(cpu.Sub16(true, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x4: /* AND */ cpu.WriteOpcodeEw(cpu.And16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x5: /* SUB */ cpu.WriteOpcodeEw(cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x6: /* XOR */ cpu.WriteOpcodeEw(cpu.Xor16(cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb())); cycles = 1; break;
+                case 0x7: /* CMP */ cpu.Sub16(false, cpu.ReadOpcodeEw(), (ushort)(sbyte)cpu.ReadOpcodeIb()); cycles = 1; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0x8D(V30MZ cpu)
-		{
-			/* LEA Gw M */
-			cpu.ReadModRM();
-			if (cpu.modRm.Mod != ModRM.Modes.Register)
-			{
-				cpu.WriteOpcodeGw(cpu.modRm.Offset);
-			}
-			return 8;
-		}
+        private static int Opcode0x8D(V30MZ cpu)
+        {
+            /* LEA Gw M */
+            cpu.ReadModRM();
 
-		private static int Opcode0x9A(V30MZ cpu)
-		{
-			/* CALL Ap */
-			var newIp = cpu.ReadOpcodeIw();
-			var newCs = cpu.ReadOpcodeIw();
+            if (cpu.modRm.Mod == ModRM.Modes.Register)
+            {
+                switch (cpu.modRm.Mem)
+                {
+                    case 0b000: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.ax.Word); break;
+                    case 0b001: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.cx.Word); break;
+                    case 0b010: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.dx.Word); break;
+                    case 0b011: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.bx.Word); break;
+                    case 0b100: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.si + cpu.sp); break;
+                    case 0b101: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.di + cpu.bp); break;
+                    case 0b110: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.si); break;
+                    case 0b111: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.di); break;
+                }
+            }
 
-			cpu.Push(cpu.cs);
-			cpu.Push(cpu.ip);
+            cpu.WriteOpcodeGw(cpu.modRm.Offset);
 
-			cpu.ip = newIp;
-			cpu.cs = newCs;
+            return 8;
+        }
 
-			return 9;
-		}
+        private static int Opcode0x9A(V30MZ cpu)
+        {
+            /* CALL Ap */
+            var newIp = cpu.ReadOpcodeIw();
+            var newCs = cpu.ReadOpcodeIw();
 
-		private static int Opcode0x9E(V30MZ cpu)
-		{
-			/* SAHF */
-			cpu.SetClearFlagConditional(Flags.Sign, ((Flags)cpu.ax.High & Flags.Sign) == Flags.Sign);
-			cpu.SetClearFlagConditional(Flags.Zero, ((Flags)cpu.ax.High & Flags.Zero) == Flags.Zero);
-			cpu.SetClearFlagConditional(Flags.Auxiliary, ((Flags)cpu.ax.High & Flags.Auxiliary) == Flags.Auxiliary);
-			cpu.SetClearFlagConditional(Flags.Parity, ((Flags)cpu.ax.High & Flags.Parity) == Flags.Parity);
-			cpu.SetClearFlagConditional(Flags.Carry, ((Flags)cpu.ax.High & Flags.Carry) == Flags.Carry);
-			return 4;
-		}
+            cpu.Push(cpu.cs);
+            cpu.Push(cpu.ip);
 
-		private static int Opcode0xA4(V30MZ cpu)
-		{
-			/* MOVSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.MoveString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.MoveString(false); cycles += 5; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+            cpu.ip = newIp;
+            cpu.cs = newCs;
 
-		private static int Opcode0xA5(V30MZ cpu)
-		{
-			/* MOVSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.MoveString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.MoveString(true); cycles += 5; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+            return 9;
+        }
 
-		private static int Opcode0xA6(V30MZ cpu)
-		{
-			/* CMPSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.CompareString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.CompareString(false); cycles += 4; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
-			}
-			return cycles;
-		}
+        private static int Opcode0x9E(V30MZ cpu)
+        {
+            /* SAHF */
+            cpu.SetClearFlagConditional(Flags.Sign, ((Flags)cpu.ax.High & Flags.Sign) == Flags.Sign);
+            cpu.SetClearFlagConditional(Flags.Zero, ((Flags)cpu.ax.High & Flags.Zero) == Flags.Zero);
+            cpu.SetClearFlagConditional(Flags.Auxiliary, ((Flags)cpu.ax.High & Flags.Auxiliary) == Flags.Auxiliary);
+            cpu.SetClearFlagConditional(Flags.Parity, ((Flags)cpu.ax.High & Flags.Parity) == Flags.Parity);
+            cpu.SetClearFlagConditional(Flags.Carry, ((Flags)cpu.ax.High & Flags.Carry) == Flags.Carry);
+            return 4;
+        }
 
-		private static int Opcode0xA7(V30MZ cpu)
-		{
-			/* CMPSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.CompareString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.CompareString(true); cycles += 4; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
-			}
-			return cycles;
-		}
+        private static int Opcode0xA4(V30MZ cpu)
+        {
+            /* MOVSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.MoveString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.MoveString(false); cycles += 5; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAA(V30MZ cpu)
-		{
-			/* STOSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.StoreString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.StoreString(false); cycles += 2; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0xA5(V30MZ cpu)
+        {
+            /* MOVSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.MoveString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.MoveString(true); cycles += 5; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAB(V30MZ cpu)
-		{
-			/* STOSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.StoreString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.StoreString(true); cycles += 2; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0xA6(V30MZ cpu)
+        {
+            /* CMPSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.CompareString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.CompareString(false); cycles += 4; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAC(V30MZ cpu)
-		{
-			/* LODSB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.LoadString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.LoadString(false); cycles += 2; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0xA7(V30MZ cpu)
+        {
+            /* CMPSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.CompareString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.CompareString(true); cycles += 4; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAD(V30MZ cpu)
-		{
-			/* LODSW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.LoadString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.LoadString(true); cycles += 2; } while (--cpu.cx.Word != 0);
-			}
-			return cycles;
-		}
+        private static int Opcode0xAA(V30MZ cpu)
+        {
+            /* STOSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.StoreString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.StoreString(false); cycles += 2; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAE(V30MZ cpu)
-		{
-			/* SCASB */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.ScanString(false);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.ScanString(false); cycles += 3; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
-			}
-			return cycles;
-		}
+        private static int Opcode0xAB(V30MZ cpu)
+        {
+            /* STOSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.StoreString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.StoreString(true); cycles += 2; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xAF(V30MZ cpu)
-		{
-			/* SCASW */
-			var cycles = 5;
-			if (!cpu.prefixHasRepeat)
-				cpu.ScanString(true);
-			else if (cpu.cx.Word != 0)
-			{
-				do { cpu.ScanString(true); cycles += 3; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
-			}
-			return cycles;
-		}
+        private static int Opcode0xAC(V30MZ cpu)
+        {
+            /* LODSB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.LoadString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.LoadString(false); cycles += 2; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xC0(V30MZ cpu)
-		{
-			/* GRP2 Eb Ib */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xAD(V30MZ cpu)
+        {
+            /* LODSW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.LoadString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.LoadString(true); cycles += 2; } while (--cpu.cx.Word != 0);
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xC1(V30MZ cpu)
-		{
-			/* GRP2 Ew Ib */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xAE(V30MZ cpu)
+        {
+            /* SCASB */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.ScanString(false);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.ScanString(false); cycles += 3; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xC4(V30MZ cpu)
-		{
-			/* LES Gw Mp */
-			cpu.ReadModRM();
-			if (cpu.modRm.Mod != ModRM.Modes.Register)
-			{
-				cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
-				cpu.es = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
-			}
-			return 8;
-		}
+        private static int Opcode0xAF(V30MZ cpu)
+        {
+            /* SCASW */
+            var cycles = 5;
+            if (!cpu.prefixHasRepeat)
+                cpu.ScanString(true);
+            else if (cpu.cx.Word != 0)
+            {
+                do { cpu.ScanString(true); cycles += 3; } while (--cpu.cx.Word != 0 && (cpu.prefixRepeatOnNotEqual ? !cpu.IsFlagSet(Flags.Zero) : cpu.IsFlagSet(Flags.Zero)));
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xC5(V30MZ cpu)
-		{
-			/* LDS Gw Mp */
-			cpu.ReadModRM();
-			if (cpu.modRm.Mod != ModRM.Modes.Register)
-			{
-				cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
-				cpu.ds = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
-			}
-			return 8;
-		}
+        private static int Opcode0xC0(V30MZ cpu)
+        {
+            /* GRP2 Eb Ib */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x6: /* --- */ cpu.ReadOpcodeEb(); cpu.ReadOpcodeIb(); cpu.WriteOpcodeEb(0); cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xC8(V30MZ cpu)
-		{
-			/* ENTER */
-			var offset = cpu.ReadOpcodeIw();
-			var length = (byte)(cpu.ReadOpcodeIb() & 0x1F);
+        private static int Opcode0xC1(V30MZ cpu)
+        {
+            /* GRP2 Ew Ib */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                case 0x6: /* --- */ cpu.ReadOpcodeEw(); cpu.ReadOpcodeIb(); cpu.WriteOpcodeEw(0); cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.ReadOpcodeIb())); cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-			cpu.Push(cpu.bp);
-			cpu.bp = cpu.sp;
-			cpu.sp -= offset;
+        private static int Opcode0xC4(V30MZ cpu)
+        {
+            /* LES Gw Mp */
+            cpu.ReadModRM();
 
-			if (length != 0)
-			{
-				for (var i = 1; i < length; i++)
-					cpu.Push(cpu.ReadMemory16(cpu.ss, (ushort)(cpu.bp - i * 2)));
-				cpu.Push(cpu.bp);
-			}
-			return 7;
-		}
+            if (cpu.modRm.Mod == ModRM.Modes.Register)
+            {
+                switch (cpu.modRm.Mem)
+                {
+                    case 0b000: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.ax.Word); break;
+                    case 0b001: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.cx.Word); break;
+                    case 0b010: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.dx.Word); break;
+                    case 0b011: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.bx.Word); break;
+                    case 0b100: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.si + cpu.sp); break;
+                    case 0b101: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.di + cpu.bp); break;
+                    case 0b110: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.si); break;
+                    case 0b111: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.di); break;
+                }
+            }
 
-		private static int Opcode0xD0(V30MZ cpu)
-		{
-			/* GRP2 Eb 1 */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+            cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
+            cpu.es = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
 
-		private static int Opcode0xD1(V30MZ cpu)
-		{
-			/* GRP2 Ew 1 */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+            return 8;
+        }
 
-		private static int Opcode0xD2(V30MZ cpu)
-		{
-			/* GRP2 Eb CL */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xC5(V30MZ cpu)
+        {
+            /* LDS Gw Mp */
+            cpu.ReadModRM();
 
-		private static int Opcode0xD3(V30MZ cpu)
-		{
-			/* GRP2 Ew CL */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				case 0x6: /* --- */ cycles = 3; break;
-				case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+            if (cpu.modRm.Mod == ModRM.Modes.Register)
+            {
+                switch (cpu.modRm.Mem)
+                {
+                    case 0b000: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.ax.Word); break;
+                    case 0b001: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.cx.Word); break;
+                    case 0b010: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.dx.Word); break;
+                    case 0b011: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.bx.Word); break;
+                    case 0b100: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.si + cpu.sp); break;
+                    case 0b101: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.di + cpu.bp); break;
+                    case 0b110: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.SS); cpu.modRm.Offset = (ushort)(cpu.bp + cpu.si); break;
+                    case 0b111: cpu.modRm.Segment = cpu.GetSegmentViaOverride(SegmentNumber.DS); cpu.modRm.Offset = (ushort)(cpu.bx.Word + cpu.di); break;
+                }
+            }
 
-		/* NOTE: AAM/AAD: While NEC V20/V30 do ignore immediate & always use base 10 (1), V30MZ does *not* ignore the immediate (2)
+            cpu.WriteOpcodeGw(cpu.ReadOpcodeEw());
+            cpu.ds = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+
+            return 8;
+        }
+
+        private static int Opcode0xC8(V30MZ cpu)
+        {
+            /* ENTER */
+            var cycles = 7;
+
+            var offset = cpu.ReadOpcodeIw();
+            var length = (byte)(cpu.ReadOpcodeIb() & 0x1F);
+
+            cpu.Push(cpu.bp);
+            var sp = cpu.sp;
+
+            if (length > 0)
+            {
+                for (var i = 0; i < length - 1; i++)
+                {
+                    cycles += 2;
+                    cpu.bp -= 2;
+
+                    cpu.Push(cpu.ReadMemory16(cpu.ss, cpu.bp));
+                }
+                cpu.Push(sp);
+            }
+
+            cpu.bp = sp;
+            cpu.sp -= offset;
+
+            return cycles;
+        }
+
+        private static int Opcode0xD0(V30MZ cpu)
+        {
+            /* GRP2 Eb 1 */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                case 0x6: /* --- */ cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), 1)); cycles = 1; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+
+        private static int Opcode0xD1(V30MZ cpu)
+        {
+            /* GRP2 Ew 1 */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                case 0x6: /* --- */ cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), 1)); cycles = 1; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+
+        private static int Opcode0xD2(V30MZ cpu)
+        {
+            /* GRP2 Eb CL */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEb(cpu.Rol8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEb(cpu.Ror8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEb(cpu.Rol8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEb(cpu.Ror8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEb(cpu.Shl8(cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEb(cpu.Shr8(false, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                case 0x6: /* --- */ cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEb(cpu.Shr8(true, cpu.ReadOpcodeEb(), cpu.cx.Low)); cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+
+        private static int Opcode0xD3(V30MZ cpu)
+        {
+            /* GRP2 Ew CL */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* ROL */ cpu.WriteOpcodeEw(cpu.Rol16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x1: /* ROR */ cpu.WriteOpcodeEw(cpu.Ror16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x2: /* RCL */ cpu.WriteOpcodeEw(cpu.Rol16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x3: /* RCR */ cpu.WriteOpcodeEw(cpu.Ror16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x4: /* SHL */ cpu.WriteOpcodeEw(cpu.Shl16(cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x5: /* SHR */ cpu.WriteOpcodeEw(cpu.Shr16(false, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                case 0x6: /* --- */ cycles = 3; break;
+                case 0x7: /* SAR */ cpu.WriteOpcodeEw(cpu.Shr16(true, cpu.ReadOpcodeEw(), cpu.cx.Low)); cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+
+        /* NOTE: AAM/AAD: While NEC V20/V30 do ignore immediate & always use base 10 (1), V30MZ does *not* ignore the immediate (2)
 		 * (1): https://www.vcfed.org/forum/forum/technical-support/vintage-computer-programming/36551/
 		 * (2): https://github.com/xdanieldzd/StoicGoose/issues/9
 		 */
 
-		private static int Opcode0xD4(V30MZ cpu)
-		{
-			/* AAM */
-			var value = cpu.ReadOpcodeIb();
-			if (value == 0)
-			{
-				/* Division-by-zero exception */
-				cpu.Interrupt(0);
-			}
-			else
-			{
-				cpu.ax.High = (byte)(cpu.ax.Low / value);
-				cpu.ax.Low = (byte)(cpu.ax.Low % value);
-				cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
-				cpu.SetClearFlagConditional(Flags.Zero, (cpu.ax.Word & 0xFFFF) == 0);
-				cpu.SetClearFlagConditional(Flags.Sign, (cpu.ax.Word & 0x8000) != 0);
-			}
-			return 16;
-		}
+        private static int Opcode0xD4(V30MZ cpu)
+        {
+            /* AAM */
+            var value = cpu.ReadOpcodeIb();
+            if (value == 0)
+            {
+                /* Division-by-zero exception */
+                cpu.SetClearFlagConditional(Flags.Carry, cpu.prevMulOverflow);
+                cpu.ClearFlags(Flags.Parity);
+                cpu.ClearFlags(Flags.Auxiliary);
+                cpu.SetClearFlagConditional(Flags.Zero, cpu.ax.Low < 0x40);
+                cpu.ClearFlags(Flags.Sign);
+                cpu.SetClearFlagConditional(Flags.Overflow, cpu.prevMulOverflow);
+                cpu.Interrupt(0);
+                return 12;
+            }
+            else
+            {
+                cpu.ax.High = (byte)(cpu.ax.Low / value);
+                cpu.ax.Low = (byte)(cpu.ax.Low % value);
+                cpu.ClearFlags(Flags.Carry);
+                cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
+                cpu.ClearFlags(Flags.Auxiliary);
+                cpu.SetClearFlagConditional(Flags.Zero, (cpu.ax.Low & 0xFF) == 0);
+                cpu.SetClearFlagConditional(Flags.Sign, (cpu.ax.Low & 0x80) != 0);
+                cpu.ClearFlags(Flags.Overflow);
+                return 16;
+            }
+        }
 
-		private static int Opcode0xD5(V30MZ cpu)
-		{
-			/* AAD */
-			var value = cpu.ReadOpcodeIb();
-			cpu.ax.Low = (byte)(cpu.ax.High * value + cpu.ax.Low);
-			cpu.ax.High = 0;
-			cpu.SetClearFlagConditional(Flags.Parity, CalculateParity(cpu.ax.Low));
-			cpu.SetClearFlagConditional(Flags.Zero, (cpu.ax.Word & 0xFFFF) == 0);
-			cpu.SetClearFlagConditional(Flags.Sign, (cpu.ax.Word & 0x8000) != 0);
-			return 6;
-		}
+        private static int Opcode0xD5(V30MZ cpu)
+        {
+            /* AAD */
+            var value = cpu.ReadOpcodeIb();
+            cpu.ax.Low = cpu.Add8(false, cpu.ax.Low, (byte)cpu.Mul8(false, cpu.ax.High, value));
+            cpu.ax.High = 0;
+            return 6;
+        }
 
-		private static int Opcode0xF6(V30MZ cpu)
-		{
-			/* GRP3 Eb */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* TEST */ cpu.And8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
-				case 0x1: /* --- */ cycles = 3; break;
-				case 0x2: /* NOT */ cpu.WriteOpcodeEb((byte)~cpu.ReadOpcodeEb()); cycles = 1; break;
-				case 0x3: /* NEG */ cpu.WriteOpcodeEb(cpu.Neg8(cpu.ReadOpcodeEb())); cycles = 1; break;
-				case 0x4: /* MUL */ cpu.ax.Word = cpu.Mul8(false, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
-				case 0x5: /* IMUL */ cpu.ax.Word = cpu.Mul8(true, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
-				case 0x6: /* DIV */ cpu.ax.Word = cpu.Div8(false, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 15; break;
-				case 0x7: /* IDIV */ cpu.ax.Word = cpu.Div8(true, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 17; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xF6(V30MZ cpu)
+        {
+            /* GRP3 Eb */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* TEST */ cpu.And8(cpu.ReadOpcodeEb(), cpu.ReadOpcodeIb()); cycles = 1; break;
+                case 0x1: /* --- */ cycles = 3; break;
+                case 0x2: /* NOT */ cpu.WriteOpcodeEb((byte)~cpu.ReadOpcodeEb()); cycles = 1; break;
+                case 0x3: /* NEG */ cpu.WriteOpcodeEb(cpu.Neg8(cpu.ReadOpcodeEb())); cycles = 1; break;
+                case 0x4: /* MUL */ cpu.ax.Word = cpu.Mul8(false, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
+                case 0x5: /* IMUL */ cpu.ax.Word = cpu.Mul8(true, cpu.ax.Low, cpu.ReadOpcodeEb()); cycles = 3; break;
+                case 0x6: /* DIV */ cpu.ax.Word = cpu.Div8(false, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 15; break;
+                case 0x7: /* IDIV */ cpu.ax.Word = cpu.Div8(true, cpu.ax.Word, cpu.ReadOpcodeEb()); cycles = 17; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xF7(V30MZ cpu)
-		{
-			/* GRP3 Ew */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* TEST */ cpu.And16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
-				case 0x1: /* --- */ cycles = 3; break;
-				case 0x2: /* NOT */ cpu.WriteOpcodeEw((ushort)~cpu.ReadOpcodeEw()); cycles = 1; break;
-				case 0x3: /* NEG */ cpu.WriteOpcodeEw(cpu.Neg16(cpu.ReadOpcodeEw())); cycles = 1; break;
-				case 0x4: /* MUL */ { var result = cpu.Mul16(false, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
-				case 0x5: /* IMUL */ { var result = cpu.Mul16(true, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
-				case 0x6: /* DIV */ { var result = cpu.Div16(false, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 23; } break;
-				case 0x7: /* IDIV */ { var result = cpu.Div16(true, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 24; } break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xF7(V30MZ cpu)
+        {
+            /* GRP3 Ew */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* TEST */ cpu.And16(cpu.ReadOpcodeEw(), cpu.ReadOpcodeIw()); cycles = 1; break;
+                case 0x1: /* --- */ cycles = 3; break;
+                case 0x2: /* NOT */ cpu.WriteOpcodeEw((ushort)~cpu.ReadOpcodeEw()); cycles = 1; break;
+                case 0x3: /* NEG */ cpu.WriteOpcodeEw(cpu.Neg16(cpu.ReadOpcodeEw())); cycles = 1; break;
+                case 0x4: /* MUL */ { var result = cpu.Mul16(false, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
+                case 0x5: /* IMUL */ { var result = cpu.Mul16(true, cpu.ax.Word, cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 3; } break;
+                case 0x6: /* DIV */ { var result = cpu.Div16(false, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 23; } break;
+                case 0x7: /* IDIV */ { var result = cpu.Div16(true, (uint)(cpu.dx.Word << 16 | cpu.ax.Word), cpu.ReadOpcodeEw()); cpu.dx.Word = (ushort)((result >> 16) & 0xFFFF); cpu.ax.Word = (ushort)((result >> 0) & 0xFFFF); cycles = 24; } break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
 
-		private static int Opcode0xFE(V30MZ cpu)
-		{
-			/* GRP4 Eb */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* INC */ cpu.WriteOpcodeEb(cpu.Inc8(cpu.ReadOpcodeEb())); cycles = 1; break;
-				case 0x1: /* DEC */ cpu.WriteOpcodeEb(cpu.Dec8(cpu.ReadOpcodeEb())); cycles = 1; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
+        private static int Opcode0xFE(V30MZ cpu)
+        {
+            /* GRP4 Eb */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* INC */ cpu.WriteOpcodeEb(cpu.Inc8(cpu.ReadOpcodeEb())); cycles = 1; break;
+                case 0x1: /* DEC */ cpu.WriteOpcodeEb(cpu.Dec8(cpu.ReadOpcodeEb())); cycles = 1; break;
 
-		private static int Opcode0xFF(V30MZ cpu)
-		{
-			/* GRP4 Ew */
-			int cycles;
-			cpu.ReadModRM();
-			switch (cpu.modRm.Reg)
-			{
-				case 0x0: /* INC */ cpu.WriteOpcodeEw(cpu.Inc16(cpu.ReadOpcodeEw())); cycles = 1; break;
-				case 0x1: /* DEC */ cpu.WriteOpcodeEw(cpu.Dec16(cpu.ReadOpcodeEw())); cycles = 1; break;
-				case 0x2: /* CALL */
-					{
-						var offset = cpu.ReadOpcodeEw();
-						cpu.Push(cpu.ip);
-						cpu.ip = offset;
-						cycles = 5;
-					}
-					break;
-				case 0x3: /* CALL Mp */
-					{
-						if (cpu.modRm.Mod != ModRM.Modes.Register)
-						{
-							var offset = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
-							var segment = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
-							cpu.Push(cpu.cs);
-							cpu.Push(cpu.ip);
-							cpu.cs = segment;
-							cpu.ip = offset;
-						}
-						cycles = 11;
-					}
-					break;
-				case 0x4: /* JMP */ cpu.ip = cpu.ReadOpcodeEw(); cycles = 4; break;
-				case 0x5: /* JMP Mp */
-					{
-						if (cpu.modRm.Mod != ModRM.Modes.Register)
-						{
-							cpu.ip = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
-							cpu.cs = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
-						}
-						cycles = 9;
-					}
-					break;
-				case 0x6: /* PUSH */ cpu.Push(cpu.ReadOpcodeEw()); cycles = 3; break;
-				case 0x7: /* --- */ cycles = 3; break;
-				default: throw new Exception("Invalid opcode");
-			}
-			return cycles;
-		}
-	}
+                /* Undefined opcodes: */
+
+                case 0x2: /* CALL */
+                    {
+                        var offset = cpu.ReadOpcodeEw();
+                        cpu.Push(cpu.ip);
+                        cpu.ip = offset;
+                        cycles = 5;
+                    }
+                    break;
+                case 0x3: /* CALL Mp */
+                    {
+                        if (cpu.modRm.Mod != ModRM.Modes.Register)
+                        {
+                            var offset = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
+                            var segment = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+                            cpu.Push(cpu.cs);
+                            cpu.Push(cpu.ip);
+                            cpu.cs = segment;
+                            cpu.ip = offset;
+                        }
+                        cycles = 11;
+                    }
+                    break;
+                case 0x4: /* JMP */ cpu.ip = cpu.ReadOpcodeEw(); cycles = 4; break;
+                case 0x5: /* JMP Mp */
+                    {
+                        if (cpu.modRm.Mod != ModRM.Modes.Register)
+                        {
+                            cpu.ip = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
+                            cpu.cs = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+                        }
+                        cycles = 9;
+                    }
+                    break;
+                case 0x6: /* PUSH */ cpu.Push(cpu.ReadOpcodeEw()); cycles = 3; break;
+                case 0x7: /* --- */ cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+
+        private static int Opcode0xFF(V30MZ cpu)
+        {
+            /* GRP4 Ew */
+            int cycles;
+            cpu.ReadModRM();
+            switch (cpu.modRm.Reg)
+            {
+                case 0x0: /* INC */ cpu.WriteOpcodeEw(cpu.Inc16(cpu.ReadOpcodeEw())); cycles = 1; break;
+                case 0x1: /* DEC */ cpu.WriteOpcodeEw(cpu.Dec16(cpu.ReadOpcodeEw())); cycles = 1; break;
+                case 0x2: /* CALL */
+                    {
+                        var offset = cpu.ReadOpcodeEw();
+                        cpu.Push(cpu.ip);
+                        cpu.ip = offset;
+                        cycles = 5;
+                    }
+                    break;
+                case 0x3: /* CALL Mp */
+                    {
+                        if (cpu.modRm.Mod != ModRM.Modes.Register)
+                        {
+                            var offset = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
+                            var segment = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+                            cpu.Push(cpu.cs);
+                            cpu.Push(cpu.ip);
+                            cpu.cs = segment;
+                            cpu.ip = offset;
+                        }
+                        cycles = 11;
+                    }
+                    break;
+                case 0x4: /* JMP */ cpu.ip = cpu.ReadOpcodeEw(); cycles = 4; break;
+                case 0x5: /* JMP Mp */
+                    {
+                        if (cpu.modRm.Mod != ModRM.Modes.Register)
+                        {
+                            cpu.ip = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 0));
+                            cpu.cs = cpu.ReadMemory16(cpu.modRm.Segment, (ushort)(cpu.modRm.Offset + 2));
+                        }
+                        cycles = 9;
+                    }
+                    break;
+                case 0x6: /* PUSH */ cpu.Push(cpu.ReadOpcodeEw()); cycles = 3; break;
+                case 0x7: /* --- */ cycles = 3; break;
+                default: throw new Exception("Invalid opcode");
+            }
+            return cycles;
+        }
+    }
 }
